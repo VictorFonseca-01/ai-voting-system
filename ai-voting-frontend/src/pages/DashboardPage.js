@@ -663,8 +663,16 @@ export default function DashboardPage() {
 
         {/* ─── EQUIPE E CRÉDITOS ────────────────────────────────────── */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '32px', marginTop: '16px' }}>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '8px', textAlign: 'center' }}>👥 Equipe e Participação</h3>
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '32px' }}>
+          <h3 style={{ fontSize: '1.2rem', marginBottom: '8px', textAlign: 'center' }}>📜 Resumo do Trabalho</h3>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px', maxWidth: '800px', margin: '0 auto 32px auto', lineHeight: '1.6' }}>
+            O projeto <strong>AI Voting System</strong> é uma plataforma integrada para pesquisa de opinião sobre o uso de Inteligência Artificial Generativa. 
+            Desenvolvido com uma arquitetura moderna em Java (Spring Boot) e React, o sistema permite o cadastro seguro de participantes, coleta de dados demográficos e profissionais, 
+            e realização de votações em tempo real entre as principais IAs do mercado. O administrador dispõe de um painel analítico completo, relatórios exportáveis e 
+            ferramentas de sincronização de dados, garantindo uma base sólida para estudos acadêmicos e técnicos sobre a evolução da IA.
+          </p>
+
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', textAlign: 'center' }}>👥 Equipe e Participação</h3>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '32px' }}>
             Tema: <strong>Utilidades da Inteligência Artificial e Pesquisas com IA</strong>
           </p>
           
@@ -698,8 +706,8 @@ export default function DashboardPage() {
           
           <div style={{ marginTop: '40px', padding: '20px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', textAlign: 'center' }}>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-              "Este trabalho é o resultado da colaboração entre a criatividade humana e a potência da IA, 
-              focado em entender como a tecnologia está moldando o nosso presente e futuro."
+              "Este trabalho é o resultado da colaboração entre inteligência humana e artificial, 
+              focado em mapear as tendências tecnológicas de 2026."
             </p>
           </div>
         </div>
