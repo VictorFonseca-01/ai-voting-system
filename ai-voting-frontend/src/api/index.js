@@ -70,6 +70,12 @@ export const dashboardAPI = {
   getData: () => api.get('/dashboard'),
 };
 
+// ─── PARTICIPATION ────────────────────────────────────────────────────
+
+export const participationAPI = {
+  submit: (data) => api.post('/participation/submit', data),
+};
+
 // ─── ADMIN ────────────────────────────────────────────────────────────
 
 export const adminAPI = {

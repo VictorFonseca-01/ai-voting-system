@@ -46,7 +46,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Endpoints públicos (sem autenticação)
                 .requestMatchers(
-                    "/api/auth/**",      // Login e cadastro
+                    "/api/auth/login",   // Login de admin
+                    "/api/participation/**", // Novo fluxo anônimo
                     "/h2-console/**"     // Console H2 para dev
                 ).permitAll()
                 // Acesso restrito a administradores

@@ -16,6 +16,7 @@ const AI_OPTIONS = [
 
 export default function VotePage() {
   const [selected, setSelected] = useState([]);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkLoading, setCheckLoading] = useState(true);
   const [hasVoted, setHasVoted] = useState(false);
@@ -23,27 +24,14 @@ export default function VotePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  // Verifica se o usuário já votou ao montar o componente
+  // Remove o checkStatus inicial já que não há mais login para votantes
   useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const { data } = await votesAPI.getMyVotes();
-        if (data.voted) {
-          setHasVoted(true);
-          setMyVotes(data.votes.map(v => v.aiName));
-        }
-      } catch (err) {
-        console.error('Erro ao verificar status de voto:', err);
-      } finally {
-        setCheckLoading(false);
-      }
-    };
-    checkStatus();
+    setCheckLoading(false);
   }, []);
 
   // Alterna seleção de uma IA (máx. 2)
   const toggleAI = (aiName) => {
-    if (hasVoted || success) return;
+    if (success) return;
     setError('');
     setSelected(prev => {
       if (prev.includes(aiName)) {
@@ -57,24 +45,16 @@ export default function VotePage() {
     });
   };
 
-  // Envia os votos
-  const handleSubmit = async () => {
+  // Pula direto para o questionário após confirmar as IAs
+  const handleSubmit = () => {
     if (selected.length !== 2) {
-      setError('Selecione 2 IAs para votar.');
+      setError('Selecione 2 IAs para continuar.');
       return;
     }
-    setLoading(true);
-    setError('');
-    try {
-      await votesAPI.submit(selected);
-      setSuccess(true);
-      setHasVoted(true);
-      setMyVotes(selected);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Erro ao registrar votos.');
-    } finally {
-      setLoading(false);
-    }
+    // Armazena temporariamente na sessão para o questionário recuperar
+    sessionStorage.setItem('selectedIAs', JSON.stringify(selected));
+    // Redireciona direto para o questionário
+    window.location.href = '/questionnaire';
   };
 
   // Permite edição dos votos
@@ -90,6 +70,37 @@ export default function VotePage() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px 24px' }}>
+      {/* Modal de Confirmação */}
+      {showConfirm && (
+        <div className="confirm-overlay">
+          <div className="confirm-card">
+            <div className="confirm-icon">🤔</div>
+            <h2 className="confirm-title">Confirmar Votação?</h2>
+            <p className="confirm-text">
+              Realmente deseja confirmar as IA's selecionadas: 
+              <br/>
+              <strong style={{ color: 'var(--accent)' }}>{selected.join(' e ')}</strong>?
+            </p>
+            <div className="confirm-actions">
+              <button 
+                className="btn btn-ghost" 
+                onClick={() => setShowConfirm(false)}
+                disabled={loading}
+              >
+                Voltar
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={confirmSubmit}
+                disabled={loading}
+              >
+                {loading ? 'Processando...' : 'Sim, Confirmar!'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="fade-up" style={{ marginBottom: '40px' }}>
         <div className="accent-line" />

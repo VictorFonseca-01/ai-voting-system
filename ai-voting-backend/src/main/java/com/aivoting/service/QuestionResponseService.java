@@ -1,18 +1,11 @@
 package com.aivoting.service;
 
-import com.aivoting.dto.QuestionResponseRequest;
 import com.aivoting.entity.QuestionResponse;
-import com.aivoting.entity.User;
 import com.aivoting.repository.QuestionResponseRepository;
-import com.aivoting.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -23,47 +16,12 @@ import java.util.stream.Collectors;
 public class QuestionResponseService {
 
     private final QuestionResponseRepository questionResponseRepository;
-    private final UserRepository userRepository;
 
     /**
-     * Salva ou atualiza as respostas do questionário do usuário autenticado.
+     * Retorna todas as respostas para exportação/lista admin.
      */
-    @Transactional
-    public QuestionResponse submitResponse(QuestionResponseRequest request) {
-        User user = getAuthenticatedUser();
-
-        // Verifica se o usuário já respondeu (atualiza se sim)
-        QuestionResponse response = questionResponseRepository
-                .findByUserId(user.getId())
-                .orElse(QuestionResponse.builder().user(user).build());
-
-        // Atualiza os campos com as respostas fornecidas
-        response.setWhereUseAi(request.getWhereUseAi());
-        response.setWhyUseAi(request.getWhyUseAi());
-        response.setHowUseAi(request.getHowUseAi());
-        response.setUseForStudy(request.getUseForStudy());
-        response.setUseForWork(request.getUseForWork());
-        response.setWorkArea(request.getWorkArea());
-        response.setWorkAreaOther(request.getWorkAreaOther());
-
-        return questionResponseRepository.save(response);
-    }
-
-    /**
-     * Verifica se o usuário já respondeu o questionário.
-     */
-    public boolean hasUserAnswered() {
-        User user = getAuthenticatedUser();
-        return questionResponseRepository.existsByUserId(user.getId());
-    }
-
-    /**
-     * Retorna respostas do usuário autenticado.
-     */
-    public QuestionResponse getUserResponse() {
-        User user = getAuthenticatedUser();
-        return questionResponseRepository.findByUserId(user.getId())
-                .orElse(null);
+    public List<QuestionResponse> getAllResponses() {
+        return questionResponseRepository.findAll();
     }
 
     // ─── DADOS PARA O DASHBOARD ──────────────────────────────────────────────
@@ -74,28 +32,58 @@ public class QuestionResponseService {
     public Map<String, Object> getDashboardData() {
         Map<String, Object> data = new LinkedHashMap<>();
 
+        List<QuestionResponse> allResponses = questionResponseRepository.findAll();
+
         // Total de respondentes
-        data.put("totalResponses", questionResponseRepository.countTotalResponses());
+        data.put("totalResponses", (long) allResponses.size());
 
         // Uso para estudo
-        data.put("useForStudy", questionResponseRepository.countUseForStudy());
+        data.put("useForStudy", allResponses.stream().filter(r -> r.getUseForStudy() != null && r.getUseForStudy()).count());
 
         // Uso para trabalho
-        data.put("useForWork", questionResponseRepository.countUseForWork());
+        data.put("useForWork", allResponses.stream().filter(r -> r.getUseForWork() != null && r.getUseForWork()).count());
 
-        // Onde usam IA
-        data.put("whereUseAi", toMap(questionResponseRepository.countByWhereUseAi()));
+        // Onde usam IA (Multi-select)
+        data.put("whereUseAi", aggregateField(allResponses, QuestionResponse::getWhereUseAi));
 
-        // Por que usam IA
-        data.put("whyUseAi", toMap(questionResponseRepository.countByWhyUseAi()));
+        // Por que usam IA (Multi-select)
+        data.put("whyUseAi", aggregateField(allResponses, QuestionResponse::getWhyUseAi));
 
-        // Como usam IA
-        data.put("howUseAi", toMap(questionResponseRepository.countByHowUseAi()));
+        // Como usam IA (Multi-select)
+        data.put("howUseAi", aggregateField(allResponses, QuestionResponse::getHowUseAi));
 
-        // Áreas profissionais
+        // Áreas profissionais (Single select)
         data.put("workAreas", toMap(questionResponseRepository.countByWorkArea()));
 
         return data;
+    }
+
+    /**
+     * Agrega campos que podem conter múltiplos valores separados por vírgula.
+     */
+    private Map<String, Long> aggregateField(List<QuestionResponse> responses, java.util.function.Function<QuestionResponse, String> extractor) {
+        Map<String, Long> counts = new HashMap<>();
+        for (QuestionResponse r : responses) {
+            String value = extractor.apply(r);
+            if (value != null && !value.isBlank()) {
+                String[] parts = value.split(",");
+                for (String part : parts) {
+                    String clean = part.trim();
+                    if (!clean.isEmpty()) {
+                        counts.put(clean, counts.getOrDefault(clean, 0L) + 1);
+                    }
+                }
+            }
+        }
+        // Ordena por contagem decrescente
+        return counts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
     }
 
     /**
@@ -112,10 +100,4 @@ public class QuestionResponseService {
                 ));
     }
 
-    private User getAuthenticatedUser() {
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-    }
 }

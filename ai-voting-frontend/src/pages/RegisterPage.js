@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ name: '', email: '', password: '', course: '', institution: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -162,7 +163,7 @@ export default function RegisterPage() {
               name="institution"
               type="text"
               className="form-control"
-              placeholder="Sua instituição"
+              placeholder="Sua instituição/Empresa"
               value={form.institution}
               onChange={handleChange}
               required
@@ -171,17 +172,27 @@ export default function RegisterPage() {
 
           <div className="form-group">
             <label htmlFor="password">Senha</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              className="form-control"
-              placeholder="Mínimo 5 caracteres"
-              value={form.password}
-              onChange={handleChange}
-              required
-              minLength={5}
-            />
+            <div className="password-field-wrap">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                className="form-control"
+                placeholder="Mínimo 5 caracteres"
+                value={form.password}
+                onChange={handleChange}
+                required
+                minLength={5}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+              >
+                {showPassword ? '👁️‍🗨️' : '👁️'}
+              </button>
+            </div>
           </div>
 
           <button

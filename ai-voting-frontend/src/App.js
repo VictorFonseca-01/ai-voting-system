@@ -24,27 +24,21 @@ export default function App() {
           {/* Página inicial */}
           <Route path="/" element={<HomePage />} />
 
-          {/* Autenticação */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          {/* Autenticação Admin */}
+          <Route path="/admin/login" element={<LoginPage />} />
+          <Route path="/login" element={<Navigate to="/admin/login" replace />} />
 
-          {/* Rotas protegidas */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute><DashboardPage /></ProtectedRoute>
-          } />
+          {/* Rotas Públicas de Participação */}
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/vote" element={<VotePage />} />
+          <Route path="/questionnaire" element={<QuestionnairePage />} />
+
+          {/* Administração protegida */}
           <Route path="/admin/users" element={
             <AdminRoute><AdminUsersPage /></AdminRoute>
           } />
           <Route path="/admin/report" element={
             <AdminRoute><ReportPage /></AdminRoute>
-          } />
-
-          {/* Rotas protegidas */}
-          <Route path="/vote" element={
-            <ProtectedRoute><VotePage /></ProtectedRoute>
-          } />
-          <Route path="/questionnaire" element={
-            <ProtectedRoute><QuestionnairePage /></ProtectedRoute>
           } />
 
           {/* Fallback */}

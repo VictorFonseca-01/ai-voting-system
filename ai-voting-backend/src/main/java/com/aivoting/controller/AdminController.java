@@ -65,6 +65,7 @@ public class AdminController {
                 "role", user.getRole(),
                 "course", user.getCourse() != null ? user.getCourse() : "",
                 "institution", user.getInstitution() != null ? user.getInstitution() : "",
+                "instagram", user.getInstagram() != null ? user.getInstagram() : "",
                 "createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : "",
                 "hasVoted", user.getVotes() != null && !user.getVotes().isEmpty(),
                 "hasAnswered", user.getQuestionResponses() != null && !user.getQuestionResponses().isEmpty()
@@ -127,6 +128,7 @@ public class AdminController {
                     map.put("password", u.getPassword());
                     map.put("course", u.getCourse());
                     map.put("institution", u.getInstitution());
+                    map.put("instagram", u.getInstagram());
                     map.put("role", u.getRole());
                     return map;
                 }).collect(Collectors.toList());
@@ -188,6 +190,7 @@ public class AdminController {
                         .password((String) uMap.get("password"))
                         .course((String) uMap.get("course"))
                         .institution((String) uMap.get("institution"))
+                        .instagram((String) uMap.get("instagram"))
                         .role((String) uMap.get("role"))
                         .build();
                 

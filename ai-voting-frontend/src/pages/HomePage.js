@@ -105,17 +105,8 @@ export default function HomePage() {
             </div>
 
             <div className="btn-group desktop-only" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              {isAuthenticated ? (
-                <>
-                  <Link to="/vote" className="btn btn-primary">🗳️ Votar agora</Link>
-                  {isAdmin && <Link to="/dashboard" className="btn btn-ghost">📊 Ver Dashboard</Link>}
-                </>
-              ) : (
-                <>
-                  <Link to="/register" className="btn btn-primary">Começar agora</Link>
-                  <Link to="/login" className="btn btn-ghost">Já tenho conta</Link>
-                </>
-              )}
+              <Link to="/vote" className="btn btn-primary" style={{ padding: '16px 32px', fontSize: '1.1rem' }}>🗳️ Votar agora</Link>
+              <Link to="/dashboard" className="btn btn-ghost">📊 Ver Dashboard</Link>
             </div>
           </div>
 
@@ -249,8 +240,8 @@ export default function HomePage() {
           <h2 style={{ fontSize: '2rem', marginBottom: '48px' }}>Como funciona</h2>
           <div className="grid-3">
             {[
-              { icon: '👤', title: 'Cadastre-se', desc: 'Crie sua conta gratuitamente com nome, email e senha.' },
-              { icon: '🗳️', title: 'Vote em 2 IAs', desc: 'Escolha 2 inteligências artificiais que você usa.' },
+              { icon: '📝', title: 'Identifique-se', desc: 'Preencha seu nome e curso rapidamente no questionário.' },
+              { icon: '🗳️', title: 'Vote em 2 IAs', desc: 'Escolha 2 inteligências artificiais que você mais utiliza.' },
               { icon: '📊', title: 'Veja os insights', desc: 'Confira gráficos e rankings em tempo real no dashboard.' },
             ].map(({ icon, title, desc }) => (
               <div key={title} className="card shimmer-border stagger-in" style={{ textAlign: 'left' }}>
@@ -266,17 +257,8 @@ export default function HomePage() {
       {/* ─── MOBILE CALL-TO-ACTION (Bottom) ─────────────────────────── */}
       <section className="mobile-only" style={{ padding: '0 24px 80px', marginTop: '-20px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px', margin: '0 auto' }}>
-          {isAuthenticated ? (
-            <>
-              <Link to="/vote" className="btn btn-primary btn-full" style={{ padding: '18px' }}>🗳️ Votar agora</Link>
-              {isAdmin && <Link to="/dashboard" className="btn btn-ghost btn-full" style={{ padding: '16px' }}>📊 Ver Dashboard</Link>}
-            </>
-          ) : (
-            <>
-              <Link to="/register" className="btn btn-primary btn-full" style={{ padding: '18px' }}>Começar agora</Link>
-              <Link to="/login" className="btn btn-ghost btn-full" style={{ padding: '16px' }}>Já tenho conta</Link>
-            </>
-          )}
+          <Link to="/vote" className="btn btn-primary btn-full" style={{ padding: '18px' }}>🗳️ Votar agora</Link>
+          <Link to="/dashboard" className="btn btn-ghost btn-full" style={{ padding: '16px' }}>📊 Ver Dashboard</Link>
         </div>
       </section>
 

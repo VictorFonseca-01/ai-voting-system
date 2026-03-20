@@ -53,6 +53,10 @@ public class User {
     @Column(nullable = false, columnDefinition = "varchar(255) default 'N/A'")
     private String institution;
 
+    /** Instagram do usuário (opcional) */
+    @Column(name = "instagram")
+    private String instagram;
+
     /** Data de criação da conta */
     @Column(name = "created_at")
     private LocalDateTime createdAt;
