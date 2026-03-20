@@ -176,14 +176,14 @@ export default function Navbar() {
         )}
 
         {isAuthenticated && (
-          <button className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.85rem', marginLeft: '12px' }} onClick={handleLogout}>
-            Sair
+          <button className="nav-link" style={{ background: 'none', border: '1px solid rgba(255,77,109,0.25)', cursor: 'pointer', color: '#ff8fa3' }} onClick={handleLogout}>
+            🚪 Sair
           </button>
         )}
         
         <button 
-          className="btn btn-ghost" 
-          style={{ padding: '8px 12px', fontSize: '1rem', color: 'var(--accent)', opacity: 0.8 }} 
+          className="nav-link" 
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: '6px 10px', fontSize: '1rem' }} 
           onClick={() => window.location.reload()}
           title="Recarregar Site"
         >

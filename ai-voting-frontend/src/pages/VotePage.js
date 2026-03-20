@@ -150,12 +150,12 @@ export default function VotePage() {
           {/* Contador */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: '24px', padding: '12px 20px',
+            marginBottom: '24px', padding: '14px 24px',
             background: 'var(--bg-card)', borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border)',
           }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Selecionadas:</span>
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem', color: selected.length === 2 ? 'var(--success)' : 'var(--accent)' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>Selecionadas:</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', color: selected.length === 2 ? 'var(--success)' : 'var(--accent)', letterSpacing: '0.05em' }}>
               {selected.length} / 2
             </span>
           </div>
