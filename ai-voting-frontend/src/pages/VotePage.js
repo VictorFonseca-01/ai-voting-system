@@ -11,7 +11,7 @@ const AI_OPTIONS = [
   { name: 'Meta AI',       emoji: '🔵', color: '#0866ff' },
   { name: 'Copilot',       emoji: '🪟', color: '#00adef' },
   { name: 'DeepSeek',      emoji: '🧠', color: '#4d6eff' },
-  { name: 'Não utilizo IA',emoji: '🚫', color: '#6b7280' },
+  { name: 'Não utilizo IA / Outra',emoji: '🚫', color: '#6b7280' },
 ];
 
 export default function VotePage() {
