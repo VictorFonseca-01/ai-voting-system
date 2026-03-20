@@ -11,15 +11,9 @@ server {
 
     # Proxy para a API do backend
     location /api/ {
-        # Resolver interno do Docker/Railway (127.0.0.11)
-        resolver 127.0.0.11 valid=30s;
-        
-        # Usamos uma variável para o proxy_pass. 
-        # Isso faz o Nginx resolver o domínio em tempo de execução.
+        # Usamos uma variável para o proxy_pass para evitar falha no boot se o backend estiver subindo.
+        # Removemos o resolver manual que estava falhando no Railway.
         set $target_backend ${BACKEND_URL};
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
         proxy_pass http://$target_backend:8080;
         
         proxy_set_header Host $host;
