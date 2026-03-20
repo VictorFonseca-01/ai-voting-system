@@ -73,9 +73,17 @@ export default function HomePage() {
 
             {/* Cards de ias */}
             <div className="ai-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '48px' }}>
-              {['ChatGPT', 'Claude', 'Gemini', 'Grok', 'Meta AI', 'Copilot', 'DeepSeek'].map((ai, i) => (
+              {[
+                { name: 'ChatGPT', icon: '🤖' },
+                { name: 'Claude', icon: '🧠' },
+                { name: 'Gemini', icon: '✨' },
+                { name: 'Grok', icon: '⚡' },
+                { name: 'Meta AI', icon: '🔵' },
+                { name: 'Copilot', icon: '🚀' },
+                { name: 'DeepSeek', icon: '🔍' },
+              ].map((ai, i) => (
                 <span 
-                  key={ai} 
+                  key={ai.name} 
                   className="hover-lift"
                   style={{
                     padding: '10px 20px',
@@ -84,10 +92,14 @@ export default function HomePage() {
                     borderRadius: '99px',
                     fontSize: '0.9rem',
                     color: 'var(--text-muted)',
-                    animationDelay: `${i * 0.1}s`
+                    animationDelay: `${i * 0.1}s`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
                   }}
                 >
-                  {ai}
+                  <span style={{ fontSize: '1.1rem' }}>{ai.icon}</span>
+                  {ai.name}
                 </span>
               ))}
             </div>

@@ -1,5 +1,6 @@
 package com.aivoting.controller;
 
+import com.aivoting.config.DataInitializer;
 import com.aivoting.repository.QuestionResponseRepository;
 import com.aivoting.repository.UserRepository;
 import com.aivoting.repository.VoteRepository;
@@ -26,6 +27,7 @@ public class AdminController {
     private final UserRepository userRepository;
     private final VoteRepository voteRepository;
     private final QuestionResponseRepository questionResponseRepository;
+    private final DataInitializer dataInitializer;
 
     /**
      * GET /api/admin/users
@@ -49,7 +51,7 @@ public class AdminController {
 
     /**
      * DELETE /api/admin/reset
-     * Limpa TODOS os dados do sistema: votos, respostas e usuários.
+     * Limpa TODOS os dados do sistema e recria o admin padrão.
      * Apenas admins autenticados podem acessar.
      */
     @DeleteMapping("/reset")
@@ -58,9 +60,14 @@ public class AdminController {
         questionResponseRepository.deleteAll();
         voteRepository.deleteAll();
         userRepository.deleteAll();
+
+        // Recria o admin padrão automaticamente
+        dataInitializer.createAdminIfNotExists();
+
         return ResponseEntity.ok(Map.of(
-            "message", "Todos os dados foram apagados com sucesso.",
-            "deletedTables", List.of("question_responses", "votes", "users")
+            "message", "Dados apagados e admin recriado com sucesso.",
+            "adminEmail", "admin@aivoting.com",
+            "adminPassword", "Admin@2026"
         ));
     }
 }
