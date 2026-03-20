@@ -7,6 +7,7 @@ import com.aivoting.entity.Vote;
 import com.aivoting.repository.QuestionResponseRepository;
 import com.aivoting.repository.UserRepository;
 import com.aivoting.repository.VoteRepository;
+import com.aivoting.util.ProfanityFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,13 +31,32 @@ public class ParticipationService {
 
     @Transactional
     public void submitParticipation(ParticipationRequest request) {
-        // 1. Cria um usuário "Guest" para representar este participante
+        // --- VALIDAÇÕES DE SEGURANÇA ---
+        String name = request.getFullName() != null ? request.getFullName().trim() : "";
+        
+        // 1. Validação de Nome Completo (pelo menos dois nomes)
+        if (!name.contains(" ") || name.split("\\s+").length < 2) {
+            throw new RuntimeException("Por favor, digite seu nome completo (ex: Victor Fonseca)");
+        }
+
+        // 3. Filtro de Palavrões
+        if (ProfanityFilter.containsProfanity(name)) {
+            throw new RuntimeException("O nome contém termos inadequados.");
+        }
+        if (ProfanityFilter.containsProfanity(request.getCourse())) {
+            throw new RuntimeException("O campo Curso contém termos inadequados.");
+        }
+        if (request.getInstitution() != null && ProfanityFilter.containsProfanity(request.getInstitution())) {
+            throw new RuntimeException("O campo Instituição contém termos inadequados.");
+        }
+
+        // --- PROCESSAMENTO ---
         String guestEmail = "guest_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + "@aivoting.guest";
         
         User guest = User.builder()
-                .name(request.getFullName())
+                .name(name)
                 .email(guestEmail)
-                .password(passwordEncoder.encode(UUID.randomUUID().toString())) // senha aleatória inutilizável
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .course(request.getCourse())
                 .institution(request.getInstitution() != null && !request.getInstitution().isBlank() ? request.getInstitution() : "N/A")
                 .instagram(request.getInstagram())

@@ -107,6 +107,11 @@ export default function QuestionnairePage() {
       return;
     }
 
+    if (!form.fullName.trim().includes(' ') || form.fullName.trim().split(/\s+/).length < 2) {
+      setError('Por favor, digite seu nome completo (ex: Victor Fonseca).');
+      return;
+    }
+
     setLoading(true);
     setError('');
 

@@ -93,7 +93,7 @@ export default function AdminUsersPage() {
               <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
                 <th style={{ padding: '12px' }}>ID</th>
                 <th style={{ padding: '12px' }}>Nome</th>
-                <th style={{ padding: '12px' }}>Email</th>
+                <th style={{ padding: '12px' }}>Curso</th>
                 <th style={{ padding: '12px' }}>Votou?</th>
                 <th style={{ padding: '12px' }}>Questionário?</th>
                 <th style={{ padding: '12px' }}>Ações</th>
@@ -107,7 +107,7 @@ export default function AdminUsersPage() {
                     {u.name}
                     {u.role === 'ROLE_ADMIN' && <span className="badge badge-accent" style={{ marginLeft: '8px', fontSize: '0.65rem' }}>ADMIN</span>}
                   </td>
-                  <td style={{ padding: '12px', color: 'var(--text-dim)' }}>{u.email}</td>
+                  <td style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.85rem' }}>{u.course || 'N/A'}</td>
                   <td style={{ padding: '12px' }}>{u.hasVoted ? '✅ Sim' : '⏳ Não'}</td>
                   <td style={{ padding: '12px' }}>{u.hasAnswered ? '✅ Sim' : '⏳ Não'}</td>
                   <td style={{ padding: '12px' }}>
