@@ -18,8 +18,8 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.');
+    if (form.password.length < 5) {
+      setError('A senha deve ter pelo menos 5 caracteres.');
       return;
     }
     setLoading(true);
@@ -87,11 +87,11 @@ export default function RegisterPage() {
               name="password"
               type="password"
               className="form-control"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 5 caracteres"
               value={form.password}
               onChange={handleChange}
               required
-              minLength={6}
+              minLength={5}
             />
           </div>
 
