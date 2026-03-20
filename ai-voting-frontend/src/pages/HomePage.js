@@ -92,7 +92,7 @@ export default function HomePage() {
 
           {/* Right — QR Code */}
           <div className="fade-up delay-2" style={{ display: 'flex', justifyContent: 'center' }}>
-            <div className="card" style={{ textAlign: 'center', padding: '40px', maxWidth: '320px' }}>
+            <div className="card floating-card" style={{ textAlign: 'center', padding: '40px', maxWidth: '320px' }}>
               <div className="accent-line" style={{ margin: '0 auto 20px' }} />
               <h3 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Acesse pelo celular</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '28px' }}>

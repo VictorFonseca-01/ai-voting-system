@@ -443,13 +443,19 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
 /* ─── INTERACTIVE ELEMENTS ───────────────────────────────────── */
 .hover-lift {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .hover-lift:hover {
   transform: translateY(-8px) scale(1.05);
-  background: var(--bg-card) !important;
+  background: rgba(108, 99, 255, 0.2) !important;
   border-color: var(--accent) !important;
   color: #fff !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+}
+
+.floating-card {
+  animation: float 6s infinite ease-in-out;
 }
 
 .ai-icon-card {
