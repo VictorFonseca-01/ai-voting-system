@@ -9,8 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.aivoting.entity.User;
 
 import java.util.List;
 import java.util.Map;
@@ -57,7 +59,7 @@ public class AdminController {
      */
     @DeleteMapping("/users/{id}")
     @Transactional
-    public ResponseEntity<?> deleteUser(org.springframework.web.bind.annotation.PathVariable Long id) {
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         return userRepository.findById(id).map(user -> {
             // Se for o admin principal, não permite excluir a si mesmo por segurança
             if ("admin@aivoting.com".equals(user.getEmail())) {
