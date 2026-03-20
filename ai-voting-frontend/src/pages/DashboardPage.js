@@ -144,6 +144,60 @@ export default function DashboardPage() {
     }
   };
 
+  const handleExportData = async () => {
+    try {
+      const { data: backup } = await adminAPI.exportData();
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `backup_aivoting_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Erro ao exportar backup.');
+    }
+  };
+
+  const handleImportData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setModalConfig({
+      title: 'Restaurar Backup',
+      message: `ATENÇÃO: Isso apagará TODOS os dados atuais do Localhost e substituirá pelos dados do arquivo "${file.name}". Deseja continuar?`,
+      onConfirm: () => confirmImport(file),
+      type: 'confirm'
+    });
+    setShowModal(true);
+  };
+
+  const confirmImport = async (file) => {
+    setShowModal(false);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const backup = JSON.parse(event.target.result);
+        await adminAPI.importData(backup);
+        setModalConfig({
+          title: 'Sucesso! 🚀',
+          message: 'Banco de dados restaurado com sucesso! Recarregando...',
+          type: 'alert'
+        });
+        setShowModal(true);
+        setTimeout(() => window.location.reload(), 2000);
+      } catch (err) {
+        setModalConfig({
+          title: 'Erro na Restauração',
+          message: err.response?.data?.error || 'Arquivo de backup inválido ou erro no servidor.',
+          type: 'alert'
+        });
+        setShowModal(true);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   if (loading || authLoading) return <div className="page"><div className="spinner" /></div>;
 
   if (error) {
@@ -374,6 +428,16 @@ export default function DashboardPage() {
           <button onClick={handleChangePassword} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             🔑 Mudar Minha Senha
           </button>
+          
+          <div style={{ borderLeft: '1px solid var(--border)', margin: '0 8px', height: '32px' }} />
+          
+          <button onClick={handleExportData} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: '#10d98e' }}>
+            📥 Baixar Backup
+          </button>
+          <label className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: '#6c63ff', cursor: 'pointer' }}>
+            📤 Restaurar Backup
+            <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
+          </label>
           <button onClick={handleResetData} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: '#ff4d6d', borderColor: '#ff4d6d33' }}>
             🗑️ Zerar Sistema
           </button>

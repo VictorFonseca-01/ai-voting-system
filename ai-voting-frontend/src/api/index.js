@@ -79,6 +79,8 @@ export const adminAPI = {
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   changePassword: (newPassword) => api.put('/admin/password', { newPassword }),
   resetMyAdminVotes: () => api.delete('/admin/my-votes'),
+  exportData: () => api.get('/admin/export'),
+  importData: (data) => api.post('/admin/import', data),
 };
 
 export default api;

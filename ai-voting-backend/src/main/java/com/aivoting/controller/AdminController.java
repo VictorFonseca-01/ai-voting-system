@@ -11,6 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -105,6 +107,133 @@ public class AdminController {
             voteRepository.deleteByUser(user);
             return ResponseEntity.ok(Map.of("message", "Seus votos foram removidos. Você pode votar novamente."));
         }).orElse(ResponseEntity.status(401).build());
+    }
+
+    /**
+     * GET /api/admin/export
+     * Exporta todos os dados do sistema em formato JSON simplificado para backup.
+     */
+    @GetMapping("/export")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> exportData() {
+        Map<String, Object> backup = new LinkedHashMap<>();
+        
+        // Exporta usuários
+        List<Map<String, Object>> users = userRepository.findAll().stream()
+                .map(u -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", u.getName());
+                    map.put("email", u.getEmail());
+                    map.put("password", u.getPassword());
+                    map.put("course", u.getCourse());
+                    map.put("institution", u.getInstitution());
+                    map.put("role", u.getRole());
+                    return map;
+                }).collect(Collectors.toList());
+        backup.put("users", users);
+
+        // Exporta votos
+        List<Map<String, Object>> votes = voteRepository.findAll().stream()
+                .map(v -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("userEmail", v.getUser().getEmail());
+                    map.put("aiName", v.getAiName());
+                    return map;
+                }).collect(Collectors.toList());
+        backup.put("votes", votes);
+
+        // Exporta respostas
+        List<Map<String, Object>> responses = questionResponseRepository.findAll().stream()
+                .map(r -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("userEmail", r.getUser().getEmail());
+                    map.put("workArea", r.getWorkArea());
+                    map.put("whereUseAi", r.getWhereUseAi());
+                    map.put("whyUseAi", r.getWhyUseAi());
+                    return map;
+                }).collect(Collectors.toList());
+        backup.put("responses", responses);
+
+        return ResponseEntity.ok(backup);
+    }
+
+    /**
+     * POST /api/admin/import
+     * Importa dados de um JSON de backup, substituindo os dados atuais.
+     */
+    @SuppressWarnings("unchecked")
+    @PostMapping("/import")
+    @Transactional
+    public ResponseEntity<?> importData(@RequestBody Map<String, Object> backup) {
+        try {
+            // 1. Limpa o banco atual
+            questionResponseRepository.deleteAll();
+            voteRepository.deleteAll();
+            userRepository.deleteAll();
+
+            // 2. Recria Admin Master
+            dataInitializer.createAdminIfNotExists();
+
+            // 3. Importa Usuários
+            List<Map<String, Object>> usersData = (List<Map<String, Object>>) backup.get("users");
+            Map<String, com.aivoting.entity.User> emailToUser = new HashMap<>();
+            
+            for (Map<String, Object> uMap : usersData) {
+                String email = (String) uMap.get("email");
+                if ("admin@aivoting.com".equals(email)) continue; // Pula admin já criado
+
+                com.aivoting.entity.User user = com.aivoting.entity.User.builder()
+                        .name((String) uMap.get("name"))
+                        .email(email)
+                        .password((String) uMap.get("password"))
+                        .course((String) uMap.get("course"))
+                        .institution((String) uMap.get("institution"))
+                        .role((String) uMap.get("role"))
+                        .build();
+                
+                com.aivoting.entity.User saved = userRepository.save(user);
+                emailToUser.put(email, saved);
+            }
+
+            // Adiciona o admin na lista de mapeamento
+            userRepository.findByEmail("admin@aivoting.com").ifPresent(adm -> emailToUser.put(adm.getEmail(), adm));
+
+            // 4. Importa Votos
+            List<Map<String, Object>> votesData = (List<Map<String, Object>>) backup.get("votes");
+            if (votesData != null) {
+                for (Map<String, Object> vMap : votesData) {
+                    String userEmail = (String) vMap.get("userEmail");
+                    com.aivoting.entity.User user = emailToUser.get(userEmail);
+                    if (user != null) {
+                        voteRepository.save(com.aivoting.entity.Vote.builder()
+                                .user(user)
+                                .aiName((String) vMap.get("aiName"))
+                                .build());
+                    }
+                }
+            }
+
+            // 5. Importa Respostas
+            List<Map<String, Object>> respData = (List<Map<String, Object>>) backup.get("responses");
+            if (respData != null) {
+                for (Map<String, Object> rMap : respData) {
+                    String userEmail = (String) rMap.get("userEmail");
+                    com.aivoting.entity.User user = emailToUser.get(userEmail);
+                    if (user != null) {
+                        questionResponseRepository.save(com.aivoting.entity.QuestionResponse.builder()
+                                .user(user)
+                                .workArea((String) rMap.get("workArea"))
+                                .whereUseAi((String) rMap.get("whereUseAi"))
+                                .whyUseAi((String) rMap.get("whyUseAi"))
+                                .build());
+                    }
+                }
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Backup restaurado com sucesso!", "usersImported", usersData.size()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Erro na restauração: " + e.getMessage()));
+        }
     }
 
     /**
