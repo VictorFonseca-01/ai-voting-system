@@ -71,6 +71,8 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    environment:
+      BACKEND_URL: "/api"
     ports:
       - "3000:80"              # ← ACESSE AQUI: http://localhost:3000
 
