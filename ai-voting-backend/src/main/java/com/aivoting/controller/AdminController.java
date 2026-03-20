@@ -52,6 +52,28 @@ public class AdminController {
     }
 
     /**
+     * DELETE /api/admin/users/{id}
+     * Exclui um usuário específico e todos os seus dados vinculados.
+     */
+    @DeleteMapping("/users/{id}")
+    @Transactional
+    public ResponseEntity<?> deleteUser(org.springframework.web.bind.annotation.PathVariable Long id) {
+        return userRepository.findById(id).map(user -> {
+            // Se for o admin principal, não permite excluir a si mesmo por segurança
+            if ("admin@aivoting.com".equals(user.getEmail())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "O administrador principal não pode ser excluído."));
+            }
+
+            // Remove referências
+            questionResponseRepository.deleteByUser(user);
+            voteRepository.deleteByUser(user);
+            userRepository.delete(user);
+
+            return ResponseEntity.ok(Map.of("message", "Usuário " + user.getName() + " excluído com sucesso."));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
      * DELETE /api/admin/reset
      * Limpa TODOS os dados do sistema e recria o admin padrão.
      * Apenas admins autenticados podem acessar.

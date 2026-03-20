@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import com.aivoting.entity.User;
 import com.aivoting.entity.Vote;
 
 /**
@@ -22,6 +23,9 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     /** Lista todos os votos de um usuário */
     List<Vote> findByUserId(Long userId);
+
+    /** Remove todos os votos de um usuário específico */
+    void deleteByUser(User user);
 
     /**
      * Conta votos agrupados por IA.

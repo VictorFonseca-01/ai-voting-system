@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Chart as ChartJS,
@@ -7,7 +7,7 @@ import {
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { QRCodeSVG } from 'qrcode.react';
-import { dashboardAPI } from '../api';
+import { dashboardAPI, adminAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 // Registra os componentes do Chart.js
@@ -23,23 +23,59 @@ export default function DashboardPage() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
+  
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
+
+  const fetchData = async () => {
+    try {
+      const { data: d } = await dashboardAPI.getData();
+      setData(d);
+    } catch (err) {
+      setError('Erro ao carregar dados do dashboard. Verifique se o backend está rodando.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data: d } = await dashboardAPI.getData();
-        setData(d);
-      } catch (err) {
-        setError('Erro ao carregar dados do dashboard. Verifique se o backend está rodando.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
     // Atualiza a cada 30 segundos
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleResetData = () => {
+    setModalConfig({
+      title: 'Zerar Todos os Dados',
+      message: 'ATENÇÃO: Isso apagará TODOS os votos, respostas e usuários (exceto o admin). Esta ação não pode ser desfeita. Deseja continuar?',
+      onConfirm: confirmReset,
+      type: 'confirm'
+    });
+    setShowModal(true);
+  };
+
+  const confirmReset = async () => {
+    setShowModal(false);
+    try {
+      await adminAPI.resetData();
+      setModalConfig({
+        title: 'Sucesso',
+        message: 'O sistema foi reiniciado com sucesso.',
+        type: 'alert'
+      });
+      setShowModal(true);
+      fetchData(); // Recarrega os dados (que estarão zerados)
+    } catch (err) {
+      setModalConfig({
+        title: 'Erro',
+        message: 'Não foi possível zerar os dados.',
+        type: 'alert'
+      });
+      setShowModal(true);
+    }
+  };
 
   if (loading) return <div className="page"><div className="spinner" /></div>;
 
@@ -207,6 +243,31 @@ export default function DashboardPage() {
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px 24px' }}>
+      
+      {/* Modal Customizado */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="accent-line" style={{ width: '40px', marginBottom: '8px' }} />
+              <h3>{modalConfig.title}</h3>
+            </div>
+            <div className="modal-body">
+              {modalConfig.message}
+            </div>
+            <div className="modal-footer">
+              {modalConfig.type === 'confirm' ? (
+                <>
+                  <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
+                  <button className="btn btn-primary" onClick={modalConfig.onConfirm} style={{ background: '#cc0000' }}>Confirmar Reset</button>
+                </>
+              ) : (
+                <button className="btn btn-primary" onClick={() => setShowModal(false)}>Entendido</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── HEADER ───────────────────────────────────────────────── */}
       <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
@@ -215,13 +276,16 @@ export default function DashboardPage() {
           <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>🕵️‍♂️ Painel Administrativo</h1>
           <p style={{ color: 'var(--text-muted)' }}>Métricas detalhadas e análise de comportamento</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <Link to="/vote" className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             🗳️ Votar
           </Link>
           <Link to="/admin/users" className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             👥 Ver Usuários
           </Link>
+          <button onClick={handleResetData} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: '#ff4d6d', borderColor: '#ff4d6d33' }}>
+            🗑️ Zerar Sistema
+          </button>
         </div>
       </div>
 
@@ -399,57 +463,6 @@ export default function DashboardPage() {
               <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{item.desc}</p>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* ─── A IMPORTÂNCIA DA IA NO PROJETO ────────────────────────── */}
-      <div className="card fade-up" style={{
-        marginTop: '24px',
-        padding: '40px',
-        background: 'linear-gradient(135deg, rgba(108,99,255,0.08) 0%, var(--bg-card) 50%, rgba(16,217,142,0.06) 100%)',
-        borderLeft: '4px solid var(--accent)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <span style={{ fontSize: '2rem' }}>🤖</span>
-          <h2 style={{ fontSize: '1.4rem' }}>O Papel da Inteligência Artificial neste Projeto</h2>
-        </div>
-
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.8, maxWidth: '900px' }}>
-          <p style={{ marginBottom: '16px' }}>
-            <strong style={{ color: 'var(--text)' }}>Este projeto foi integralmente desenvolvido com auxílio de uma Inteligência Artificial</strong>, demonstrando na prática como a IA pode atuar como uma ferramenta poderosa de produtividade no desenvolvimento de software.
-          </p>
-
-          <p style={{ marginBottom: '16px' }}>
-            A IA atuou como um <strong style={{ color: 'var(--accent)' }}>engenheiro de software assistente</strong>, participando de todas as etapas do ciclo de desenvolvimento: desde a arquitetura do sistema (Spring Boot + React + PostgreSQL), passando pela implementação do backend com autenticação JWT, até o design da interface com efeitos visuais modernos como Glassmorphism e micro-animações.
-          </p>
-
-          <p style={{ marginBottom: '16px' }}>
-            Durante o processo, a IA foi responsável por:
-          </p>
-
-          <ul style={{ paddingLeft: '24px', marginBottom: '16px' }}>
-            <li style={{ marginBottom: '8px' }}>📐 <strong>Arquitetura</strong> — Definir a estrutura de pastas, entidades JPA, controllers REST e configurações de segurança.</li>
-            <li style={{ marginBottom: '8px' }}>🐛 <strong>Debug</strong> — Diagnosticar e resolver problemas complexos como erros 502 de DNS no Railway, falhas de proxy Nginx e configuração de CORS.</li>
-            <li style={{ marginBottom: '8px' }}>🎨 <strong>Design</strong> — Criar uma interface premium com paleta de cores personalizada, animações CSS e responsividade.</li>
-            <li style={{ marginBottom: '8px' }}>🔐 <strong>Segurança</strong> — Implementar autenticação JWT, criptografia de senhas, proteção de rotas e controle de acesso por role.</li>
-            <li style={{ marginBottom: '8px' }}>🚀 <strong>DevOps</strong> — Configurar Dockerfiles multi-stage, Nginx, variáveis de ambiente e deploy contínuo no Railway.</li>
-            <li style={{ marginBottom: '8px' }}>📊 <strong>Analytics</strong> — Construir dashboards com Chart.js, queries JPA agregadas e visualizações em tempo real.</li>
-          </ul>
-
-          <div style={{
-            padding: '20px',
-            background: 'rgba(108, 99, 255, 0.06)',
-            borderRadius: 'var(--radius)',
-            border: '1px solid rgba(108, 99, 255, 0.15)',
-            marginTop: '20px',
-          }}>
-            <p style={{ fontStyle: 'italic', color: 'var(--text)', marginBottom: '8px' }}>
-              "A Inteligência Artificial não substitui o desenvolvedor — ela amplifica sua capacidade. O que levaria semanas de trabalho individual foi realizado em horas, com qualidade profissional, demonstrando que a IA é uma aliada indispensável no futuro do desenvolvimento de software."
-            </p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, textAlign: 'right' }}>
-              — Projeto AIVote, 2026
-            </p>
-          </div>
         </div>
       </div>
 

@@ -5,21 +5,48 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
+
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get('/admin/users');
+      setUsers(response.data);
+    } catch (err) {
+      setError('Erro ao carregar usuários.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await api.get('/admin/users');
-        setUsers(response.data);
-      } catch (err) {
-        setError('Erro ao carregar usuários.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
+
+  const handleDeleteUser = (user) => {
+    setModalConfig({
+      title: 'Excluir Usuário',
+      message: `Tem certeza que deseja excluir o usuário "${user.name}"? Todos os seus votos e respostas também serão apagados!`,
+      onConfirm: () => confirmDelete(user.id),
+      type: 'confirm'
+    });
+    setShowModal(true);
+  };
+
+  const confirmDelete = async (userId) => {
+    setShowModal(false);
+    try {
+      await api.delete(`/admin/users/${userId}`);
+      fetchUsers(); // Recarrega a lista
+    } catch (err) {
+      setModalConfig({
+        title: 'Erro',
+        message: err.response?.data?.error || 'Não foi possível excluir o usuário.',
+        type: 'alert'
+      });
+      setShowModal(true);
+    }
+  };
 
   if (loading) {
     return <div className="page"><div className="spinner" /></div>;
@@ -27,8 +54,36 @@ export default function AdminUsersPage() {
 
   return (
     <div className="page fade-up">
-      <div className="card" style={{ maxWidth: '1000px', width: '100%' }}>
-        <h2 style={{ marginBottom: '24px' }}>👥 Usuários Cadastrados</h2>
+      {/* Modal Customizado */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="accent-line" style={{ width: '40px', marginBottom: '8px' }} />
+              <h3>{modalConfig.title}</h3>
+            </div>
+            <div className="modal-body">
+              {modalConfig.message}
+            </div>
+            <div className="modal-footer">
+              {modalConfig.type === 'confirm' ? (
+                <>
+                  <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
+                  <button className="btn btn-primary" onClick={modalConfig.onConfirm} style={{ background: '#cc0000' }}>Excluir</button>
+                </>
+              ) : (
+                <button className="btn btn-primary" onClick={() => setShowModal(false)}>Entendido</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="card" style={{ maxWidth: '1100px', width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ margin: 0 }}>👥 Usuários Cadastrados</h2>
+          <button onClick={() => window.history.back()} className="btn btn-ghost">Voltar</button>
+        </div>
         
         {error && <div className="alert alert-error">{error}</div>}
         
@@ -41,7 +96,7 @@ export default function AdminUsersPage() {
                 <th style={{ padding: '12px' }}>Email</th>
                 <th style={{ padding: '12px' }}>Votou?</th>
                 <th style={{ padding: '12px' }}>Questionário?</th>
-                <th style={{ padding: '12px' }}>Data</th>
+                <th style={{ padding: '12px' }}>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -55,8 +110,16 @@ export default function AdminUsersPage() {
                   <td style={{ padding: '12px', color: 'var(--text-dim)' }}>{u.email}</td>
                   <td style={{ padding: '12px' }}>{u.hasVoted ? '✅ Sim' : '⏳ Não'}</td>
                   <td style={{ padding: '12px' }}>{u.hasAnswered ? '✅ Sim' : '⏳ Não'}</td>
-                  <td style={{ padding: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-'}
+                  <td style={{ padding: '12px' }}>
+                    {u.email !== 'admin@aivoting.com' && (
+                      <button 
+                        onClick={() => handleDeleteUser(u)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#ff4d6d', padding: '4px' }}
+                        title="Excluir Usuário"
+                      >
+                         🗑️
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

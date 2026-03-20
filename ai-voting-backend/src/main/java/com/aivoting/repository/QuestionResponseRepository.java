@@ -1,6 +1,7 @@
 package com.aivoting.repository;
 
 import com.aivoting.entity.QuestionResponse;
+import com.aivoting.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,6 +20,9 @@ public interface QuestionResponseRepository extends JpaRepository<QuestionRespon
 
     /** Verifica se o usuário já respondeu o questionário */
     boolean existsByUserId(Long userId);
+
+    /** Remove todas as respostas de um usuário específico */
+    void deleteByUser(User user);
 
     // ============================================
     // QUERIES PARA O DASHBOARD
