@@ -362,6 +362,97 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ─── PAINEL DO PROJETO ─────────────────────────────────────── */}
+      <div className="card fade-up" style={{ marginTop: '24px', padding: '40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+          <span style={{ fontSize: '2rem' }}>🛠️</span>
+          <div>
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '4px' }}>Desenvolvimento do Projeto</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Tudo que foi construído neste sistema com auxílio de IA</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+          {[
+            { icon: '🔐', title: 'Autenticação JWT', desc: 'Sistema completo de login e cadastro com tokens JWT, criptografia BCrypt e controle de sessão.' },
+            { icon: '👨‍💻', title: 'Painel Administrativo', desc: 'Dashboard exclusivo para admin com gráficos, rankings, métricas detalhadas e gestão de usuários.' },
+            { icon: '📊', title: 'Dashboard de Usuário', desc: 'Versão simplificada do dashboard para usuários comuns visualizarem resultados da pesquisa.' },
+            { icon: '🗳️', title: 'Sistema de Votação', desc: 'Votação em até 2 IAs favoritas com validação e prevenção de votos duplicados.' },
+            { icon: '📝', title: 'Questionário Integrado', desc: 'Coleta de dados sobre uso de IA: onde, por quê, área profissional e finalidade.' },
+            { icon: '✨', title: 'UI Premium (Glassmorphism)', desc: 'Interface moderna com efeitos de vidro, partículas animadas, gradientes e micro-animações.' },
+            { icon: '🚀', title: 'Deploy Automático (Railway)', desc: 'CI/CD via GitHub com deploy automático no Railway. Frontend Nginx + Backend Spring Boot.' },
+            { icon: '🤖', title: '7 IAs como Opções', desc: 'ChatGPT, Claude, Gemini, Grok, Meta AI, Copilot e DeepSeek disponíveis para votação.' },
+            { icon: '🖨️', title: 'QR Code Imprimível', desc: 'Botão de impressão que gera página A4 otimizada com QR Code em alta resolução.' },
+            { icon: '🔄', title: 'Reset de Dados', desc: 'Endpoint admin para limpar todos os dados e recriar o admin automaticamente.' },
+            { icon: '🌐', title: 'CORS & Segurança', desc: 'Configuração de CORS, proteção de rotas por role (ADMIN/USER) e interceptors Axios.' },
+            { icon: '⚡', title: 'Performance Otimizada', desc: 'HikariCP tunado, conexões rápidas ao PostgreSQL e Gzip no Nginx.' },
+          ].map(item => (
+            <div key={item.title} style={{
+              padding: '20px',
+              background: 'rgba(108, 99, 255, 0.04)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              transition: 'all 0.3s ease',
+            }}>
+              <div style={{ fontSize: '1.8rem', marginBottom: '10px' }}>{item.icon}</div>
+              <h4 style={{ fontSize: '0.95rem', marginBottom: '6px', color: 'var(--text)' }}>{item.title}</h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── A IMPORTÂNCIA DA IA NO PROJETO ────────────────────────── */}
+      <div className="card fade-up" style={{
+        marginTop: '24px',
+        padding: '40px',
+        background: 'linear-gradient(135deg, rgba(108,99,255,0.08) 0%, var(--bg-card) 50%, rgba(16,217,142,0.06) 100%)',
+        borderLeft: '4px solid var(--accent)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <span style={{ fontSize: '2rem' }}>🤖</span>
+          <h2 style={{ fontSize: '1.4rem' }}>O Papel da Inteligência Artificial neste Projeto</h2>
+        </div>
+
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.8, maxWidth: '900px' }}>
+          <p style={{ marginBottom: '16px' }}>
+            <strong style={{ color: 'var(--text)' }}>Este projeto foi integralmente desenvolvido com auxílio de uma Inteligência Artificial</strong>, demonstrando na prática como a IA pode atuar como uma ferramenta poderosa de produtividade no desenvolvimento de software.
+          </p>
+
+          <p style={{ marginBottom: '16px' }}>
+            A IA atuou como um <strong style={{ color: 'var(--accent)' }}>engenheiro de software assistente</strong>, participando de todas as etapas do ciclo de desenvolvimento: desde a arquitetura do sistema (Spring Boot + React + PostgreSQL), passando pela implementação do backend com autenticação JWT, até o design da interface com efeitos visuais modernos como Glassmorphism e micro-animações.
+          </p>
+
+          <p style={{ marginBottom: '16px' }}>
+            Durante o processo, a IA foi responsável por:
+          </p>
+
+          <ul style={{ paddingLeft: '24px', marginBottom: '16px' }}>
+            <li style={{ marginBottom: '8px' }}>📐 <strong>Arquitetura</strong> — Definir a estrutura de pastas, entidades JPA, controllers REST e configurações de segurança.</li>
+            <li style={{ marginBottom: '8px' }}>🐛 <strong>Debug</strong> — Diagnosticar e resolver problemas complexos como erros 502 de DNS no Railway, falhas de proxy Nginx e configuração de CORS.</li>
+            <li style={{ marginBottom: '8px' }}>🎨 <strong>Design</strong> — Criar uma interface premium com paleta de cores personalizada, animações CSS e responsividade.</li>
+            <li style={{ marginBottom: '8px' }}>🔐 <strong>Segurança</strong> — Implementar autenticação JWT, criptografia de senhas, proteção de rotas e controle de acesso por role.</li>
+            <li style={{ marginBottom: '8px' }}>🚀 <strong>DevOps</strong> — Configurar Dockerfiles multi-stage, Nginx, variáveis de ambiente e deploy contínuo no Railway.</li>
+            <li style={{ marginBottom: '8px' }}>📊 <strong>Analytics</strong> — Construir dashboards com Chart.js, queries JPA agregadas e visualizações em tempo real.</li>
+          </ul>
+
+          <div style={{
+            padding: '20px',
+            background: 'rgba(108, 99, 255, 0.06)',
+            borderRadius: 'var(--radius)',
+            border: '1px solid rgba(108, 99, 255, 0.15)',
+            marginTop: '20px',
+          }}>
+            <p style={{ fontStyle: 'italic', color: 'var(--text)', marginBottom: '8px' }}>
+              "A Inteligência Artificial não substitui o desenvolvedor — ela amplifica sua capacidade. O que levaria semanas de trabalho individual foi realizado em horas, com qualidade profissional, demonstrando que a IA é uma aliada indispensável no futuro do desenvolvimento de software."
+            </p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600, textAlign: 'right' }}>
+              — Projeto AIVote, 2026
+            </p>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
