@@ -124,8 +124,9 @@ public class VoteService {
     public List<Map<String, Object>> getRecentVotesWithUser() {
         return voteRepository.findAllWithUser().stream()
                 .map(vote -> Map.<String, Object>of(
+                        "id", vote.getId(),
                         "userName", vote.getUser().getName(),
-                        "userEmail", vote.getUser().getEmail(),
+                        "userCourse", vote.getUser().getCourse() != null ? vote.getUser().getCourse() : "Convidado",
                         "aiName", vote.getAiName()
                 ))
                 .collect(Collectors.toList());

@@ -524,7 +524,7 @@ export default function DashboardPage() {
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
                   <th style={{ padding: '12px 8px' }}>Usuário</th>
-                  <th style={{ padding: '12px 8px' }}>Email</th>
+                  <th style={{ padding: '12px 8px' }}>Curso</th>
                   <th style={{ padding: '12px 8px' }}>IA Votada</th>
                 </tr>
               </thead>
@@ -532,7 +532,7 @@ export default function DashboardPage() {
                 {recentVotes.map((v, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                     <td style={{ padding: '12px 8px', fontWeight: 600 }}>{v.userName}</td>
-                    <td style={{ padding: '12px 8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{v.userEmail}</td>
+                    <td style={{ padding: '12px 8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{v.userCourse}</td>
                     <td style={{ padding: '12px 8px' }}>
                       <span style={{ 
                         background: 'rgba(108, 99, 255, 0.1)', 

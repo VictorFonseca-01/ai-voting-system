@@ -149,9 +149,14 @@ public class AdminController {
                 .map(r -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("userEmail", r.getUser().getEmail());
-                    map.put("workArea", r.getWorkArea());
+                    map.put("workArea", r.getWorkArea()); // Corrected field
                     map.put("whereUseAi", r.getWhereUseAi());
                     map.put("whyUseAi", r.getWhyUseAi());
+                    // Novas perguntas
+                    map.put("howUseAi", r.getHowUseAi());
+                    map.put("useForStudy", r.getUseForStudy());
+                    map.put("useForWork", r.getUseForWork());
+                    map.put("workAreaOther", r.getWorkAreaOther());
                     return map;
                 }).collect(Collectors.toList());
         backup.put("responses", responses);
@@ -228,6 +233,10 @@ public class AdminController {
                                 .workArea((String) rMap.get("workArea"))
                                 .whereUseAi((String) rMap.get("whereUseAi"))
                                 .whyUseAi((String) rMap.get("whyUseAi"))
+                                .howUseAi((String) rMap.get("howUseAi"))
+                                .useForStudy(rMap.get("useForStudy") != null ? (Boolean) rMap.get("useForStudy") : false)
+                                .useForWork(rMap.get("useForWork") != null ? (Boolean) rMap.get("useForWork") : false)
+                                .workAreaOther((String) rMap.get("workAreaOther"))
                                 .build());
                     }
                 }
