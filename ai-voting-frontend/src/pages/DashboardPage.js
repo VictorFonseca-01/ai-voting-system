@@ -675,7 +675,7 @@ export default function DashboardPage() {
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👥</div>
               <h4 style={{ marginBottom: '4px' }}>Equipe Técnica</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Gabriel Calixto, Erick Fernando e Kelly Mota</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Gabriel Calixto e Erick Fernando</p>
             </div>
 
             <div style={{ textAlign: 'center' }}>
