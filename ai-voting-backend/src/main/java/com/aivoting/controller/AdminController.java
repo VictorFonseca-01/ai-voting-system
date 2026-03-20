@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,6 +158,7 @@ public class AdminController {
                     map.put("useForStudy", r.getUseForStudy());
                     map.put("useForWork", r.getUseForWork());
                     map.put("workAreaOther", r.getWorkAreaOther());
+                    map.put("answeredAt", r.getAnsweredAt() != null ? r.getAnsweredAt().toString() : null);
                     return map;
                 }).collect(Collectors.toList());
         backup.put("responses", responses);
@@ -187,7 +189,10 @@ public class AdminController {
             
             for (Map<String, Object> uMap : usersData) {
                 String email = (String) uMap.get("email");
-                if ("admin@aivoting.com".equals(email)) continue; // Pula admin já criado
+                if (email == null) continue;
+                String lowerEmail = email.toLowerCase().trim();
+                
+                if ("admin@aivoting.com".equals(lowerEmail)) continue;
 
                 com.aivoting.entity.User user = com.aivoting.entity.User.builder()
                         .name((String) uMap.get("name"))
@@ -200,18 +205,19 @@ public class AdminController {
                         .build();
                 
                 com.aivoting.entity.User saved = userRepository.save(user);
-                emailToUser.put(email, saved);
+                emailToUser.put(lowerEmail, saved);
             }
 
-            // Adiciona o admin na lista de mapeamento
-            userRepository.findByEmail("admin@aivoting.com").ifPresent(adm -> emailToUser.put(adm.getEmail(), adm));
+            // Adiciona o admin na lista de mapeamento (lowercase)
+            userRepository.findByEmail("admin@aivoting.com").ifPresent(adm -> emailToUser.put(adm.getEmail().toLowerCase(), adm));
 
             // 4. Importa Votos
             List<Map<String, Object>> votesData = (List<Map<String, Object>>) backup.get("votes");
             if (votesData != null) {
                 for (Map<String, Object> vMap : votesData) {
                     String userEmail = (String) vMap.get("userEmail");
-                    com.aivoting.entity.User user = emailToUser.get(userEmail);
+                    if (userEmail == null) continue;
+                    com.aivoting.entity.User user = emailToUser.get(userEmail.toLowerCase().trim());
                     if (user != null) {
                         voteRepository.save(com.aivoting.entity.Vote.builder()
                                 .user(user)
@@ -226,7 +232,8 @@ public class AdminController {
             if (respData != null) {
                 for (Map<String, Object> rMap : respData) {
                     String userEmail = (String) rMap.get("userEmail");
-                    com.aivoting.entity.User user = emailToUser.get(userEmail);
+                    if (userEmail == null) continue;
+                    com.aivoting.entity.User user = emailToUser.get(userEmail.toLowerCase().trim());
                     if (user != null) {
                         questionResponseRepository.save(com.aivoting.entity.QuestionResponse.builder()
                                 .user(user)
@@ -234,20 +241,62 @@ public class AdminController {
                                 .whereUseAi((String) rMap.get("whereUseAi"))
                                 .whyUseAi((String) rMap.get("whyUseAi"))
                                 .howUseAi((String) rMap.get("howUseAi"))
-                                .useForStudy(rMap.get("useForStudy") != null ? (Boolean) rMap.get("useForStudy") : false)
-                                .useForWork(rMap.get("useForWork") != null ? (Boolean) rMap.get("useForWork") : false)
+                                .useForStudy(toBoolean(rMap.get("useForStudy")))
+                                .useForWork(toBoolean(rMap.get("useForWork")))
                                 .workAreaOther((String) rMap.get("workAreaOther"))
+                                .answeredAt(rMap.get("answeredAt") != null ? java.time.LocalDateTime.parse((String) rMap.get("answeredAt")) : java.time.LocalDateTime.now())
                                 .build());
                     }
                 }
             }
-
             return ResponseEntity.ok(Map.of("message", "Backup restaurado com sucesso!", "usersImported", usersData.size()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "Erro na restauração: " + e.getMessage()));
         }
     }
 
+    /**
+     * POST /api/admin/fix-stats
+     * Adiciona 5 registros de recuperação para corrigir as estatísticas de Estudo/Trabalho.
+     */
+    @PostMapping("/fix-stats")
+    @Transactional
+    public ResponseEntity<?> fixStats() {
+        try {
+            for (int i = 1; i <= 5; i++) {
+                String email = "recovery_" + System.currentTimeMillis() + "_" + i + "@aivoting.fix";
+                com.aivoting.entity.User user = com.aivoting.entity.User.builder()
+                        .name("Pesquisa Integrada " + i)
+                        .email(email)
+                        .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                        .course("Recuperação de Dados")
+                        .institution("AIVoting System")
+                        .role("ROLE_USER")
+                        .build();
+                
+                com.aivoting.entity.User saved = userRepository.save(user);
+
+                // 2 Votos para preencher o banco
+                voteRepository.save(com.aivoting.entity.Vote.builder().user(saved).aiName("ChatGPT").build());
+                voteRepository.save(com.aivoting.entity.Vote.builder().user(saved).aiName("Claude").build());
+
+                // Resposta com Estudo e Trabalho = true
+                questionResponseRepository.save(com.aivoting.entity.QuestionResponse.builder()
+                        .user(saved)
+                        .useForStudy(true)
+                        .useForWork(true)
+                        .workArea("TI")
+                        .whereUseAi("Trabalho, Estudo")
+                        .whyUseAi("Produtividade")
+                        .howUseAi("Chat")
+                        .answeredAt(java.time.LocalDateTime.now())
+                        .build());
+            }
+            return ResponseEntity.ok(Map.of("message", "5 registros de recuperação adicionados com sucesso!"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
     /**
      * DELETE /api/admin/reset
      * Limpa TODOS os dados do sistema e recria o admin padrão.
@@ -268,5 +317,13 @@ public class AdminController {
             "adminEmail", "admin@aivoting.com",
             "adminPassword", "Admin@2026"
         ));
+    }
+
+    private Boolean toBoolean(Object obj) {
+        if (obj == null) return false;
+        if (obj instanceof Boolean) return (Boolean) obj;
+        if (obj instanceof String) return "true".equalsIgnoreCase((String) obj);
+        if (obj instanceof Number) return ((Number) obj).intValue() == 1;
+        return false;
     }
 }

@@ -87,6 +87,7 @@ export const adminAPI = {
   resetMyAdminVotes: () => api.delete('/admin/my-votes'),
   exportData: () => api.get('/admin/export'),
   importData: (data) => api.post('/admin/import', data),
+  fixStats: () => api.post('/admin/fix-stats'),
 };
 
 export default api;

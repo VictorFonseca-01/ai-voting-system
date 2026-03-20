@@ -21,7 +21,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     private static final String ADMIN_EMAIL = "admin@aivoting.com";
-    private static final String ADMIN_PASSWORD = "Admin@2026";
+    private static final String ADMIN_PASSWORD = "TriadIA@2026!";
     private static final String ADMIN_NAME = "Administrador";
 
     @Override

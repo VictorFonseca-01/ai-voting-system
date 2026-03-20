@@ -37,6 +37,7 @@ export default function QuestionnairePage() {
   });
   const [loading, setLoading]       = useState(false);
   const [success, setSuccess]        = useState(false);
+  const [error, setError]           = useState('');
   const [selectedIAs, setSelectedIAs] = useState([]);
   const [showCourseSuggestions, setShowCourseSuggestions] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});

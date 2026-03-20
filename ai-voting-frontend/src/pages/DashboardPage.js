@@ -415,35 +415,45 @@ export default function DashboardPage() {
           <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>🕵️‍♂️ Painel Administrativo</h1>
           <p style={{ color: 'var(--text-muted)' }}>Métricas detalhadas e análise de comportamento</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <Link to="/vote" className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
-            🗳️ Votar
-          </Link>
-          <button onClick={handleResetMyVotes} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
-            🔄 Refazer Meus Votos
-          </button>
-          <button onClick={fetchData} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: 'var(--accent)' }}>
-            🔄 Atualizar
-          </button>
-          <Link to="/admin/users" className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
-            👥 Ver Usuários
-          </Link>
-          <button onClick={handleChangePassword} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
-            🔑 Mudar Minha Senha
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'flex-end', flex: 1 }}>
+          {/* Grupo 1: Atividade e Navegação */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <Link to="/vote" className="btn btn-primary" style={{ padding: '10px 18px', fontSize: '0.85rem' }}>
+              🗳️ Votar
+            </Link>
+            <button onClick={fetchData} className="btn btn-ghost" style={{ padding: '10px 18px', fontSize: '0.85rem', color: 'var(--accent)' }}>
+              🔄 Atualizar
+            </button>
+            <Link to="/admin/users" className="btn btn-ghost" style={{ padding: '10px 18px', fontSize: '0.85rem' }}>
+              👥 Ver Usuários
+            </Link>
+            <button onClick={handleResetMyVotes} className="btn btn-ghost" style={{ padding: '10px 18px', fontSize: '0.85rem' }}>
+              🔄 Refazer Meus Votos
+            </button>
+            <button onClick={handleChangePassword} className="btn btn-ghost" style={{ padding: '10px 18px', fontSize: '0.85rem' }}>
+              🔑 Mudar Minha Senha
+            </button>
+          </div>
           
-          <div style={{ borderLeft: '1px solid var(--border)', margin: '0 8px', height: '32px' }} />
-          
-          <button onClick={handleExportData} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: '#10d98e' }}>
-            📥 Baixar Backup
-          </button>
-          <label className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: '#6c63ff', cursor: 'pointer' }}>
-            📤 Restaurar Backup
-            <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
-          </label>
-          <button onClick={handleResetData} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: '#ff4d6d', borderColor: '#ff4d6d33' }}>
-            🗑️ Zerar Sistema
-          </button>
+          {/* Grupo 2: Sistema e Dados */}
+          <div style={{ 
+            display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end',
+            padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--border)' 
+          }}>
+            <button onClick={handleExportData} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#10d98e', border: 'none' }}>
+              📥 Baixar Backup
+            </button>
+            {window.location.hostname === 'localhost' && (
+              <label className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#6c63ff', cursor: 'pointer', border: 'none' }}>
+                📤 Restaurar Backup
+                <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
+              </label>
+            )}
+            <div style={{ width: '1px', background: 'var(--border)', height: '20px', alignSelf: 'center', margin: '0 4px' }} />
+            <button onClick={handleResetData} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#ff4d6d', border: 'none' }}>
+              🗑️ Zerar Sistema
+            </button>
+          </div>
         </div>
       </div>
 
