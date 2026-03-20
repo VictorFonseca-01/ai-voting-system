@@ -68,7 +68,7 @@ export default function HomePage() {
             </h1>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: 1.7, marginBottom: '40px', maxWidth: '480px' }}>
-              Vote nas suas IAs favoritas, responda um questionário rápido e visualize insights em tempo real sobre o uso de inteligências artificiais.
+              Vote nas suas 2 IAs favoritas ou mais utilizadas, responda um questionário rápido e visualize insights em tempo real sobre o uso de inteligências artificiais.
             </p>
 
             {/* Cards de ias */}
