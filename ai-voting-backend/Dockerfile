@@ -6,16 +6,17 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copia código-fonte e compila o JAR
+# Copia código-fonte e compila o JAR com nome fixo
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B && \
+    mv target/*.jar target/app.jar
 
 # ─── Stage 2: Runtime ────────────────────────────────────────────
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Copia apenas o JAR final do stage de build
-COPY --from=builder /app/target/*.jar app.jar
+# Copia apenas o JAR fixo
+COPY --from=builder /app/target/app.jar .
 
 # Expõe a porta do Spring Boot
 EXPOSE 8080

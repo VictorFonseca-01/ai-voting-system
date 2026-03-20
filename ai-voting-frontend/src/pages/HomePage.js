@@ -21,11 +21,13 @@ export default function HomePage() {
         overflow: 'hidden',
       }}>
         {/* Background decorativo */}
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0,
           background: `
-            radial-gradient(ellipse 60% 50% at 20% 40%, rgba(108,99,255,0.12) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 50% at 80% 60%, rgba(16,217,142,0.06) 0%, transparent 70%)
+            radial-gradient(ellipse 60% 50% at 20% 40%, rgba(108,99,255,0.08) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 50% at 80% 60%, rgba(16,217,142,0.04) 0%, transparent 70%)
           `,
           pointerEvents: 'none',
         }} />
@@ -38,26 +40,36 @@ export default function HomePage() {
               🚀 Sistema de Votação em IA
             </span>
 
-            <h1 style={{ fontSize: 'clamp(2.4rem, 5vw, 4rem)', fontWeight: 800, lineHeight: 1.1, marginBottom: '24px' }}>
+            <h1 style={{ fontSize: 'clamp(2.4rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.1, marginBottom: '24px', letterSpacing: '-0.02em' }}>
               Qual IA você mais{' '}
-              <span style={{ color: 'var(--accent)' }}>utiliza?</span>
+              <span style={{ color: 'var(--accent)', position: 'relative' }}>
+                utiliza?
+                <svg style={{ position: 'absolute', bottom: '-8px', left: 0, width: '100%' }} viewBox="0 0 100 20" preserveAspectRatio="none">
+                  <path d="M0,10 Q50,20 100,10" stroke="var(--accent)" strokeWidth="4" fill="transparent" opacity="0.3" />
+                </svg>
+              </span>
             </h1>
 
-            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: 1.7, marginBottom: '40px', maxWidth: '480px', marginInline: 'auto' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: 1.7, marginBottom: '40px', maxWidth: '480px' }}>
               Vote nas suas IAs favoritas, responda um questionário rápido e visualize insights em tempo real sobre o uso de inteligências artificiais.
             </p>
 
             {/* Cards de ias */}
-            <div className="ai-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '40px' }}>
-              {['ChatGPT', 'Claude', 'Gemini', 'Grok', 'Meta AI', 'Copilot'].map(ai => (
-                <span key={ai} style={{
-                  padding: '6px 16px',
-                  background: 'var(--bg-input)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '99px',
-                  fontSize: '0.85rem',
-                  color: 'var(--text-muted)',
-                }}>
+            <div className="ai-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '48px' }}>
+              {['ChatGPT', 'Claude', 'Gemini', 'Grok', 'Meta AI', 'Copilot'].map((ai, i) => (
+                <span 
+                  key={ai} 
+                  className="hover-lift"
+                  style={{
+                    padding: '10px 20px',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '99px',
+                    fontSize: '0.9rem',
+                    color: 'var(--text-muted)',
+                    animationDelay: `${i * 0.1}s`
+                  }}
+                >
                   {ai}
                 </span>
               ))}

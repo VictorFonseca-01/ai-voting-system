@@ -4,4 +4,4 @@ dockerFilePath = "Dockerfile"
 
 [deploy]
 healthcheckPath = "/api/auth/health"
-healthcheckTimeout = 100
+healthcheckTimeout = 300
