@@ -37,4 +37,8 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     /** Total geral de votos no sistema */
     @Query("SELECT COUNT(v) FROM Vote v")
     long countTotalVotes();
+
+    /** Busca todos os votos trazendo os dados do usuário (JOIN FETCH) */
+    @Query("SELECT v FROM Vote v JOIN FETCH v.user ORDER BY v.id DESC")
+    List<Vote> findAllWithUser();
 }

@@ -119,6 +119,19 @@ public class VoteService {
     }
 
     /**
+     * Retorna lista de votos com os nomes dos usuários (Apenas para fins administrativos).
+     */
+    public List<Map<String, Object>> getRecentVotesWithUser() {
+        return voteRepository.findAllWithUser().stream()
+                .map(vote -> Map.<String, Object>of(
+                        "userName", vote.getUser().getName(),
+                        "userEmail", vote.getUser().getEmail(),
+                        "aiName", vote.getAiName()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Obtém o usuário autenticado via SecurityContext.
      */
     private User getAuthenticatedUser() {

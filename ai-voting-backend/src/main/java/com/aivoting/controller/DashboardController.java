@@ -5,13 +5,14 @@ import com.aivoting.service.VoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Controller do dashboard de insights.
- * Endpoint público - não requer autenticação.
+ * Endpoint público - retorna dados básicos para todos, 
+ * e dados detalhados apenas para admins.
  */
 @RestController
 @RequestMapping("/api/dashboard")
@@ -24,19 +25,26 @@ public class DashboardController {
     /**
      * GET /api/dashboard
      * Retorna todos os dados para o dashboard de insights.
-     * Inclui: votos por IA, respostas do questionário, totais.
      */
     @GetMapping
     public ResponseEntity<?> getDashboard() {
         Map<String, Object> dashboard = new LinkedHashMap<>();
 
-        // ─── Dados de votação ────────────────────────────────────
+        // ─── Dados gerais (Públicos) ──────────────────────────────
         dashboard.put("totalVotes", voteService.getTotalVotes());
         dashboard.put("votesByAi", voteService.getVoteCountByAi());
 
-        // ─── Dados do questionário ───────────────────────────────
         Map<String, Object> questionData = questionResponseService.getDashboardData();
         dashboard.putAll(questionData);
+
+        // ─── Dados detalhados (Apenas Admin) ─────────────────────
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication() != null &&
+                SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            dashboard.put("recentVotes", voteService.getRecentVotesWithUser());
+        }
 
         return ResponseEntity.ok(dashboard);
     }

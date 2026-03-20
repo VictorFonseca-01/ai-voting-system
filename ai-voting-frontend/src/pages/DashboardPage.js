@@ -137,6 +137,7 @@ export default function DashboardPage() {
   const workAreas     = data?.workAreas      || {};
   const whereUseAi    = data?.whereUseAi     || {};
   const whyUseAi      = data?.whyUseAi       || {};
+  const recentVotes   = data?.recentVotes    || [];
 
   // Ranking de IAs
   const aiRanking = Object.entries(votesByAi)
@@ -408,6 +409,44 @@ export default function DashboardPage() {
         <div className="card fade-up delay-2" style={{ marginBottom: '24px' }}>
           <h2 style={{ fontSize: '1.1rem', marginBottom: '24px' }}>📈 Votos por IA</h2>
           <Bar data={barData} options={barOpts()} height={90} />
+        </div>
+      )}
+
+      {/* ─── VOTOS POR USUÁRIO (Apenas Admin) ────────────────────── */}
+      {isAdmin && recentVotes.length > 0 && (
+        <div className="card fade-up delay-3" style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '1.1rem', marginBottom: '24px' }}>📢 Votos por Usuário (Recentes)</h2>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                  <th style={{ padding: '12px 8px' }}>Usuário</th>
+                  <th style={{ padding: '12px 8px' }}>Email</th>
+                  <th style={{ padding: '12px 8px' }}>IA Votada</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentVotes.map((v, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={{ padding: '12px 8px', fontWeight: 600 }}>{v.userName}</td>
+                    <td style={{ padding: '12px 8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{v.userEmail}</td>
+                    <td style={{ padding: '12px 8px' }}>
+                      <span style={{ 
+                        background: 'rgba(108, 99, 255, 0.1)', 
+                        color: 'var(--accent)', 
+                        padding: '4px 10px', 
+                        borderRadius: '99px',
+                        fontSize: '0.8rem',
+                        fontWeight: 700
+                      }}>
+                        {v.aiName}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
