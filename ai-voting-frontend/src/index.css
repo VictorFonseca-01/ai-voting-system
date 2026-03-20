@@ -312,6 +312,7 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
   .hero-text-col .ai-badges, .hero-text-col .btn-group { justify-content: center; }
   .card { padding: 24px; }
   .stat-card { padding: 16px; }
+  .stat-value { font-size: 2.2rem; font-weight: 600; letter-spacing: 0.02em; }
 
   /* ── Navbar Mobile ── */
   html, body { overflow-x: hidden; }
@@ -401,9 +402,10 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
 .stat-value {
   font-family: var(--font-display);
   font-size: 2.5rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--accent);
-  line-height: 1;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
 .stat-label {
