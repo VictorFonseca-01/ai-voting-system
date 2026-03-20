@@ -3,5 +3,5 @@ builder = "dockerfile"
 dockerFilePath = "Dockerfile"
 
 [deploy]
-healthcheckPath = "/api/auth/login"
+healthcheckPath = "/api/auth/health"
 healthcheckTimeout = 100

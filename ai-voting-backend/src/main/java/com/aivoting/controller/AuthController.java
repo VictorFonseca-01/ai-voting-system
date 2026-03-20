@@ -51,4 +51,13 @@ public class AuthController {
                     .body(Map.of("error", "Email ou senha inválidos"));
         }
     }
+
+    /**
+     * GET /api/auth/health
+     * Endpoint simples para verificação de integridade (Healthcheck).
+     */
+    @GetMapping("/health")
+    public ResponseEntity<?> health() {
+        return ResponseEntity.ok(Map.of("status", "UP"));
+    }
 }
