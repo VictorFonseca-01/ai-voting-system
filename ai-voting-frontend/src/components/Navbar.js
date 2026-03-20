@@ -45,6 +45,14 @@ export default function Navbar() {
             <span style={{ color: 'var(--text-dim)', fontSize: '0.85rem', padding: '0 4px' }}>
               {user?.name?.split(' ')[0]}
             </span>
+            <button 
+              className="btn btn-ghost" 
+              style={{ padding: '8px 12px', fontSize: '1rem', color: 'var(--accent)', opacity: 0.8 }} 
+              onClick={() => window.location.reload()}
+              title="Recarregar Site"
+            >
+              🔄
+            </button>
             <button className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={handleLogout}>
               Sair
             </button>

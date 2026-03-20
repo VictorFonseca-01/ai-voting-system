@@ -67,7 +67,10 @@ export default function ReportPage() {
     <div className="printable-report">
       {/* Botões visíveis apenas na tela */}
       <div className="no-print" style={{ marginBottom: '20px', padding: '20px', background: 'var(--bg-card)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', border: '1px solid var(--border)' }}>
-        <button onClick={() => window.history.back()} className="btn btn-ghost" style={{ padding: '8px 16px' }}>Voltar</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => window.history.back()} className="btn btn-ghost" style={{ padding: '8px 16px' }}>Voltar</button>
+          <button onClick={fetchReport} className="btn btn-ghost" style={{ padding: '8px 16px', color: 'var(--accent)' }}>🔄 Atualizar</button>
+        </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={handleResetData} style={{ padding: '8px 16px', background: '#cc0000', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
             🗑️ Zerar Dados de Teste

@@ -422,6 +422,9 @@ export default function DashboardPage() {
           <button onClick={handleResetMyVotes} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             🔄 Refazer Meus Votos
           </button>
+          <button onClick={fetchData} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: 'var(--accent)' }}>
+            🔄 Atualizar
+          </button>
           <Link to="/admin/users" className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             👥 Ver Usuários
           </Link>
