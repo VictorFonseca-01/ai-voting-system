@@ -47,6 +47,8 @@ public class SecurityConfig {
                 // Endpoints públicos (sem autenticação)
                 .requestMatchers(
                     "/api/auth/login",   // Login de admin
+                    "/api/auth/health",   // Health check do Railway
+                    "/api/dashboard/**", // Dados públicos para o site
                     "/api/participation/**", // Novo fluxo anônimo
                     "/h2-console/**"     // Console H2 para dev
                 ).permitAll()
