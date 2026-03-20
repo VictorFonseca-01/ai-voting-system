@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import api from '../api';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { token } = useAuth();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // Backend proxies /api via nginx or assumes full URL
-        const response = await axios.get('/api/admin/users', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.get('/admin/users');
         setUsers(response.data);
       } catch (err) {
         setError('Erro ao carregar usuários.');
@@ -24,7 +19,7 @@ export default function AdminUsersPage() {
     };
 
     fetchUsers();
-  }, [token]);
+  }, []);
 
   if (loading) {
     return <div className="page"><div className="spinner" /></div>;
