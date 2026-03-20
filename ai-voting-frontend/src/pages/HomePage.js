@@ -128,7 +128,7 @@ export default function HomePage() {
                 Escaneie o QR Code para abrir o sistema
               </p>
 
-              <div style={{
+              <div id="qr-print-area" style={{
                 background: '#fff',
                 borderRadius: '12px',
                 padding: '16px',
@@ -146,9 +146,98 @@ export default function HomePage() {
                 />
               </div>
 
-              <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+              <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', fontFamily: 'monospace', marginBottom: '16px' }}>
                 {SYSTEM_URL}
               </p>
+
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.85rem', padding: '8px 20px' }}
+                onClick={() => {
+                  const printWindow = window.open('', '_blank');
+                  printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <title>QR Code — AIVote</title>
+                      <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        @page { size: A4; margin: 20mm; }
+                        body {
+                          font-family: 'Segoe UI', Arial, sans-serif;
+                          display: flex;
+                          flex-direction: column;
+                          align-items: center;
+                          justify-content: center;
+                          min-height: 100vh;
+                          padding: 40px;
+                          text-align: center;
+                        }
+                        .title {
+                          font-size: 36px;
+                          font-weight: 800;
+                          margin-bottom: 12px;
+                          color: #0a0a0f;
+                        }
+                        .subtitle {
+                          font-size: 20px;
+                          color: #555;
+                          margin-bottom: 40px;
+                        }
+                        .qr-container {
+                          border: 4px solid #0a0a0f;
+                          border-radius: 20px;
+                          padding: 24px;
+                          display: inline-block;
+                          margin-bottom: 32px;
+                          background: #fff;
+                        }
+                        .url {
+                          font-size: 18px;
+                          font-family: monospace;
+                          color: #333;
+                          background: #f0f0f0;
+                          padding: 12px 24px;
+                          border-radius: 8px;
+                          margin-bottom: 32px;
+                          letter-spacing: 0.5px;
+                        }
+                        .instructions {
+                          font-size: 16px;
+                          color: #777;
+                          max-width: 400px;
+                          line-height: 1.6;
+                        }
+                        .emoji { font-size: 28px; margin-bottom: 8px; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="emoji">⚡</div>
+                      <div class="title">AIVote</div>
+                      <div class="subtitle">Sistema de Votação em Inteligência Artificial</div>
+                      <div class="qr-container">
+                        ${document.getElementById('qr-print-area').innerHTML}
+                      </div>
+                      <div class="url">${SYSTEM_URL}</div>
+                      <div class="instructions">
+                        📱 Aponte a câmera do seu celular para o QR Code acima para acessar o sistema e votar na sua IA favorita!
+                      </div>
+                    </body>
+                    </html>
+                  `);
+                  // Aumentar o SVG para impressão
+                  const svg = printWindow.document.querySelector('svg');
+                  if (svg) {
+                    svg.setAttribute('width', '300');
+                    svg.setAttribute('height', '300');
+                  }
+                  printWindow.document.close();
+                  printWindow.focus();
+                  setTimeout(() => printWindow.print(), 300);
+                }}
+              >
+                🖨️ Imprimir QR Code
+              </button>
             </div>
           </div>
         </div>
