@@ -1,0 +1,9 @@
+[build]
+builder = "dockerfile"
+dockerFilePath = "Dockerfile"
+
+[deploy]
+startCommand = "java -jar app.jar"
+healthcheckPath = "/api/auth/login"
+healthcheckTimeout = 100
+restartPolicyType = "on-failure"
