@@ -409,48 +409,105 @@ export default function DashboardPage() {
       )}
 
       {/* ─── HEADER ───────────────────────────────────────────────── */}
-      <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
-        <div>
-          <div className="accent-line" />
-          <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>🕵️‍♂️ Painel Administrativo</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Métricas detalhadas e análise de comportamento</p>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'flex-end', flex: 1 }}>
-          {/* Grupo 1: Atividade e Navegação */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            <Link to="/vote" className="btn btn-primary" style={{ padding: '10px 18px', fontSize: '0.85rem' }}>
+      <div className="fade-up" style={{ marginBottom: '32px' }}>
+        <div className="accent-line" />
+        <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>🕵️‍♂️ Painel Administrativo</h1>
+        <p style={{ color: 'var(--text-muted)' }}>Métricas detalhadas e análise de comportamento</p>
+      </div>
+
+      {/* ─── PAINEL DE AÇÕES ADMIN ─────────────────────────────────── */}
+      <div className="card fade-up" style={{ marginBottom: '32px', padding: '24px' }}>
+        {/* Grupo 1: Navegação & Atividade */}
+        <div style={{ marginBottom: '20px' }}>
+          <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--accent)', marginBottom: '12px' }}>
+            🧭 Navegação & Atividade
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+            <Link to="/vote" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 600,
+              background: 'linear-gradient(135deg, var(--accent), #8b5cf6)', color: '#fff',
+              border: 'none', borderRadius: '10px', cursor: 'pointer',
+              textDecoration: 'none', transition: 'all 0.2s', textAlign: 'center',
+            }}>
               🗳️ Votar
             </Link>
-            <button onClick={fetchData} className="btn btn-ghost" style={{ padding: '10px 18px', fontSize: '0.85rem', color: 'var(--accent)' }}>
+            <button onClick={fetchData} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+              background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
+              border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}>
               🔄 Atualizar
             </button>
-            <Link to="/admin/users" className="btn btn-ghost" style={{ padding: '10px 18px', fontSize: '0.85rem' }}>
-              👥 Ver Usuários
+            <Link to="/admin/users" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+              background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
+              border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+              textDecoration: 'none', transition: 'all 0.2s', textAlign: 'center',
+            }}>
+              👥 Usuários
             </Link>
-            <button onClick={handleResetMyVotes} className="btn btn-ghost" style={{ padding: '10px 18px', fontSize: '0.85rem' }}>
-              🔄 Refazer Meus Votos
+            <button onClick={handleResetMyVotes} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+              background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
+              border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}>
+              🔄 Refazer Votos
             </button>
-            <button onClick={handleChangePassword} className="btn btn-ghost" style={{ padding: '10px 18px', fontSize: '0.85rem' }}>
-              🔑 Mudar Minha Senha
+            <button onClick={handleChangePassword} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+              background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
+              border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}>
+              🔑 Mudar Senha
             </button>
           </div>
-          
-          {/* Grupo 2: Sistema e Dados */}
-          <div style={{ 
-            display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end',
-            padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--border)' 
-          }}>
-            <button onClick={handleExportData} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#10d98e', border: 'none' }}>
+        </div>
+
+        {/* Divisor */}
+        <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0 20px' }} />
+
+        {/* Grupo 2: Sistema & Dados */}
+        <div>
+          <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+            ⚙️ Sistema & Dados
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+            <button onClick={handleExportData} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+              background: 'rgba(16, 217, 142, 0.08)', color: '#10d98e',
+              border: '1px solid rgba(16, 217, 142, 0.2)', borderRadius: '10px', cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}>
               📥 Baixar Backup
             </button>
             {window.location.hostname === 'localhost' && (
-              <label className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#6c63ff', cursor: 'pointer', border: 'none' }}>
+              <label style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+                background: 'rgba(108, 99, 255, 0.08)', color: '#a78bfa',
+                border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}>
                 📤 Restaurar Backup
                 <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
               </label>
             )}
-            <div style={{ width: '1px', background: 'var(--border)', height: '20px', alignSelf: 'center', margin: '0 4px' }} />
-            <button onClick={handleResetData} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#ff4d6d', border: 'none' }}>
+            <button onClick={handleResetData} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+              background: 'rgba(255, 77, 109, 0.08)', color: '#ff8fa3',
+              border: '1px solid rgba(255, 77, 109, 0.2)', borderRadius: '10px', cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}>
               🗑️ Zerar Sistema
             </button>
           </div>
