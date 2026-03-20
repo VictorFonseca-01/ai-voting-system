@@ -18,6 +18,7 @@ RUN npm run build
 
 # ─── Stage 2: Serve com Nginx ────────────────────────────────────
 FROM nginx:alpine
+RUN apk add --no-cache gettext
 WORKDIR /usr/share/nginx/html
 
 # Remove config padrão do nginx
