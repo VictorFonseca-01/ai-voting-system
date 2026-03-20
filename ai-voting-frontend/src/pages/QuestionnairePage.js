@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { participationAPI } from '../api';
 
@@ -39,6 +39,8 @@ export default function QuestionnairePage() {
   const [success, setSuccess]        = useState(false);
   const [error, setError]            = useState('');
   const [selectedIAs, setSelectedIAs] = useState([]);
+  const [showCourseSuggestions, setShowCourseSuggestions] = useState(false);
+  const courseDropdownRef = useRef(null);
 
   // Recupera as IAs selecionadas no passo anterior
   useEffect(() => {
@@ -46,6 +48,14 @@ export default function QuestionnairePage() {
     if (saved) {
       setSelectedIAs(JSON.parse(saved));
     }
+
+    const handleClickOutside = (e) => {
+      if (courseDropdownRef.current && !courseDropdownRef.current.contains(e.target)) {
+        setShowCourseSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const set = (key, val) => setForm(p => ({ ...p, [key]: val }));
@@ -91,10 +101,6 @@ export default function QuestionnairePage() {
         setError('Nome Completo e Curso são obrigatórios.');
         return;
     }
-    if (form.course === 'Outro (Digitar)' && !form.customCourse.trim()) {
-        setError('Por favor, digite o nome do seu curso.');
-        return;
-    }
 
     if (form.whereUseAi.length === 0 || form.whyUseAi.length === 0 || form.howUseAi.length === 0 ||
         form.useForStudy === null || form.useForWork === null || !form.workArea) {
@@ -116,7 +122,7 @@ export default function QuestionnairePage() {
     setError('');
 
     // Prepara o Course final
-    const finalCourse = form.course === 'Outro (Digitar)' ? form.customCourse : form.course;
+    const finalCourse = form.course;
 
     // Prepara dados de Participação Completa
     const payload = {
@@ -196,28 +202,72 @@ export default function QuestionnairePage() {
             />
           </div>
 
-          <div>
+          <div ref={courseDropdownRef} style={{ position: 'relative' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                 Curso <span style={{ color: 'var(--accent)' }}>*</span>
             </label>
-            <select
-                className="form-control"
-                value={form.course}
-                onChange={(e) => set('course', e.target.value)}
-                style={{ padding: '12px', background: 'var(--bg-input)' }}
-            >
-                <option value="">Selecione seu curso...</option>
-                {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            {form.course === 'Outro (Digitar)' && (
+            <div style={{ position: 'relative' }}>
                 <input
                     type="text"
                     className="form-control"
-                    placeholder="Digite o nome do seu curso"
-                    value={form.customCourse}
-                    onChange={(e) => set('customCourse', e.target.value)}
-                    style={{ marginTop: '8px', padding: '12px' }}
+                    placeholder="Comece a digitar seu curso..."
+                    value={form.course}
+                    onChange={(e) => {
+                        set('course', e.target.value);
+                        setShowCourseSuggestions(true);
+                    }}
+                    onFocus={() => setShowCourseSuggestions(true)}
+                    style={{ padding: '12px', background: 'var(--bg-input)' }}
                 />
+                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }}>
+                    🔍
+                </span>
+            </div>
+
+            {showCourseSuggestions && (
+                <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    zIndex: 100,
+                    background: '#0d0d12',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    marginTop: '4px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                }}>
+                    {COURSES.filter(c => c !== 'Outro (Digitar)')
+                        .filter(c => !form.course || c.toLowerCase().includes(form.course.toLowerCase()))
+                        .map(c => (
+                            <div
+                                key={c}
+                                onClick={() => {
+                                    set('course', c);
+                                    setShowCourseSuggestions(false);
+                                }}
+                                style={{
+                                    padding: '10px 12px',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid var(--border)',
+                                    fontSize: '0.9rem',
+                                    transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = 'rgba(108, 99, 255, 0.1)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                            >
+                                {c}
+                            </div>
+                        ))
+                    }
+                    {form.course && !COURSES.some(c => c.toLowerCase() === form.course.toLowerCase()) && (
+                        <div style={{ padding: '10px 12px', fontSize: '0.85rem', color: 'var(--accent)', fontStyle: 'italic' }}>
+                            Pressione Tab ou clique fora para usar "{form.course}"
+                        </div>
+                    )}
+                </div>
             )}
           </div>
 

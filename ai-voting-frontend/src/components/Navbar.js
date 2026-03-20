@@ -122,12 +122,16 @@ export default function Navbar() {
                   position: 'absolute',
                   top: '100%',
                   right: 0,
-                  width: '320px',
+                  width: '300px',
+                  maxHeight: '480px',
+                  overflowY: 'auto',
                   marginTop: '12px',
                   zIndex: 1000,
                   padding: '16px',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
-                  border: '1px solid var(--border)'
+                  background: '#0d0d12', // Mais opaco para não confundir com o fundo
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.6), 0 0 0 1px var(--border)',
+                  border: '1px solid var(--accent)',
+                  borderRadius: '16px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
                     <h4 style={{ fontSize: '0.9rem', margin: 0 }}>Últimas Atividades</h4>
