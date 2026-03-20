@@ -27,6 +27,7 @@ export default function DashboardPage() {
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
+  const [newPass, setNewPass] = useState('');
 
   const fetchData = async () => {
     try {
@@ -71,6 +72,39 @@ export default function DashboardPage() {
       setModalConfig({
         title: 'Erro',
         message: 'Não foi possível zerar os dados.',
+        type: 'alert'
+      });
+      setShowModal(true);
+    }
+  };
+
+  const handleChangePassword = () => {
+    setModalConfig({
+      title: 'Alterar Minha Senha',
+      type: 'password'
+    });
+    setNewPass('');
+    setShowModal(true);
+  };
+
+  const confirmChangePassword = async () => {
+    if (newPass.length < 6) {
+      alert('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    setShowModal(false);
+    try {
+      await adminAPI.changePassword(newPass);
+      setModalConfig({
+        title: 'Sucesso',
+        message: 'Sua senha foi alterada com sucesso.',
+        type: 'alert'
+      });
+      setShowModal(true);
+    } catch (err) {
+      setModalConfig({
+        title: 'Erro',
+        message: err.response?.data?.error || 'Não foi possível alterar a senha.',
         type: 'alert'
       });
       setShowModal(true);
@@ -253,13 +287,30 @@ export default function DashboardPage() {
               <h3>{modalConfig.title}</h3>
             </div>
             <div className="modal-body">
-              {modalConfig.message}
+              {modalConfig.type === 'password' ? (
+                <div style={{ marginTop: '10px' }}>
+                  <p style={{ marginBottom: '12px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Digite sua nova senha abaixo:</p>
+                  <input 
+                    type="password" 
+                    className="input" 
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    autoFocus
+                  />
+                </div>
+              ) : modalConfig.message}
             </div>
             <div className="modal-footer">
               {modalConfig.type === 'confirm' ? (
                 <>
                   <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
                   <button className="btn btn-primary" onClick={modalConfig.onConfirm} style={{ background: '#cc0000' }}>Confirmar Reset</button>
+                </>
+              ) : modalConfig.type === 'password' ? (
+                <>
+                  <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
+                  <button className="btn btn-primary" onClick={confirmChangePassword}>Salvar Nova Senha</button>
                 </>
               ) : (
                 <button className="btn btn-primary" onClick={() => setShowModal(false)}>Entendido</button>
@@ -283,6 +334,9 @@ export default function DashboardPage() {
           <Link to="/admin/users" className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             👥 Ver Usuários
           </Link>
+          <button onClick={handleChangePassword} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
+            🔑 Mudar Minha Senha
+          </button>
           <button onClick={handleResetData} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem', color: '#ff4d6d', borderColor: '#ff4d6d33' }}>
             🗑️ Zerar Sistema
           </button>

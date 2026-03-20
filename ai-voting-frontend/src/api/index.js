@@ -77,6 +77,7 @@ export const adminAPI = {
   getReport: () => api.get('/admin/report'),
   resetData: () => api.delete('/admin/reset'),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  changePassword: (newPassword) => api.put('/admin/password', { newPassword }),
 };
 
 export default api;

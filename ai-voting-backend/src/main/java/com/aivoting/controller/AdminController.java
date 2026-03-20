@@ -6,13 +6,10 @@ import com.aivoting.repository.UserRepository;
 import com.aivoting.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.aivoting.entity.User;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +27,27 @@ public class AdminController {
     private final VoteRepository voteRepository;
     private final QuestionResponseRepository questionResponseRepository;
     private final DataInitializer dataInitializer;
+    private final PasswordEncoder passwordEncoder;
+
+    /**
+     * PUT /api/admin/password
+     * Altera a senha do administrador logado.
+     */
+    @PutMapping("/password")
+    @Transactional
+    public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> request) {
+        String newPassword = request.get("newPassword");
+        if (newPassword == null || newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("error", "A senha deve ter pelo menos 6 caracteres."));
+        }
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email).map(user -> {
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso."));
+        }).orElse(ResponseEntity.status(401).build());
+    }
 
     /**
      * GET /api/admin/users
