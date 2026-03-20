@@ -56,7 +56,7 @@ export default function HomePage() {
 
             {/* Cards de ias */}
             <div className="ai-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '48px' }}>
-              {['ChatGPT', 'Claude', 'Gemini', 'Grok', 'Meta AI', 'Copilot'].map((ai, i) => (
+              {['ChatGPT', 'Claude', 'Gemini', 'Grok', 'Meta AI', 'Copilot', 'DeepSeek'].map((ai, i) => (
                 <span 
                   key={ai} 
                   className="hover-lift"

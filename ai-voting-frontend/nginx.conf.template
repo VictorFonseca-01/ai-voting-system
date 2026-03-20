@@ -18,7 +18,10 @@ server {
         # Isso faz o Nginx resolver o domínio em tempo de execução, 
         # evitando que ele quebre se o backend estiver fora do ar no início.
         set $target_backend ${BACKEND_URL};
-        proxy_pass $target_backend;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_pass http://$backend_host:8080;
         
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
