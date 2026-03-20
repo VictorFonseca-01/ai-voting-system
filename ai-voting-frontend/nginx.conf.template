@@ -11,10 +11,9 @@ server {
 
     # Proxy para a API do backend
     location /api/ {
-        # Usamos uma variável para o proxy_pass para evitar falha no boot se o backend estiver subindo.
-        # Removemos o resolver manual que estava falhando no Railway.
-        set $target_backend ${BACKEND_URL};
-        proxy_pass http://$target_backend:8080;
+        # Apontamos diretamente para o nome do serviço interno no Railway.
+        # Isso é o mais robusto e evita problemas de resolver DNS.
+        proxy_pass http://backend:8080;
         
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
