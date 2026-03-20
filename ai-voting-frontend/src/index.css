@@ -369,7 +369,13 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
     font-size: 0.8rem !important;
     flex-shrink: 0;
   }
+
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
 }
+
+.mobile-only { display: none; }
+.desktop-only { display: block; }
 
 /* ─── DIVIDER ────────────────────────────────────────────────── */
 .divider {

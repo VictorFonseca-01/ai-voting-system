@@ -104,7 +104,7 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div className="btn-group" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div className="btn-group desktop-only" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {isAuthenticated ? (
                 <>
                   <Link to="/vote" className="btn btn-primary">🗳️ Votar agora</Link>
@@ -262,6 +262,24 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      
+      {/* ─── MOBILE CALL-TO-ACTION (Bottom) ─────────────────────────── */}
+      <section className="mobile-only" style={{ padding: '0 24px 80px', marginTop: '-20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px', margin: '0 auto' }}>
+          {isAuthenticated ? (
+            <>
+              <Link to="/vote" className="btn btn-primary btn-full" style={{ padding: '18px' }}>🗳️ Votar agora</Link>
+              {isAdmin && <Link to="/dashboard" className="btn btn-ghost btn-full" style={{ padding: '16px' }}>📊 Ver Dashboard</Link>}
+            </>
+          ) : (
+            <>
+              <Link to="/register" className="btn btn-primary btn-full" style={{ padding: '18px' }}>Começar agora</Link>
+              <Link to="/login" className="btn btn-ghost btn-full" style={{ padding: '16px' }}>Já tenho conta</Link>
+            </>
+          )}
+        </div>
+      </section>
+
     </div>
   );
 }
