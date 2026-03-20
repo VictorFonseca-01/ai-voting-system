@@ -4,7 +4,9 @@ import com.aivoting.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  * Repositório para operações de banco de dados com a entidade User.
@@ -18,4 +20,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /** Verifica se já existe um usuário com o email fornecido */
     boolean existsByEmail(String email);
     boolean existsByNameIgnoreCase(String name);
+
+    @Query("SELECT u.name FROM User u")
+    List<String> findAllNames();
 }

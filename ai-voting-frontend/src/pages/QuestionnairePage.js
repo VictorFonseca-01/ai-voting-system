@@ -37,10 +37,11 @@ export default function QuestionnairePage() {
   });
   const [loading, setLoading]       = useState(false);
   const [success, setSuccess]        = useState(false);
-  const [error, setError]            = useState('');
   const [selectedIAs, setSelectedIAs] = useState([]);
   const [showCourseSuggestions, setShowCourseSuggestions] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const courseDropdownRef = useRef(null);
+  const identSectionRef = useRef(null);
 
   // Recupera as IAs selecionadas no passo anterior
   useEffect(() => {
@@ -97,24 +98,18 @@ export default function QuestionnairePage() {
 
   const handleSubmit = async () => {
     // Validação básica
+    setFieldErrors({});
     if (!form.fullName || !form.course) {
         setError('Nome Completo e Curso são obrigatórios.');
+        setFieldErrors({ fullName: !form.fullName, course: !form.course });
+        identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
-    }
-
-    if (form.whereUseAi.length === 0 || form.whyUseAi.length === 0 || form.howUseAi.length === 0 ||
-        form.useForStudy === null || form.useForWork === null || !form.workArea) {
-      setError('Por favor, responda todas as perguntas do questionário.');
-      return;
-    }
-    
-    if (form.workArea === 'Outros' && !form.workAreaOther.trim()) {
-      setError('Por favor, descreva sua área de atuação.');
-      return;
     }
 
     if (!form.fullName.trim().includes(' ') || form.fullName.trim().split(/\s+/).length < 2) {
       setError('Por favor, digite seu nome completo (ex: Victor Fonseca).');
+      setFieldErrors({ fullName: true });
+      identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
@@ -186,43 +181,70 @@ export default function QuestionnairePage() {
       {error && <div className="alert alert-error">{error}</div>}
 
       {/* ─── IDENTIFICAÇÃO (Passo 0) ─────────────────────────────────── */}
-      <QuestionCard num={0} title="Identificação" delay="fade-in">
-        <div style={{ display: 'grid', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                Nome Completo <span style={{ color: 'var(--accent)' }}>*</span>
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Digite seu nome completo"
-              value={form.fullName}
-              onChange={(e) => set('fullName', e.target.value)}
-              style={{ padding: '12px' }}
-            />
-          </div>
-
-          <div ref={courseDropdownRef} style={{ position: 'relative' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                Curso <span style={{ color: 'var(--accent)' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-                <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Comece a digitar seu curso..."
-                    value={form.course}
-                    onChange={(e) => {
-                        set('course', e.target.value);
-                        setShowCourseSuggestions(true);
-                    }}
-                    onFocus={() => setShowCourseSuggestions(true)}
-                    style={{ padding: '12px', background: 'var(--bg-input)' }}
-                />
-                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }}>
-                    🔍
-                </span>
+      <div ref={identSectionRef}>
+        <QuestionCard num={0} title="Identificação" delay="fade-in">
+          <div style={{ display: 'grid', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                  Nome Completo <span style={{ color: 'var(--accent)' }}>*</span>
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Digite seu nome completo"
+                value={form.fullName}
+                onChange={(e) => {
+                    set('fullName', e.target.value);
+                    if (fieldErrors.fullName) setFieldErrors(p => ({...p, fullName: false}));
+                }}
+                style={{ 
+                    padding: '12px',
+                    borderColor: fieldErrors.fullName ? 'var(--danger)' : 'var(--border)',
+                    boxShadow: fieldErrors.fullName ? '0 0 0 1px var(--danger)' : 'none'
+                }}
+              />
             </div>
+
+            <div ref={courseDropdownRef} style={{ position: 'relative' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                  Curso <span style={{ color: 'var(--accent)' }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                  <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Comece a digitar seu curso..."
+                      value={form.course}
+                      onChange={(e) => {
+                          set('course', e.target.value);
+                          setShowCourseSuggestions(true);
+                          if (fieldErrors.course) setFieldErrors(p => ({...p, course: false}));
+                      }}
+                      onFocus={() => setShowCourseSuggestions(true)}
+                      onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === 'Tab') {
+                              const filtered = COURSES.filter(c => c !== 'Outro (Digitar)')
+                                  .filter(c => !form.course || c.toLowerCase().includes(form.course.toLowerCase()));
+                              if (filtered.length > 0) {
+                                  set('course', filtered[0]);
+                                  setShowCourseSuggestions(false);
+                              } else {
+                                  setShowCourseSuggestions(false);
+                              }
+                              if (e.key === 'Enter') e.preventDefault();
+                          }
+                      }}
+                      style={{ 
+                          padding: '12px', 
+                          background: 'var(--bg-input)',
+                          borderColor: fieldErrors.course ? 'var(--danger)' : 'var(--border)',
+                          boxShadow: fieldErrors.course ? '0 0 0 1px var(--danger)' : 'none'
+                      }}
+                  />
+                  <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }}>
+                      🔍
+                  </span>
+              </div>
 
             {showCourseSuggestions && (
                 <div style={{
@@ -264,7 +286,7 @@ export default function QuestionnairePage() {
                     }
                     {form.course && !COURSES.some(c => c.toLowerCase() === form.course.toLowerCase()) && (
                         <div style={{ padding: '10px 12px', fontSize: '0.85rem', color: 'var(--accent)', fontStyle: 'italic' }}>
-                            Pressione Tab ou clique fora para usar "{form.course}"
+                            Pressione Enter, Tab ou clique fora para usar "{form.course}"
                         </div>
                     )}
                 </div>
@@ -301,6 +323,7 @@ export default function QuestionnairePage() {
           </div>
         </div>
       </QuestionCard>
+    </div>
 
       {/* ─── PERGUNTA 1 ────────────────────────────────────────────── */}
       <QuestionCard num={1} title="Onde você mais usa IA? (Escolha até 2)" delay="delay-1">
