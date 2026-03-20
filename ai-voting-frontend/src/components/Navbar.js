@@ -93,103 +93,131 @@ export default function Navbar() {
               📄 Relatório
             </NavLink>
 
-            {/* Sino de Notificações */}
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} ref={dropdownRef}>
-              <button 
-                className="btn btn-ghost" 
-                style={{ padding: '8px', fontSize: '1.2rem', position: 'relative', marginLeft: '10px' }}
-                onClick={handleOpenNotifications}
-                title="Notificações"
-              >
-                🔔
-                {hasNew && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '6px',
-                    right: '6px',
-                    width: '10px',
-                    height: '10px',
-                    background: '#ff4d6d',
-                    borderRadius: '50%',
-                    border: '2px solid var(--bg-body)',
-                    boxShadow: '0 0 8px rgba(255, 77, 109, 0.5)'
-                  }} />
-                )}
-              </button>
-
-              {showPanel && (
-                <div className="card fade-up" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  width: '300px',
-                  maxHeight: '480px',
-                  overflowY: 'auto',
-                  marginTop: '12px',
-                  zIndex: 1000,
-                  padding: '16px',
-                  background: '#0d0d12', // Mais opaco para não confundir com o fundo
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.6), 0 0 0 1px var(--border)',
-                  border: '1px solid var(--accent)',
-                  borderRadius: '16px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
-                    <h4 style={{ fontSize: '0.9rem', margin: 0 }}>Últimas Atividades</h4>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{notifications.length} recentes</span>
-                  </div>
-                  
-                  {notifications.length === 0 ? (
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px' }}>Nenhuma atividade nova.</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {notifications.map((n, i) => (
-                        <div key={i} style={{ 
-                          padding: '10px', 
-                          background: 'rgba(255,255,255,0.03)', 
-                          borderRadius: '8px',
-                          fontSize: '0.82rem',
-                          borderLeft: '3px solid var(--accent)'
-                        }}>
-                          <div style={{ fontWeight: 700, marginBottom: '2px', cursor: 'pointer', color: 'var(--accent)' }} onClick={() => { navigate('/dashboard'); setShowPanel(false); }}>
-                            {n.userName}
-                          </div>
-                          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '4px' }}>
-                            {n.userCourse}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ opacity: 0.6 }}>Votou em:</span>
-                            <span style={{ fontWeight: 600 }}>{n.aiName}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div style={{ marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '12px', textAlign: 'center' }}>
-                    <Link to="/dashboard" style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }} onClick={() => setShowPanel(false)}>
-                      Ver Dashboard Completo
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Sino de Notificações — fora do scroll para funcionar no mobile */}
           </>
         )}
 
+        {isAdmin && (
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flexShrink: 0 }} ref={dropdownRef}>
+            <button 
+              style={{ 
+                padding: '8px 10px', fontSize: '1.2rem', position: 'relative',
+                background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)',
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'manipulation',
+              }}
+              onClick={handleOpenNotifications}
+              title="Notificações"
+            >
+              🔔
+              {hasNew && (
+                <span style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '6px',
+                  width: '10px',
+                  height: '10px',
+                  background: '#ff4d6d',
+                  borderRadius: '50%',
+                  border: '2px solid var(--bg-body)',
+                  boxShadow: '0 0 8px rgba(255, 77, 109, 0.5)'
+                }} />
+              )}
+            </button>
+          </div>
+        )}
+
         {isAuthenticated && (
-          <button className="nav-link" style={{ background: 'none', border: '1px solid rgba(255,77,109,0.25)', cursor: 'pointer', color: '#ff8fa3' }} onClick={handleLogout}>
+          <button className="nav-link" style={{ background: 'none', border: '1px solid rgba(255,77,109,0.25)', cursor: 'pointer', color: '#ff8fa3', flexShrink: 0 }} onClick={handleLogout}>
             🚪 Sair
           </button>
         )}
         
         <button 
           className="nav-link" 
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: '6px 10px', fontSize: '1rem' }} 
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: '6px 10px', fontSize: '1rem', flexShrink: 0 }} 
           onClick={() => window.location.reload()}
           title="Recarregar Site"
         >
           🔄
         </button>
       </div>
+
+      {/* ─── PAINEL DE NOTIFICAÇÕES (renderizado fora do navbar-nav) ─── */}
+      {isAdmin && showPanel && (
+        <>
+          {/* Backdrop — visível no mobile, sutil no desktop */}
+          <div 
+            onClick={() => setShowPanel(false)}
+            style={{
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              zIndex: 999,
+            }} 
+          />
+          <div className="card fade-up" style={{
+            position: 'fixed',
+            top: '72px',
+            right: '16px',
+            width: 'min(340px, calc(100vw - 32px))',
+            maxHeight: 'min(480px, calc(100vh - 100px))',
+            overflowY: 'auto',
+            zIndex: 1001,
+            padding: '20px',
+            background: '#0d0d12',
+            boxShadow: '0 10px 50px rgba(0,0,0,0.7), 0 0 0 1px var(--border)',
+            border: '1px solid var(--accent)',
+            borderRadius: '16px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
+              <h4 style={{ fontSize: '0.95rem', margin: 0 }}>🔔 Últimas Atividades</h4>
+              <button 
+                onClick={() => setShowPanel(false)} 
+                style={{ 
+                  background: 'none', border: 'none', cursor: 'pointer', 
+                  color: 'var(--text-muted)', fontSize: '1.2rem', padding: '4px 8px',
+                  lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            {notifications.length === 0 ? (
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 10px' }}>Nenhuma atividade nova.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {notifications.map((n, i) => (
+                  <div key={i} style={{ 
+                    padding: '12px', 
+                    background: 'rgba(255,255,255,0.03)', 
+                    borderRadius: '10px',
+                    fontSize: '0.85rem',
+                    borderLeft: '3px solid var(--accent)'
+                  }}>
+                    <div style={{ fontWeight: 700, marginBottom: '3px', cursor: 'pointer', color: 'var(--accent)' }} onClick={() => { navigate('/dashboard'); setShowPanel(false); }}>
+                      {n.userName}
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '4px' }}>
+                      {n.userCourse}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ opacity: 0.6 }}>Votou em:</span>
+                      <span style={{ fontWeight: 600 }}>{n.aiName}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '12px', textAlign: 'center' }}>
+              <Link to="/dashboard" style={{ fontSize: '0.85rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }} onClick={() => setShowPanel(false)}>
+                Ver Dashboard Completo →
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
     </nav>
   );
 }
