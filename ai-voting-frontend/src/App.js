@@ -13,6 +13,7 @@ import VotePage from './pages/VotePage';
 import QuestionnairePage from './pages/QuestionnairePage';
 import DashboardPage from './pages/DashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import ReportPage from './pages/ReportPage';
 
 export default function App() {
   return (
@@ -33,6 +34,9 @@ export default function App() {
           } />
           <Route path="/admin/users" element={
             <AdminRoute><AdminUsersPage /></AdminRoute>
+          } />
+          <Route path="/admin/report" element={
+            <AdminRoute><ReportPage /></AdminRoute>
           } />
 
           {/* Rotas protegidas */}

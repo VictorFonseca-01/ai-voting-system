@@ -29,7 +29,7 @@ public class VoteService {
     /** IAs disponíveis para votação */
     private static final List<String> VALID_AI_NAMES = List.of(
             "ChatGPT", "Claude", "Gemini", "Grok",
-            "Meta AI", "Copilot", "Não utilizo IA"
+            "Meta AI", "Copilot", "DeepSeek", "Não utilizo IA / Outra"
     );
 
     /**

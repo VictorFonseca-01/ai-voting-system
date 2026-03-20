@@ -7,9 +7,40 @@ export default function RegisterPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', course: '', institution: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // ─── Filtro de nomes ofensivos (client-side) ────────────────────
+  const BLOCKED_TERMS = [
+    'porra','caralho','merda','foder','fodase','foda-se','fodasse',
+    'puta','putaria','arrombado','arrombada','cuzao','cuzão',
+    'viado','viada','viadinho','bicha','bichona',
+    'buceta','boceta','piroca','rola',
+    'vsf','fdp','pqp','tnc',
+    'desgraçado','desgraçada','corno','cornuda',
+    'otario','otário','otaria','otária','babaca','imbecil',
+    'idiota','retardado','retardada','mongoloide',
+    'vagabundo','vagabunda','safado','safada',
+    'filhodaputa','piranha','bosta',
+    'punheta','punheteiro','broxa',
+    'macaco','macaca','crioulo','crioula',
+    'nazist','hitler','fascist',
+    'fuck','shit','bitch','asshole','bastard',
+    'dick','pussy','cunt','whore','slut',
+    'nigger','nigga','faggot','retard',
+    'cock','motherfucker','wtf','stfu',
+  ];
+
+  const containsProfanity = (name) => {
+    const normalized = name.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+      .replace(/[^a-z\s]/g, '');
+    return BLOCKED_TERMS.some(term => {
+      const normTerm = term.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z\s]/g, '');
+      return normalized.includes(normTerm);
+    });
+  };
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -18,6 +49,33 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const trimmedName = form.name.trim();
+    if (trimmedName.length < 2) {
+      setError('O nome deve ter pelo menos 2 caracteres.');
+      return;
+    }
+    if (containsProfanity(trimmedName)) {
+      setError('O nome contém termos inadequados. Por favor, escolha outro nome.');
+      return;
+    }
+    const trimmedCourse = form.course.trim();
+    if (trimmedCourse.length < 2) {
+      setError('O curso deve ter pelo menos 2 caracteres.');
+      return;
+    }
+    if (containsProfanity(trimmedCourse)) {
+      setError('O curso contém termos inadequados.');
+      return;
+    }
+    const trimmedInst = form.institution.trim();
+    if (trimmedInst.length < 2) {
+      setError('A faculdade/empresa deve ter pelo menos 2 caracteres.');
+      return;
+    }
+    if (containsProfanity(trimmedInst)) {
+      setError('A faculdade/empresa contém termos inadequados.');
+      return;
+    }
     if (form.password.length < 5) {
       setError('A senha deve ter pelo menos 5 caracteres.');
       return;
@@ -75,6 +133,34 @@ export default function RegisterPage() {
               className="form-control"
               placeholder="seu@email.com"
               value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="course">Curso</label>
+            <input
+              id="course"
+              name="course"
+              type="text"
+              className="form-control"
+              placeholder="Ex: Engenharia de Software"
+              value={form.course}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="institution">Faculdade ou Empresa</label>
+            <input
+              id="institution"
+              name="institution"
+              type="text"
+              className="form-control"
+              placeholder="Sua instituição"
+              value={form.institution}
               onChange={handleChange}
               required
             />

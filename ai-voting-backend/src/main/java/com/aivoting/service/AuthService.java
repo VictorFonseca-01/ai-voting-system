@@ -6,6 +6,7 @@ import com.aivoting.dto.RegisterRequest;
 import com.aivoting.entity.User;
 import com.aivoting.repository.UserRepository;
 import com.aivoting.security.JwtUtil;
+import com.aivoting.util.ProfanityFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,9 +32,27 @@ public class AuthService {
      * Registra um novo usuário no sistema.
      * @param request Dados de cadastro (nome, email, senha)
      * @return Resposta com token JWT e dados do usuário
-     * @throws RuntimeException se o email já estiver em uso
+     * @throws RuntimeException se o email já estiver em uso ou o nome for inválido
      */
     public LoginResponse register(RegisterRequest request) {
+        // Valida o nome (tamanho, caracteres e palavras ofensivas)
+        String nameError = ProfanityFilter.validate(request.getName());
+        if (nameError != null) {
+            throw new RuntimeException("Nome: " + nameError);
+        }
+
+        // Valida curso
+        String courseError = ProfanityFilter.validate(request.getCourse());
+        if (courseError != null) {
+            throw new RuntimeException("Curso: " + courseError);
+        }
+
+        // Valida instituição
+        String institutionError = ProfanityFilter.validate(request.getInstitution());
+        if (institutionError != null) {
+            throw new RuntimeException("Instituição: " + institutionError);
+        }
+
         // Verifica se email já está cadastrado
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email já está em uso: " + request.getEmail());
@@ -44,9 +63,11 @@ public class AuthService {
 
         // Cria e salva o novo usuário com senha criptografada
         User user = User.builder()
-                .name(request.getName())
+                .name(request.getName().trim())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .course(request.getCourse().trim())
+                .institution(request.getInstitution().trim())
                 .role(role)
                 .build();
 

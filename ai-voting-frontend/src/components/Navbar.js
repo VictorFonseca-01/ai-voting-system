@@ -21,9 +21,14 @@ export default function Navbar() {
       {/* Nav links */}
       <div className="navbar-nav">
         {isAdmin && (
-          <NavLink to="/admin/users" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            👥 Usuários
-          </NavLink>
+          <>
+            <NavLink to="/admin/users" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              👥 Usuários
+            </NavLink>
+            <NavLink to="/admin/report" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ color: '#0866ff' }}>
+              📄 Relatório
+            </NavLink>
+          </>
         )}
 
         {isAuthenticated ? (

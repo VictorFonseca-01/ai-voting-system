@@ -70,4 +70,12 @@ export const dashboardAPI = {
   getData: () => api.get('/dashboard'),
 };
 
+// ─── ADMIN ────────────────────────────────────────────────────────────
+
+export const adminAPI = {
+  getUsers: () => api.get('/admin/users'),
+  getReport: () => api.get('/admin/report'),
+  resetData: () => api.delete('/admin/reset'),
+};
+
 export default api;

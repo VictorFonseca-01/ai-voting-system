@@ -43,6 +43,16 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    /** Curso do usuário */
+    @NotBlank(message = "Curso é obrigatório")
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'N/A'")
+    private String course;
+
+    /** Faculdade ou Empresa do usuário */
+    @NotBlank(message = "Instituição é obrigatória")
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'N/A'")
+    private String institution;
+
     /** Data de criação da conta */
     @Column(name = "created_at")
     private LocalDateTime createdAt;

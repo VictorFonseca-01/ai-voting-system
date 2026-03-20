@@ -41,6 +41,8 @@ public class AdminController {
                 "name", user.getName(),
                 "email", user.getEmail(),
                 "role", user.getRole(),
+                "course", user.getCourse() != null ? user.getCourse() : "",
+                "institution", user.getInstitution() != null ? user.getInstitution() : "",
                 "createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : "",
                 "hasVoted", user.getVotes() != null && !user.getVotes().isEmpty(),
                 "hasAnswered", user.getQuestionResponses() != null && !user.getQuestionResponses().isEmpty()

@@ -21,6 +21,8 @@ FROM nginx:alpine
 RUN apk add --no-cache gettext
 WORKDIR /usr/share/nginx/html
 
+ENV PORT=80
+
 # Remove config padrão do nginx
 RUN rm -rf ./*
 
