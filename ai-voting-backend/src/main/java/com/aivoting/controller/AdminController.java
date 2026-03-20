@@ -94,6 +94,20 @@ public class AdminController {
     }
 
     /**
+     * DELETE /api/admin/my-votes
+     * Remove apenas os votos do administrador logado para fins de teste.
+     */
+    @DeleteMapping("/my-votes")
+    @Transactional
+    public ResponseEntity<?> resetMyAdminVotes() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email).map(user -> {
+            voteRepository.deleteByUser(user);
+            return ResponseEntity.ok(Map.of("message", "Seus votos foram removidos. Você pode votar novamente."));
+        }).orElse(ResponseEntity.status(401).build());
+    }
+
+    /**
      * DELETE /api/admin/reset
      * Limpa TODOS os dados do sistema e recria o admin padrão.
      * Apenas admins autenticados podem acessar.

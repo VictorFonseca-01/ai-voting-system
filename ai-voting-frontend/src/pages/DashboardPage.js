@@ -110,6 +110,39 @@ export default function DashboardPage() {
       setShowModal(true);
     }
   };
+  
+  const handleResetMyVotes = () => {
+    setModalConfig({
+      title: 'Refazer Meus Votos',
+      message: 'Isso apagará apenas os SEUS votos para que você possa votar novamente. Deseja continuar?',
+      onConfirm: confirmResetMyVotes,
+      type: 'confirm'
+    });
+    setShowModal(true);
+  };
+
+  const confirmResetMyVotes = async () => {
+    setShowModal(false);
+    try {
+      await adminAPI.resetMyAdminVotes();
+      setModalConfig({
+        title: 'Sucesso',
+        message: 'Seus votos foram removidos. Redirecionando para a página de votação...',
+        type: 'alert'
+      });
+      setShowModal(true);
+      setTimeout(() => {
+        window.location.href = '/vote';
+      }, 2000);
+    } catch (err) {
+      setModalConfig({
+        title: 'Erro',
+        message: 'Não foi possível remover seus votos.',
+        type: 'alert'
+      });
+      setShowModal(true);
+    }
+  };
 
   if (loading) return <div className="page"><div className="spinner" /></div>;
 
@@ -332,6 +365,9 @@ export default function DashboardPage() {
           <Link to="/vote" className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             🗳️ Votar
           </Link>
+          <button onClick={handleResetMyVotes} className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
+            🔄 Refazer Meus Votos
+          </button>
           <Link to="/admin/users" className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             👥 Ver Usuários
           </Link>
