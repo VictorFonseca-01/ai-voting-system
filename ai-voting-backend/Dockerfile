@@ -20,5 +20,5 @@ COPY --from=builder /app/target/*.jar app.jar
 # Expõe a porta do Spring Boot
 EXPOSE 8080
 
-# Aguarda o banco estar pronto antes de iniciar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Comando para iniciar a aplicação com o perfil 'docker' ativado
+ENTRYPOINT ["java", "-Dspring.profiles.active=docker", "-jar", "app.jar"]
