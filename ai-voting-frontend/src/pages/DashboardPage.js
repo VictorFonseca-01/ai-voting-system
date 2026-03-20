@@ -443,12 +443,10 @@ export default function DashboardPage() {
             <button onClick={handleExportData} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#10d98e', border: 'none' }}>
               📥 Baixar Backup
             </button>
-            {window.location.hostname === 'localhost' && (
-              <label className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#6c63ff', cursor: 'pointer', border: 'none' }}>
+            <label className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#6c63ff', cursor: 'pointer', border: 'none' }}>
                 📤 Restaurar Backup
                 <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
               </label>
-            )}
             <div style={{ width: '1px', background: 'var(--border)', height: '20px', alignSelf: 'center', margin: '0 4px' }} />
             <button onClick={handleResetData} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem', color: '#ff4d6d', border: 'none' }}>
               🗑️ Zerar Sistema
