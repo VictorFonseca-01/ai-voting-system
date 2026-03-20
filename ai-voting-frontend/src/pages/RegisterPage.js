@@ -32,13 +32,16 @@ export default function RegisterPage() {
     'cock','motherfucker','wtf','stfu',
   ];
 
-  const containsProfanity = (name) => {
-    const normalized = name.toLowerCase()
+  const containsProfanity = (text) => {
+    const normalized = text.toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
       .replace(/[^a-z\s]/g, '');
+    
     return BLOCKED_TERMS.some(term => {
       const normTerm = term.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z\s]/g, '');
-      return normalized.includes(normTerm);
+      // Usa word boundaries (\b) para evitar falsos positivos
+      const regex = new RegExp(`\\b${normTerm}\\b`, 'i');
+      return regex.test(normalized);
     });
   };
 
@@ -145,7 +148,7 @@ export default function RegisterPage() {
               name="course"
               type="text"
               className="form-control"
-              placeholder="Ex: Engenharia de Software"
+              placeholder="Ex: Engenharia da Computação"
               value={form.course}
               onChange={handleChange}
               required

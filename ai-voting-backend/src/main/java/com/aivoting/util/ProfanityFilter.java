@@ -72,7 +72,9 @@ public final class ProfanityFilter {
                     .replaceAll("[ç]", "c")
                     .replaceAll("[^a-z\\s]", "");
 
-            if (normalized.contains(normalizedTerm)) {
+            // Usa regex com limites de palavra (\b) para evitar falsos positivos como "Computação" (contém "puta")
+            Pattern pattern = Pattern.compile("\\b" + Pattern.quote(normalizedTerm) + "\\b");
+            if (pattern.matcher(normalized).find()) {
                 return true;
             }
         }
