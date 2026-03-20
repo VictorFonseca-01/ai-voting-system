@@ -10,6 +10,7 @@ const AI_OPTIONS = [
   { name: 'Grok',          emoji: '⚡', color: '#1da1f2' },
   { name: 'Meta AI',       emoji: '🔵', color: '#0866ff' },
   { name: 'Copilot',       emoji: '🪟', color: '#00adef' },
+  { name: 'DeepSeek',      emoji: '🧠', color: '#4d6eff' },
   { name: 'Não utilizo IA',emoji: '🚫', color: '#6b7280' },
 ];
 

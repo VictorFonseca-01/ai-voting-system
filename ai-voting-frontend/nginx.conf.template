@@ -11,8 +11,8 @@ server {
 
     # Proxy para a API do backend
     location /api/ {
-        # Resolver do Google para evitar erros de DNS no boot
-        resolver 8.8.8.8 8.8.4.4 valid=30s;
+        # Resolver interno do Docker/Railway (127.0.0.11)
+        resolver 127.0.0.11 valid=30s;
         
         # Usamos uma variável para o proxy_pass. 
         # Isso faz o Nginx resolver o domínio em tempo de execução, 

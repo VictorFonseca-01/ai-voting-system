@@ -21,18 +21,16 @@ export default function Navbar() {
       {/* Nav links */}
       <div className="navbar-nav">
         {isAdmin && (
-          <>
-            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              📊 Dashboard
-            </NavLink>
-            <NavLink to="/admin/users" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              👥 Usuários
-            </NavLink>
-          </>
+          <NavLink to="/admin/users" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            👥 Usuários
+          </NavLink>
         )}
 
         {isAuthenticated ? (
           <>
+            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              📊 Dashboard
+            </NavLink>
             <NavLink to="/vote" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               🗳️ Votar
             </NavLink>

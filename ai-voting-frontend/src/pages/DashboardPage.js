@@ -8,6 +8,7 @@ import {
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { QRCodeSVG } from 'qrcode.react';
 import { dashboardAPI } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 // Registra os componentes do Chart.js
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title);
@@ -18,6 +19,7 @@ const PALETTE = ['#6c63ff','#10d98e','#ff4d6d','#ffb547','#00c4cc','#a78bfa','#f
 const SYSTEM_URL = window.location.origin;
 
 export default function DashboardPage() {
+  const { isAdmin } = useAuth();
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
@@ -70,6 +72,58 @@ export default function DashboardPage() {
   const aiRanking = Object.entries(votesByAi)
     .sort((a, b) => b[1] - a[1]);
 
+  // Se NÃO for Admin, mostra a versão SIMPLIFICADA
+  if (!isAdmin) {
+    return (
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px 24px' }}>
+        <div className="fade-up" style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <div className="accent-line" style={{ margin: '0 auto 16px' }} />
+          <h1 style={{ fontSize: '2.2rem', marginBottom: '12px' }}>📊 Resumo da Pesquisa</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Sua participação ajuda a mapear o futuro da IA no Brasil.</p>
+        </div>
+
+        <div className="grid-2 fade-up delay-1" style={{ marginBottom: '32px' }}>
+          <StatCard value={totalVotes}     label="Votos registrados" icon="🗳️" />
+          <StatCard value={totalResponses} label="Participantes"     icon="👥" />
+        </div>
+
+        <div className="card fade-up delay-2" style={{ marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '1.3rem', marginBottom: '24px', textAlign: 'center' }}>🏆 As IAs mais utilizadas</h2>
+          {totalVotes === 0 ? (
+            <EmptyState text="Nenhum voto registrado ainda." />
+          ) : (
+            aiRanking.map(([name, count], i) => {
+              const pct = Math.round((count / totalVotes) * 100);
+              return (
+                <div key={name} className="progress-wrap" style={{ marginBottom: '20px' }}>
+                  <div className="progress-label">
+                    <span style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>#{i+1}</span> {name}
+                    </span>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{pct}%</span>
+                  </div>
+                  <div className="progress-bar" style={{ height: '10px' }}>
+                    <div className="progress-fill" style={{ width: `${pct}%`, background: PALETTE[i % PALETTE.length] }} />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="card fade-up delay-3" style={{ textAlign: 'center', padding: '40px', background: 'linear-gradient(135deg, var(--bg-card) 0%, #1a1a2e 100%)' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✨</div>
+          <h2 style={{ marginBottom: '12px' }}>Obrigado por participar!</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: '1.6' }}>
+            Nossos analistas (e as próprias IAs) estão processando os dados para gerar um relatório completo sobre o uso da tecnologia.
+          </p>
+          <button className="btn btn-ghost" onClick={() => window.location.reload()}>🔄 Atualizar Resultados</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Se FOR Admin, mostra a versão COMPLETA (Elaborada)
   // Gráfico donut — distribuição de votos
   const donutData = {
     labels: aiRanking.map(([name]) => name),
@@ -158,15 +212,15 @@ export default function DashboardPage() {
       <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <div className="accent-line" />
-          <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>📊 Dashboard de Insights</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Resultados em tempo real · atualiza a cada 30s</p>
+          <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>🕵️‍♂️ Painel Administrativo</h1>
+          <p style={{ color: 'var(--text-muted)' }}>Métricas detalhadas e análise de comportamento</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <Link to="/vote" className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
             🗳️ Votar
           </Link>
-          <Link to="/register" className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
-            Participar
+          <Link to="/admin/users" className="btn btn-ghost" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
+            👥 Ver Usuários
           </Link>
         </div>
       </div>

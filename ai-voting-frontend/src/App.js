@@ -27,9 +27,9 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Rotas de Admin */}
+          {/* Rotas protegidas */}
           <Route path="/dashboard" element={
-            <AdminRoute><DashboardPage /></AdminRoute>
+            <ProtectedRoute><DashboardPage /></ProtectedRoute>
           } />
           <Route path="/admin/users" element={
             <AdminRoute><AdminUsersPage /></AdminRoute>
