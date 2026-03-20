@@ -15,13 +15,12 @@ server {
         resolver 127.0.0.11 valid=30s;
         
         # Usamos uma variável para o proxy_pass. 
-        # Isso faz o Nginx resolver o domínio em tempo de execução, 
-        # evitando que ele quebre se o backend estiver fora do ar no início.
+        # Isso faz o Nginx resolver o domínio em tempo de execução.
         set $target_backend ${BACKEND_URL};
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-        proxy_pass http://$backend_host:8080;
+        proxy_pass http://$target_backend:8080;
         
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
