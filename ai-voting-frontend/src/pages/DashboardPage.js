@@ -19,7 +19,7 @@ const PALETTE = ['#6c63ff','#10d98e','#ff4d6d','#ffb547','#00c4cc','#a78bfa','#f
 const SYSTEM_URL = window.location.origin;
 
 export default function DashboardPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, loading: authLoading } = useAuth();
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
@@ -144,7 +144,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) return <div className="page"><div className="spinner" /></div>;
+  if (loading || authLoading) return <div className="page"><div className="spinner" /></div>;
 
   if (error) {
     return (
