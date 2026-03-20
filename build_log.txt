@@ -1,0 +1,135 @@
+time="2026-03-19T20:16:30-03:00" level=warning msg="C:\\Users\\vfonseca\\Downloads\\ai-voting-system-docker\\ai-voting-system-docker\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Image ai-voting-system-docker-backend Building 
+ Image ai-voting-system-docker-frontend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.33kB 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.05kB 0.0s done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:20-alpine
+#3 ...
+
+#4 [internal] load metadata for docker.io/library/nginx:alpine
+#4 DONE 1.1s
+
+#3 [internal] load metadata for docker.io/library/node:20-alpine
+#3 DONE 1.1s
+
+#5 [internal] load .dockerignore
+#5 transferring context:
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 863B 0.0s done
+#6 DONE 0.1s
+
+#7 [builder 1/7] FROM docker.io/library/node:20-alpine@sha256:b88333c42c23fbd91596ebd7fd10de239cedab9617de04142dde7315e3bc0afa
+#7 resolve docker.io/library/node:20-alpine@sha256:b88333c42c23fbd91596ebd7fd10de239cedab9617de04142dde7315e3bc0afa 0.1s done
+#7 DONE 0.1s
+
+#8 [stage-1 1/5] FROM docker.io/library/nginx:alpine@sha256:f46cb72c7df02710e693e863a983ac42f6a9579058a59a35f1ae36c9958e4ce0
+#8 resolve docker.io/library/nginx:alpine@sha256:f46cb72c7df02710e693e863a983ac42f6a9579058a59a35f1ae36c9958e4ce0 0.1s done
+#8 DONE 0.1s
+
+#9 [stage-1 2/5] WORKDIR /usr/share/nginx/html
+#9 CACHED
+
+#10 [stage-1 3/5] RUN rm -rf ./*
+#10 CACHED
+
+#11 [builder 4/7] RUN npm install --legacy-peer-deps
+#11 CACHED
+
+#12 [builder 2/7] WORKDIR /app
+#12 CACHED
+
+#13 [builder 3/7] COPY package.json package-lock.json* ./
+#13 CACHED
+
+#14 [builder 5/7] COPY public ./public
+#14 CACHED
+
+#15 [builder 6/7] COPY src ./src
+#15 CACHED
+
+#16 [builder 7/7] RUN npm run build
+#16 0.546 
+#16 0.546 > ai-voting-frontend@1.0.0 build
+#16 0.546 > react-scripts build
+#16 0.546 
+#16 2.011 node:internal/modules/cjs/loader:1210
+#16 2.011   throw err;
+#16 2.011   ^
+#16 2.011 
+#16 2.011 Error: Cannot find module 'ajv/dist/compile/codegen'
+#16 2.011 Require stack:
+#16 2.011 - /app/node_modules/ajv-keywords/dist/definitions/typeof.js
+#16 2.011 - /app/node_modules/ajv-keywords/dist/keywords/typeof.js
+#16 2.011 - /app/node_modules/ajv-keywords/dist/keywords/index.js
+#16 2.011 - /app/node_modules/ajv-keywords/dist/index.js
+#16 2.011 - /app/node_modules/schema-utils/dist/validate.js
+#16 2.011 - /app/node_modules/schema-utils/dist/index.js
+#16 2.011 - /app/node_modules/terser-webpack-plugin/dist/index.js
+#16 2.011 - /app/node_modules/react-scripts/config/webpack.config.js
+#16 2.011 - /app/node_modules/react-scripts/scripts/build.js
+#16 2.011     at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+#16 2.011     at Module._load (node:internal/modules/cjs/loader:1038:27)
+#16 2.011     at Module.require (node:internal/modules/cjs/loader:1289:19)
+#16 2.011     at require (node:internal/modules/helpers:182:18)
+#16 2.011     at Object.<anonymous> (/app/node_modules/ajv-keywords/dist/definitions/typeof.js:3:19)
+#16 2.011     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+#16 2.011     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+#16 2.011     at Module.load (node:internal/modules/cjs/loader:1266:32)
+#16 2.011     at Module._load (node:internal/modules/cjs/loader:1091:12)
+#16 2.011     at Module.require (node:internal/modules/cjs/loader:1289:19) {
+#16 2.011   code: 'MODULE_NOT_FOUND',
+#16 2.011   requireStack: [
+#16 2.011     '/app/node_modules/ajv-keywords/dist/definitions/typeof.js',
+#16 2.011     '/app/node_modules/ajv-keywords/dist/keywords/typeof.js',
+#16 2.011     '/app/node_modules/ajv-keywords/dist/keywords/index.js',
+#16 2.011     '/app/node_modules/ajv-keywords/dist/index.js',
+#16 2.011     '/app/node_modules/schema-utils/dist/validate.js',
+#16 2.011     '/app/node_modules/schema-utils/dist/index.js',
+#16 2.011     '/app/node_modules/terser-webpack-plugin/dist/index.js',
+#16 2.011     '/app/node_modules/react-scripts/config/webpack.config.js',
+#16 2.011     '/app/node_modules/react-scripts/scripts/build.js'
+#16 2.011   ]
+#16 2.011 }
+#16 2.011 
+#16 2.011 Node.js v20.20.1
+#16 ERROR: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+------
+ > [builder 7/7] RUN npm run build:
+2.011     '/app/node_modules/ajv-keywords/dist/index.js',
+2.011     '/app/node_modules/schema-utils/dist/validate.js',
+2.011     '/app/node_modules/schema-utils/dist/index.js',
+2.011     '/app/node_modules/terser-webpack-plugin/dist/index.js',
+2.011     '/app/node_modules/react-scripts/config/webpack.config.js',
+2.011     '/app/node_modules/react-scripts/scripts/build.js'
+2.011   ]
+2.011 }
+2.011 
+2.011 Node.js v20.20.1
+------
+Dockerfile:17
+
+--------------------
+
+  15 |     ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+  16 |     
+
+  17 | >>> RUN npm run build
+
+  18 |     
+
+  19 |     # ─── Stage 2: Serve com Nginx ────────────────────────────────────
+
+--------------------
+
+failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+

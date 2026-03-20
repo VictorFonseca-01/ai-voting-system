@@ -1,0 +1,82 @@
+version: '3.9'
+
+# ================================================================
+#  AI VOTING SYSTEM — Docker Compose
+#  Rode com: docker-compose up --build
+#  Acesse em: http://localhost:3000
+# ================================================================
+
+services:
+
+  # ──────────────────────────────────────────────────────────────
+  # BANCO DE DADOS — PostgreSQL
+  # ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: aivoting-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-aivoting}
+      POSTGRES_USER:     ${POSTGRES_USER:-aivoting}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aivoting123}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"       # opcional: acesso externo ao banco
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aivoting} -d ${POSTGRES_DB:-aivoting}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────────
+  # BACKEND — Spring Boot
+  # ──────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./ai-voting-backend
+      dockerfile: Dockerfile
+    container_name: aivoting-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy   # só sobe após o banco estar pronto
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      POSTGRES_DB:             ${POSTGRES_DB:-aivoting}
+      POSTGRES_USER:           ${POSTGRES_USER:-aivoting}
+      POSTGRES_PASSWORD:       ${POSTGRES_PASSWORD:-aivoting123}
+      JWT_SECRET:              ${JWT_SECRET:-minha-chave-secreta-super-segura-ai-voting-2024}
+      CORS_ORIGINS:            "*"
+    ports:
+      - "8080:8080"            # opcional: acesso direto à API
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/auth/login -o /dev/null -w '%{http_code}' || exit 0"]
+      interval: 15s
+      timeout: 10s
+      retries: 6
+      start_period: 40s
+
+  # ──────────────────────────────────────────────────────────────
+  # FRONTEND — React (build) + Nginx
+  # ──────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./ai-voting-frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: /api   # nginx redireciona /api → backend:8080
+    container_name: aivoting-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"              # ← ACESSE AQUI: http://localhost:3000
+
+# ──────────────────────────────────────────────────────────────
+# VOLUMES PERSISTENTES
+# ──────────────────────────────────────────────────────────────
+volumes:
+  pgdata:
+    name: aivoting-pgdata
