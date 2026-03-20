@@ -1,6 +1,6 @@
 package com.aivoting.controller;
 
-import com.aivoting.dto.VoteRequest;
+import com.aivoting.dto.*;
 import com.aivoting.entity.Vote;
 import com.aivoting.service.VoteService;
 import jakarta.validation.Valid;
