@@ -51,10 +51,9 @@ public class SecurityConfig {
                 ).permitAll()
                 // Acesso restrito a administradores
                 .requestMatchers(
-                    "/api/dashboard/**",
                     "/api/admin/**"
                 ).hasRole("ADMIN")
-                // Todos os outros endpoints requerem autenticação comum
+                // Dashboard e demais endpoints: qualquer usuário autenticado
                 .anyRequest().authenticated()
             )
 
