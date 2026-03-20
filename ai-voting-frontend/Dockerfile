@@ -26,9 +26,8 @@ RUN rm -rf ./*
 # Copia os arquivos do build React
 COPY --from=builder /app/build .
 
-# Copia configuração customizada do nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copia a template do nginx
+COPY nginx.conf.template /etc/nginx/conf.d/default.conf.template
 
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# Comando para substituir as variáveis no template e iniciar o nginx
+CMD ["/bin/sh", "-c", "envsubst '${PORT} ${BACKEND_URL}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
