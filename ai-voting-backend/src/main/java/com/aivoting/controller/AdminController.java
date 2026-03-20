@@ -1,9 +1,12 @@
 package com.aivoting.controller;
 
+import com.aivoting.repository.QuestionResponseRepository;
 import com.aivoting.repository.UserRepository;
+import com.aivoting.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +24,8 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final UserRepository userRepository;
+    private final VoteRepository voteRepository;
+    private final QuestionResponseRepository questionResponseRepository;
 
     /**
      * GET /api/admin/users
@@ -40,5 +45,22 @@ public class AdminController {
         )).collect(Collectors.toList());
 
         return ResponseEntity.ok(users);
+    }
+
+    /**
+     * DELETE /api/admin/reset
+     * Limpa TODOS os dados do sistema: votos, respostas e usuários.
+     * Apenas admins autenticados podem acessar.
+     */
+    @DeleteMapping("/reset")
+    @Transactional
+    public ResponseEntity<?> resetAllData() {
+        questionResponseRepository.deleteAll();
+        voteRepository.deleteAll();
+        userRepository.deleteAll();
+        return ResponseEntity.ok(Map.of(
+            "message", "Todos os dados foram apagados com sucesso.",
+            "deletedTables", List.of("question_responses", "votes", "users")
+        ));
     }
 }
