@@ -660,6 +660,39 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* ─── EQUIPE E CRÉDITOS ────────────────────────────────────── */}
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '32px', marginTop: '16px' }}>
+          <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', textAlign: 'center' }}>👥 Equipe e Participação</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+            
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🥇</div>
+              <h4 style={{ color: 'var(--accent)', marginBottom: '4px' }}>Victor Fonseca</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Líder do Projeto e Desenvolvedor (Código Base e Lógica)</p>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👥</div>
+              <h4 style={{ marginBottom: '4px' }}>Equipe Técnica</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Gabriel Calixto, Erick Fernando e Kelly Mota</p>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🤖</div>
+              <h4 style={{ color: '#10d98e', marginBottom: '4px' }}>Antigravity (IA)</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pair Programming (Expansões, Backend, UI e Segurança)</p>
+            </div>
+
+          </div>
+          
+          <div style={{ marginTop: '40px', padding: '20px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', textAlign: 'center' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              "Este trabalho é o resultado da colaboração entre inteligência humana e artificial, 
+              focado em mapear as tendências tecnológicas de 2026."
+            </p>
+          </div>
+        </div>
       </div>
 
     </div>
