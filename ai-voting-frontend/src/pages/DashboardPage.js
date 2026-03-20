@@ -693,7 +693,7 @@ export default function DashboardPage() {
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>💡</div>
               <h4 style={{ marginBottom: '4px' }}>Ideias e Pesquisa Real</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Luiz (LP), Mikael e Pablo</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>João Lucas, Luiz, Mikael e Pablo</p>
             </div>
 
             <div style={{ textAlign: 'center' }}>
