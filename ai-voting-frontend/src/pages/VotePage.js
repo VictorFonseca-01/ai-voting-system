@@ -46,15 +46,18 @@ export default function VotePage() {
   };
 
   // Pula direto para o questionário após confirmar as IAs
+  const confirmSubmit = () => {
+    sessionStorage.setItem('selectedIAs', JSON.stringify(selected));
+    window.location.href = '/questionnaire';
+  };
+
   const handleSubmit = () => {
     if (selected.length !== 2) {
       setError('Selecione 2 IAs para continuar.');
       return;
     }
-    // Armazena temporariamente na sessão para o questionário recuperar
-    sessionStorage.setItem('selectedIAs', JSON.stringify(selected));
-    // Redireciona direto para o questionário
-    window.location.href = '/questionnaire';
+    setShowConfirm(true);
+    setSuccess(false); // Ensure success state is reset when attempting a new submission
   };
 
   // Permite edição dos votos
