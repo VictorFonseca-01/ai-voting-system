@@ -434,6 +434,16 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
   animation-delay: -5s;
 }
 
+.orb-3 {
+  background: #ff6b6b;
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+  opacity: 0.08;
+  animation-delay: -10s;
+}
+
 @keyframes float {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33%      { transform: translate(30px, 50px) scale(1.1); }
@@ -465,4 +475,110 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
 .ai-icon-card:hover {
   transform: rotate(3deg) scale(1.1);
   filter: drop-shadow(0 0 15px var(--accent));
+}
+
+/* ─── ANIMATED GRADIENT TEXT ─────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(270deg, var(--accent), #ff6b6b, var(--success), var(--accent));
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ─── PARTICLES / STARS ──────────────────────────────────────── */
+.particles-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: rgba(108, 99, 255, 0.6);
+  border-radius: 50%;
+  animation: twinkle 4s infinite ease-in-out;
+}
+
+.particle:nth-child(2n) {
+  background: rgba(16, 217, 142, 0.5);
+  animation-duration: 5s;
+}
+
+.particle:nth-child(3n) {
+  background: rgba(255, 107, 107, 0.4);
+  animation-duration: 6s;
+  width: 2px;
+  height: 2px;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5) translateY(0); }
+  50%      { opacity: 1; transform: scale(1.2) translateY(-20px); }
+}
+
+/* ─── SHIMMER BORDER ─────────────────────────────────────────── */
+.shimmer-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-border::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(108, 99, 255, 0.15) 60deg,
+    transparent 120deg
+  );
+  animation: shimmerRotate 4s linear infinite;
+  z-index: -1;
+}
+
+@keyframes shimmerRotate {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ─── STAGGERED ENTRANCE ─────────────────────────────────────── */
+.stagger-in {
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger-in:nth-child(1) { animation-delay: 0.1s; }
+.stagger-in:nth-child(2) { animation-delay: 0.25s; }
+.stagger-in:nth-child(3) { animation-delay: 0.4s; }
+
+/* ─── PULSE RING ─────────────────────────────────────────────── */
+.pulse-ring {
+  position: relative;
+}
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: pulseRing 3s ease-out infinite;
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(0.95); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 0; }
 }

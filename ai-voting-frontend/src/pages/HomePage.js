@@ -23,6 +23,23 @@ export default function HomePage() {
         {/* Background decorativo */}
         <div className="orb orb-1" />
         <div className="orb orb-2" />
+        <div className="orb orb-3" />
+
+        {/* Partículas / Estrelas */}
+        <div className="particles-container">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={i}
+              className="particle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+        </div>
+
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0,
           background: `
@@ -42,7 +59,7 @@ export default function HomePage() {
 
             <h1 style={{ fontSize: 'clamp(2.4rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.1, marginBottom: '24px', letterSpacing: '-0.02em' }}>
               Qual IA você mais{' '}
-              <span style={{ color: 'var(--accent)', position: 'relative' }}>
+              <span className="gradient-text" style={{ position: 'relative' }}>
                 utiliza?
                 <svg style={{ position: 'absolute', bottom: '-8px', left: 0, width: '100%' }} viewBox="0 0 100 20" preserveAspectRatio="none">
                   <path d="M0,10 Q50,20 100,10" stroke="var(--accent)" strokeWidth="4" fill="transparent" opacity="0.3" />
@@ -135,7 +152,7 @@ export default function HomePage() {
               { icon: '🗳️', title: 'Vote em 2 IAs', desc: 'Escolha 2 inteligências artificiais que você usa.' },
               { icon: '📊', title: 'Veja os insights', desc: 'Confira gráficos e rankings em tempo real no dashboard.' },
             ].map(({ icon, title, desc }) => (
-              <div key={title} className="card" style={{ textAlign: 'left' }}>
+              <div key={title} className="card shimmer-border stagger-in" style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>{icon}</div>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>{title}</h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{desc}</p>
