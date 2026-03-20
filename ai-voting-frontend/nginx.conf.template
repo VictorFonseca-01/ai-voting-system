@@ -10,13 +10,24 @@ server {
     gzip_min_length 256;
 
     # Proxy para a API do backend
-    # IMPORTANTE: No Railway, use a variável BACKEND_URL para apontar para o seu backend
     location /api/ {
-        proxy_pass ${BACKEND_URL};
+        # Resolver do Google para evitar erros de DNS no boot
+        resolver 8.8.8.8 8.8.4.4 valid=30s;
+        
+        # Usamos uma variável para o proxy_pass. 
+        # Isso faz o Nginx resolver o domínio em tempo de execução, 
+        # evitando que ele quebre se o backend estiver fora do ar no início.
+        set $target_backend ${BACKEND_URL};
+        proxy_pass $target_backend;
+        
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Timeout maior para o backend acordar
+        proxy_connect_timeout 60s;
+        proxy_read_timeout 60s;
     }
 
     # SPA: todas as rotas retornam o index.html
