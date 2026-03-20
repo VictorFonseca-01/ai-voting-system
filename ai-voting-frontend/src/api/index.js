@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-/** Base URL do backend Spring Boot */
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+/** Base URL do backend Spring Boot injetada via Docker em runtime */
+const API_BASE_URL = window.ENV?.API_URL || process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 /** Instância configurada do axios */
 const api = axios.create({

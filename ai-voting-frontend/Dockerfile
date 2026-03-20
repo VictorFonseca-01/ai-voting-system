@@ -30,5 +30,12 @@ COPY --from=builder /app/build .
 # Copia a template do nginx
 COPY nginx.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Comando para substituir as variáveis no template e iniciar o nginx
-CMD ["/bin/sh", "-c", "envsubst '${PORT} ${BACKEND_URL}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Script de inicialização para injetar a variável BACKEND_URL
+RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'echo "window.ENV = { API_URL: \"${BACKEND_URL:-http://localhost:8080/api}\" };" > /usr/share/nginx/html/env-config.js' >> /start.sh && \
+    echo 'envsubst '"'"'${PORT}'"'"' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf' >> /start.sh && \
+    echo 'nginx -g "daemon off;"' >> /start.sh && \
+    chmod +x /start.sh
+
+# Inicia o container com o script
+CMD ["/start.sh"]

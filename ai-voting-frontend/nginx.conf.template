@@ -9,34 +9,6 @@ server {
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
     gzip_min_length 256;
 
-    # Proxy para a API do backend
-    location /api/ {
-        # Resolver externo (Google) para garantir resolução do domínio público do Railway se necessário.
-        resolver 8.8.8.8 8.8.4.4 valid=300s;
-        resolver_timeout 5s;
-        
-        # Aponta para a variável de ambiente que guarda a URL pública do backend 
-        # (Ex: https://ai-voting-backend-production.up.railway.app)
-        set $target_backend ${BACKEND_URL};
-        
-        proxy_pass $target_backend;
-        
-        # Headers necessários para TLS no Railway
-        proxy_set_header Host $proxy_host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-        
-        # SNI para suportar SSL no proxy_pass
-        proxy_ssl_server_name on;
-        proxy_ssl_protocols TLSv1.2 TLSv1.3;
-        
-        # Timeouts de leitura/escrita
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-
     # SPA: todas as rotas retornam o index.html
     location / {
         try_files $uri $uri/ /index.html;
