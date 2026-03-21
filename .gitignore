@@ -1,27 +1,18 @@
-# Node
-ai-voting-frontend/node_modules/
-ai-voting-frontend/build/
-
-# Java / Maven
-ai-voting-backend/target/
-ai-voting-backend/.mvn/
-
-# IDE
-.idea/
-*.iml
-.vscode/
-.gemini/
-
-# OS
+node_modules/
+.env
+build/
 .DS_Store
-Thumbs.db
-
-# Logs
 *.log
-tunnel*.log
-
-# Docker volumes (local only)
-pgdata/
-
-# Misc
-ai-voting-system-backup.zip
+backups/
+ai-voting-backend/
+*.py
+supabase/
+docker-compose.yml
+run-recovery.js
+start-local.sh
+db_users.csv
+backend.log
+build_log.txt
+tunnel.log
+tunnel2.log
+tunnel3.log

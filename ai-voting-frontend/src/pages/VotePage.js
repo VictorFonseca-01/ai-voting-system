@@ -24,9 +24,22 @@ export default function VotePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  // Remove o checkStatus inicial já que não há mais login para votantes
+  // Verifica se o usuário já votou no banco de dados
   useEffect(() => {
-    setCheckLoading(false);
+    const checkStatus = async () => {
+      try {
+        const { data } = await votesAPI.checkStatus();
+        if (data.hasVoted) {
+          setHasVoted(true);
+          setMyVotes(data.votes);
+        }
+      } catch (err) {
+        console.error("Erro ao checar status de votação", err);
+      } finally {
+        setCheckLoading(false);
+      }
+    };
+    checkStatus();
   }, []);
 
   // Alterna seleção de uma IA (máx. 2)

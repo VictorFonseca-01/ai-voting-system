@@ -22,11 +22,10 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const { data } = await authAPI.login(form);
-      login({ id: data.userId, name: data.name, email: data.email, role: data.role }, data.token);
+      await authAPI.login(form);
       navigate('/vote');
     } catch (err) {
-      setError(err.response?.data?.error || 'Erro ao fazer login. Verifique suas credenciais.');
+      setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
     } finally {
       setLoading(false);
     }

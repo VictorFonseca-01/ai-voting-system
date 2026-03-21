@@ -1,7 +1,0 @@
-[build]
-builder = "dockerfile"
-dockerFilePath = "Dockerfile"
-
-[deploy]
-healthcheckPath = "/api/auth/health"
-healthcheckTimeout = 300

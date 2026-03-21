@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api';
+import { adminAPI } from '../api';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -10,8 +10,8 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get('/admin/users');
-      setUsers(response.data);
+      const { data } = await adminAPI.getUsers();
+      setUsers(data);
     } catch (err) {
       setError('Erro ao carregar usuários.');
     } finally {
@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
   const confirmDelete = async (userId) => {
     setShowModal(false);
     try {
-      await api.delete(`/admin/users/${userId}`);
+      await adminAPI.deleteUser(userId);
       fetchUsers(); // Recarrega a lista
     } catch (err) {
       setModalConfig({

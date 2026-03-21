@@ -142,7 +142,7 @@ export default function QuestionnairePage() {
       sessionStorage.removeItem('selectedIAs');
       setSuccess(true);
     } catch (err) {
-      setError(err.response?.data?.error || 'Erro ao salvar participação.');
+      setError(err.message || 'Erro ao salvar participação.');
     } finally {
       setLoading(false);
     }

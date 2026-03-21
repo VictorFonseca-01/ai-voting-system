@@ -1,45 +1,40 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
+import { authAPI } from '../api';
 
 /** Contexto global de autenticação */
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Carrega dados salvos no localStorage ao iniciar
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser  = localStorage.getItem('user');
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    // Busca sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ? { ...session.user, ...session.user.user_metadata } : null);
+      setLoading(false);
+    });
+
+    // Ouve mudanças
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? { ...session.user, ...session.user.user_metadata } : null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  /** Salva token e usuário após login/cadastro */
-  const login = (userData, jwtToken) => {
-    setToken(jwtToken);
-    setUser(userData);
-    localStorage.setItem('token', jwtToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+  /** Mantendo as assinaturas legadas para não quebrar componentes */
+  const login = () => { /* Vazio: state se atualiza sozinho via onAuthStateChange após o login no component */ };
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
-  /** Remove dados e desloga o usuário */
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  };
-
-  const isAuthenticated = !!token;
-  const isAdmin = user?.role === 'ROLE_ADMIN';
+  const isAuthenticated = !!user;
+  const isAdmin = user?.role === 'ROLE_ADMIN' || user?.email === 'admin@aivoting.com';
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isAdmin, loading }}>
       {children}
     </AuthContext.Provider>
   );

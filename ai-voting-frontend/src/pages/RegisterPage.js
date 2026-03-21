@@ -87,11 +87,12 @@ export default function RegisterPage() {
     setLoading(true);
     setError('');
     try {
-      const { data } = await authAPI.register(form);
-      login({ id: data.userId, name: data.name, email: data.email, role: data.role }, data.token);
+      await authAPI.register(form);
+      // Se o usuário já estiver logado (confirmação auto), navega. 
+      // Caso contrário, ele pode precisar confirmar o email.
       navigate('/vote');
     } catch (err) {
-      setError(err.response?.data?.error || 'Erro ao criar conta. Tente novamente.');
+      setError(err.message || 'Erro ao criar conta. Tente novamente.');
     } finally {
       setLoading(false);
     }
