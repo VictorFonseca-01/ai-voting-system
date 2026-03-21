@@ -100,9 +100,17 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map(u => (
+              {[...users]
+                .sort((a, b) => {
+                  if (a.email === 'admin@aivoting.com') return -1;
+                  if (b.email === 'admin@aivoting.com') return 1;
+                  return (a.name || '').localeCompare(b.name || '');
+                })
+                .map((u, index) => (
                 <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '12px', color: 'var(--text-muted)' }}>#{u.id}</td>
+                  <td style={{ padding: '12px', color: 'var(--text-muted)' }}>
+                    #{String(index + 1).padStart(2, '0')}
+                  </td>
                   <td style={{ padding: '12px', fontWeight: 'bold' }}>
                     {u.name}
                     {u.role === 'ROLE_ADMIN' && <span className="badge badge-accent" style={{ marginLeft: '8px', fontSize: '0.65rem' }}>ADMIN</span>}
