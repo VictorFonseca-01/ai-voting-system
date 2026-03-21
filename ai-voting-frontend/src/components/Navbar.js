@@ -97,7 +97,12 @@ export default function Navbar() {
       </div>
 
       {/* Action buttons — ALWAYS visible, never inside the scrollable area */}
-      <div className="navbar-actions" ref={dropdownRef}>
+      <div className="navbar-actions" ref={dropdownRef} style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '4px',
+        flexShrink: 0
+      }}>
         {isAdmin && (
           <button 
             style={{ 
