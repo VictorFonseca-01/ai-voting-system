@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { votesAPI } from '../api';
 
 // IAs disponíveis para votação
@@ -11,8 +12,19 @@ const AI_OPTIONS = [
   { name: 'Meta AI',       emoji: '🔵', color: '#0866ff' },
   { name: 'Copilot',       emoji: '🪟', color: '#00adef' },
   { name: 'DeepSeek',      emoji: '🧠', color: '#4d6eff' },
-  { name: 'Não utilizo IA / Outra',emoji: '🚫', color: '#6b7280' },
+  { name: 'Não utilizo IA / Outra', emoji: '🚫', color: '#6b7280' },
 ];
+
+const fUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.08 } }
+};
+
+// BackgroundOrbs removido para visual mais limpo
 
 export default function VotePage() {
   const [selected, setSelected] = useState([]);
@@ -70,7 +82,7 @@ export default function VotePage() {
       return;
     }
     setShowConfirm(true);
-    setSuccess(false); // Ensure success state is reset when attempting a new submission
+    setSuccess(false);
   };
 
   // Permite edição dos votos
@@ -81,157 +93,249 @@ export default function VotePage() {
   };
 
   if (checkLoading) {
-    return <div className="page"><div className="spinner" /></div>;
+    return (
+      <div className="page" style={{ background: 'var(--bg-main)' }}>
+        <div className="spinner" style={{ width: '40px', height: '40px', borderTopColor: 'var(--accent)' }} />
+      </div>
+    );
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px 24px' }}>
-      {/* Modal de Confirmação */}
-      {showConfirm && (
-        <div className="confirm-overlay">
-          <div className="confirm-card">
-            <div className="confirm-icon">🤔</div>
-            <h2 className="confirm-title">Confirmar Votação?</h2>
-            <p className="confirm-text">
-              Realmente deseja confirmar as IA's selecionadas: 
-              <br/>
-              <strong style={{ color: 'var(--accent)' }}>{selected.join(' e ')}</strong>?
-            </p>
-            <div className="confirm-actions">
-              <button 
-                className="btn btn-ghost" 
-                onClick={() => setShowConfirm(false)}
-                disabled={loading}
-              >
-                Voltar
-              </button>
-              <button 
-                className="btn btn-primary" 
-                onClick={confirmSubmit}
-                disabled={loading}
-              >
-                {loading ? 'Processando...' : 'Sim, Confirmar!'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="fade-up" style={{ marginBottom: '40px' }}>
-        <div className="accent-line" />
-        <h1 style={{ fontSize: '2rem', marginBottom: '12px' }}>🗳️ Votação</h1>
-        <p style={{ color: 'var(--text-muted)' }}>
-          Selecione <strong style={{ color: 'var(--text)' }}>2</strong> IAs que você mais utiliza.
-        </p>
-      </div>
-
-      {/* Já votou */}
-      {hasVoted && !success && (
-        <div className="card fade-up" style={{ textAlign: 'center', padding: '48px' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✅</div>
-          <h2 style={{ marginBottom: '8px' }}>Você já votou!</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
-            Seus votos foram registrados em: <strong style={{ color: 'var(--accent)' }}>{myVotes.join(' e ')}</strong>
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={handleEdit} className="btn btn-ghost" style={{ background: 'var(--bg-input)' }}>
-              ✏️ Editar meus votos
-            </button>
-            <Link to="/questionnaire" className="btn btn-primary">Responder questionário →</Link>
-            <Link to="/dashboard" className="btn btn-ghost">Ver dashboard</Link>
-          </div>
-        </div>
-      )}
-
-      {/* Sucesso após votar */}
-      {success && (
-        <div className="alert alert-success fade-up" style={{ marginBottom: '24px', fontSize: '1rem', padding: '20px' }}>
-          🎉 Votos registrados com sucesso em <strong>{myVotes.join(' e ')}</strong>!
-          <br />
-          <Link to="/questionnaire" style={{ color: 'var(--success)', marginTop: '8px', display: 'inline-block' }}>
-            Agora responda o questionário →
-          </Link>
-        </div>
-      )}
-
-      {/* Grid de IAs */}
-      {!hasVoted && (
-        <>
-          {error && <div className="alert alert-error fade-up">{error}</div>}
-
-          {/* Contador */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: '24px', padding: '14px 24px',
-            background: 'var(--bg-card)', borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border)',
-          }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500 }}>Selecionadas:</span>
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', color: selected.length === 2 ? 'var(--success)' : 'var(--accent)', letterSpacing: '0.05em' }}>
-              {selected.length} / 2
-            </span>
-          </div>
-
-          {/* Cards das IAs */}
-          <div className="grid-2 fade-up delay-1" style={{ marginBottom: '32px', gap: '12px' }}>
-            {AI_OPTIONS.map(({ name, emoji, color }) => {
-              const isSelected = selected.includes(name);
-              return (
-                <button
-                  key={name}
-                  onClick={() => toggleAI(name)}
-                  style={{
-                    background: isSelected ? `${color}18` : 'var(--bg-card)',
-                    border: `2px solid ${isSelected ? color : 'var(--border)'}`,
-                    borderRadius: 'var(--radius)',
-                    padding: '20px 24px',
-                    display: 'flex', alignItems: 'center', gap: '16px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    textAlign: 'left',
-                    boxShadow: isSelected ? `0 0 20px ${color}25` : 'none',
-                    transform: isSelected ? 'translateY(-2px)' : 'none',
-                  }}
-                >
-                  <span style={{ fontSize: '2rem' }}>{emoji}</span>
-                  <div>
-                    <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: isSelected ? color : 'var(--text)', marginBottom: '2px' }}>
-                      {name}
-                    </p>
-                    {isSelected && (
-                      <span style={{ fontSize: '0.75rem', color, fontWeight: 600 }}>✓ Selecionado</span>
-                    )}
-                  </div>
-                  {isSelected && (
-                    <div style={{
-                      marginLeft: 'auto', width: '24px', height: '24px',
-                      borderRadius: '50%', background: color,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#fff', fontSize: '14px', fontWeight: 700,
-                    }}>✓</div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Botão de votar */}
-          <button
-            className="btn btn-primary btn-full"
-            onClick={handleSubmit}
-            disabled={selected.length !== 2 || loading}
-            style={{ padding: '16px', fontSize: '1rem' }}
+    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', paddingBottom: '80px' }}>
+      
+      {/* Modal de Confirmação Premium */}
+      <AnimatePresence>
+        {showConfirm && (
+          <motion.div 
+            className="confirm-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ zIndex: 999 }}
           >
-            {loading
-              ? <><span className="spinner" style={{ width: 20, height: 20 }} /> Registrando votos...</>
-              : selected.length === 2
-                ? `🗳️ Confirmar votos: ${selected.join(' + ')}`
-                : `Selecione ${2 - selected.length} IA${2 - selected.length > 1 ? 's' : ''} para continuar`
-            }
-          </button>
-        </>
-      )}
+            <motion.div 
+              className="confirm-card"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              style={{ background: 'var(--grad-glass)', border: '1px solid rgba(255,255,255,0.1)', padding: '40px' }}
+            >
+              <div style={{ fontSize: '4rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.3))' }}>🌟</div>
+              <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>Tudo Certo?</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '32px', fontSize: '1.1rem', lineHeight: '1.6' }}>
+                Você escolheu as seguintes Inteligências Artificiais como suas favoritas:
+                <br/>
+                <motion.div 
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+                  style={{ marginTop: '16px', fontWeight: 800, fontSize: '1.4rem' }}
+                  className="gradient-text"
+                >
+                  {selected.join(' & ')}
+                </motion.div>
+              </p>
+              <div className="confirm-actions" style={{ gap: '16px' }}>
+                <button 
+                  className="btn btn-ghost" 
+                  onClick={() => setShowConfirm(false)}
+                  style={{ padding: '14px 30px' }}
+                >
+                  Revisar
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={confirmSubmit}
+                  style={{ padding: '14px 40px', background: 'var(--grad-primary)', border: 'none' }}
+                >
+                  {loading ? 'Processando...' : 'Confirmar e Continuar →'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '60px 24px', position: 'relative', zIndex: 1 }}>
+        
+        {/* Header */}
+        <motion.div initial="hidden" animate="visible" variants={fUp} style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <motion.div 
+            style={{ width: '60px', height: '4px', background: 'var(--grad-vibrant)', borderRadius: '2px', margin: '0 auto 20px' }}
+            animate={{ width: [40, 80, 40] }} transition={{ duration: 4, repeat: Infinity }}
+          />
+          <h1 className="gradient-text" style={{ fontSize: '3rem', marginBottom: '16px', fontWeight: 800 }}>
+            Votação de Elite
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto' }}>
+            Selecione as <strong style={{ color: '#fff' }}>duas</strong> interfaces que melhor atendem suas necessidades diárias.
+          </p>
+        </motion.div>
+
+        {/* Status: Já votou */}
+        {hasVoted && !success && (
+          <motion.div 
+            className="card" initial="hidden" animate="visible" variants={fUp}
+            style={{ textAlign: 'center', padding: '60px 40px', background: 'var(--grad-glass)' }}
+          >
+            <div style={{ fontSize: '4rem', marginBottom: '24px', filter: 'drop-shadow(0 0 15px var(--success))' }}>🏆</div>
+            <h2 style={{ fontSize: '1.8rem', marginBottom: '12px' }}>Voto Registrado</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '40px', fontSize: '1.1rem' }}>
+              Suas escolhas atuais: <span className="gradient-text" style={{ fontWeight: 800 }}>{myVotes.join(' & ')}</span>
+            </p>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button 
+                onClick={handleEdit} className="btn btn-ghost" 
+                style={{ background: 'rgba(255,255,255,0.05)', padding: '14px 28px' }}
+              >
+                ✏️ Editar Escolhas
+              </button>
+              <Link to="/questionnaire" className="btn btn-primary" style={{ padding: '14px 32px' }}>Responder Pesquisa →</Link>
+              <Link to="/dashboard" className="btn btn-ghost" style={{ padding: '14px 28px' }}>Ver Dashboard</Link>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Grid de IAs */}
+        {!hasVoted && (
+          <>
+            <AnimatePresence>
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                  className="alert alert-error" style={{ marginBottom: '24px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid #f43f5e' }}
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Contador Premium */}
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                marginBottom: '32px', padding: '20px 32px',
+                background: 'rgba(255,255,255,0.02)', borderRadius: '20px',
+                border: '1px solid rgba(255,255,255,0.05)',
+                boxShadow: 'inset 0 0 20px rgba(255,255,255,0.02)'
+              }}
+            >
+              <span style={{ color: 'var(--text-muted)', fontSize: '1.1rem', fontWeight: 500, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                Progresso da Seleção
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '100px', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <motion.div 
+                    initial={{ width: 0 }} animate={{ width: `${(selected.length / 2) * 100}%` }}
+                    style={{ height: '100%', background: 'var(--grad-vibrant)' }}
+                  />
+                </div>
+                <span style={{ 
+                  fontFamily: 'var(--font-display)', 
+                  fontWeight: 800, 
+                  fontSize: '2rem', 
+                  color: selected.length === 2 ? 'var(--success)' : '#fff',
+                  minWidth: '100px',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'baseline',
+                  gap: '4px'
+                }}>
+                  {selected.length} <span style={{ fontSize: '1.2rem', opacity: 0.3, fontWeight: 400 }}>/ 2</span>
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Cards das IAs */}
+            <motion.div 
+              className="grid-2" initial="hidden" animate="visible" variants={stagger}
+              style={{ marginBottom: '40px', gap: '16px' }}
+            >
+              {AI_OPTIONS.map(({ name, emoji, color }, idx) => {
+                const isSelected = selected.includes(name);
+                return (
+                  <motion.button
+                    key={name}
+                    variants={fUp}
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => toggleAI(name)}
+                    style={{
+                      background: isSelected ? `linear-gradient(135deg, ${color}22 0%, rgba(255,255,255,0.02) 100%)` : 'var(--grad-glass)',
+                      border: `1px solid ${isSelected ? color : 'rgba(255,255,255,0.05)'}`,
+                      borderRadius: '24px',
+                      padding: '24px 32px',
+                      display: 'flex', alignItems: 'center', gap: '24px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      textAlign: 'left',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <div style={{ 
+                      fontSize: '2.5rem', 
+                      background: isSelected ? `${color}33` : 'rgba(255,255,255,0.03)',
+                      width: '64px', height: '64px', borderRadius: '16px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.3s'
+                    }}>{emoji}</div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.1rem', color: isSelected ? color : '#fff', marginBottom: '4px' }}>
+                        {name}
+                      </p>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        {isSelected ? '✓ Selecionada para votação' : 'Toque para selecionar'}
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <motion.div 
+                        initial={{ scale: 0 }} animate={{ scale: 1 }}
+                        style={{
+                          width: '28px', height: '28px',
+                          borderRadius: '50%', background: color,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: '#fff', fontSize: '16px', fontWeight: 800,
+                          boxShadow: `0 0 15px ${color}66`
+                        }}
+                      >✓</motion.div>
+                    )}
+                    {/* Decorative color orb */}
+                    {isSelected && (
+                      <div style={{ 
+                        position: 'absolute', bottom: '-20px', right: '-20px', 
+                        width: '80px', height: '80px', background: color, opacity: 0.1, 
+                        filter: 'blur(30px)', borderRadius: '50%' 
+                      }} />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+
+            {/* CTA Votar */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
+              <button
+                className="btn btn-primary btn-full"
+                onClick={handleSubmit}
+                disabled={selected.length !== 2 || loading}
+                style={{ 
+                  padding: '20px', fontSize: '1.1rem', borderRadius: '20px',
+                  background: selected.length === 2 ? 'var(--grad-primary)' : 'rgba(255,255,255,0.05)',
+                  border: 'none', fontWeight: 800, boxShadow: selected.length === 2 ? '0 10px 30px rgba(99, 102, 241, 0.3)' : 'none',
+                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+              >
+                {loading
+                  ? <><span className="spinner" style={{ width: 24, height: 24 }} /> Processando...</>
+                  : selected.length === 2
+                    ? `🚀 Confirmar Escolhas: ${selected.join(' & ')}`
+                    : `Selecione ${2 - selected.length} IA's para desbloquear`
+                }
+              </button>
+            </motion.div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

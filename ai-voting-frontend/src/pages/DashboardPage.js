@@ -7,6 +7,7 @@ import {
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { QRCodeSVG } from 'qrcode.react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { dashboardAPI, adminAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,9 +15,22 @@ import { useAuth } from '../context/AuthContext';
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title);
 
 // Paleta de cores para os gráficos
-const PALETTE = ['#6c63ff','#10d98e','#ff4d6d','#ffb547','#00c4cc','#a78bfa','#f59e0b'];
+// Paleta de cores vibrantes e modernas
+const PALETTE = ['#6366f1', '#10b981', '#f43f5e', '#fbbf24', '#06b6d4', '#8b5cf6', '#d946ef'];
 
 const SYSTEM_URL = window.location.origin;
+
+// Variantes de animação para Framer Motion
+const fUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.1 } }
+};
+
+// BackgroundOrbs removido conforme solicitado ("sem as ondas")
 
 export default function DashboardPage() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -230,52 +244,95 @@ export default function DashboardPage() {
   const aiRanking = Object.entries(votesByAi)
     .sort((a, b) => b[1] - a[1]);
 
-  // Se NÃO for Admin, mostra a versão SIMPLIFICADA
+  // Se NÃO for Admin, mostra a versão SIMPLIFICADA (PREMIUM)
   if (!isAdmin) {
     return (
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '48px 24px' }}>
-        <div className="fade-up" style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div className="accent-line" style={{ margin: '0 auto 16px' }} />
-          <h1 style={{ fontSize: '2.2rem', marginBottom: '12px' }}>📊 Resumo da Pesquisa</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Sua participação ajuda a mapear o futuro da IA no Brasil.</p>
-        </div>
+    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh' }}>
+        
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '60px 24px', position: 'relative', zIndex: 1 }}>
+          <motion.div 
+            initial="hidden" animate="visible" variants={fUp}
+            style={{ textAlign: 'center', marginBottom: '60px' }}
+          >
+            <motion.div 
+              style={{ width: '60px', height: '4px', background: 'var(--grad-vibrant)', borderRadius: '2px', margin: '0 auto 20px' }}
+              animate={{ width: [40, 80, 40] }} transition={{ duration: 4, repeat: Infinity }}
+            />
+            <h1 className="gradient-text" style={{ fontSize: '3rem', marginBottom: '16px', fontWeight: 800 }}>
+              Resumo da Pesquisa
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto' }}>
+              Descubra como a comunidade está moldando o futuro com Inteligência Artificial.
+            </p>
+          </motion.div>
 
-        <div className="grid-2 fade-up delay-1" style={{ marginBottom: '32px' }}>
-          <StatCard value={totalVotes}     label="Votos registrados" icon="🗳️" />
-          <StatCard value={totalResponses} label="Participantes"     icon="👥" />
-        </div>
+          <motion.div 
+            className="grid-2" 
+            initial="hidden" animate="visible" variants={stagger}
+            style={{ marginBottom: '40px' }}
+          >
+            <StatCard value={totalVotes}     label="Votos Registrados" icon="🗳️" delay={0.1} />
+            <StatCard value={totalResponses} label="Participantes Ativos" icon="👥" delay={0.2} />
+          </motion.div>
 
-        <div className="card fade-up delay-2" style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.3rem', marginBottom: '24px', textAlign: 'center' }}>🏆 As IAs mais utilizadas</h2>
-          {totalVotes === 0 ? (
-            <EmptyState text="Nenhum voto registrado ainda." />
-          ) : (
-            aiRanking.map(([name, count], i) => {
-              const pct = Math.round((count / totalVotes) * 100);
-              return (
-                <div key={name} className="progress-wrap" style={{ marginBottom: '20px' }}>
-                  <div className="progress-label">
-                    <span style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>#{i+1}</span> {name}
-                    </span>
-                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{pct}%</span>
-                  </div>
-                  <div className="progress-bar" style={{ height: '10px' }}>
-                    <div className="progress-fill" style={{ width: `${pct}%`, background: PALETTE[i % PALETTE.length] }} />
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+          <motion.div 
+            className="card stagger-in" 
+            initial="hidden" animate="visible" variants={fUp}
+            style={{ marginBottom: '40px', padding: '40px', background: 'var(--grad-glass)' }}
+          >
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '32px', textAlign: 'center', fontFamily: 'var(--font-display)' }}>
+              🏆 Liderança das IAs
+            </h2>
+            {totalVotes === 0 ? (
+              <EmptyState text="Aguardando os primeiros votos..." />
+            ) : (
+              aiRanking.map(([name, count], i) => {
+                const pct = Math.round((count / totalVotes) * 100);
+                return (
+                  <motion.div 
+                    key={name} className="progress-wrap" 
+                    initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 + 0.5 }}
+                    style={{ marginBottom: '24px' }}
+                  >
+                    <div className="progress-label">
+                      <span style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.05rem' }}>
+                        <span style={{ opacity: 0.3, fontSize: '0.8rem', fontStyle: 'italic' }}>#{String(i+1).padStart(2, '0')}</span> 
+                        {name}
+                      </span>
+                      <span className="gradient-text" style={{ fontWeight: 800, fontSize: '1.1rem' }}>{pct}%</span>
+                    </div>
+                    <div className="progress-bar" style={{ height: '12px', background: 'rgba(255,255,255,0.05)' }}>
+                      <motion.div 
+                        className="progress-fill" 
+                        initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.8 }}
+                        style={{ background: PALETTE[i % PALETTE.length], boxShadow: `0 0 15px ${PALETTE[i % PALETTE.length]}44` }} 
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+          </motion.div>
 
-        <div className="card fade-up delay-3" style={{ textAlign: 'center', padding: '40px', background: 'linear-gradient(135deg, var(--bg-card) 0%, #1a1a2e 100%)' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✨</div>
-          <h2 style={{ marginBottom: '12px' }}>Obrigado por participar!</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: '1.6' }}>
-            Nossos analistas (e as próprias IAs) estão processando os dados para gerar um relatório completo sobre o uso da tecnologia.
-          </p>
-          <button className="btn btn-ghost" onClick={() => window.location.reload()}>🔄 Atualizar Resultados</button>
+          <motion.div 
+            initial="hidden" animate="visible" variants={fUp}
+            style={{ 
+              textAlign: 'center', padding: '60px 40px', 
+              borderRadius: 'var(--radius)',
+              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(217, 70, 239, 0.1) 100%)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              boxShadow: 'inset 0 0 20px rgba(255,255,255,0.02)'
+            }}
+          >
+            <div style={{ fontSize: '4rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.3))' }}>✨</div>
+            <h2 style={{ fontSize: '1.8rem', marginBottom: '16px' }}>Obrigado por sua voz!</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '32px', fontSize: '1.1rem', lineHeight: '1.6' }}>
+              Sua contribuição é fundamental para entendermos como as inteligências artificiais estão impactando nosso cotidiano.
+            </p>
+            <button className="btn btn-primary" onClick={() => window.location.reload()} style={{ padding: '16px 40px', fontSize: '1rem' }}>
+              🔄 Atualizar Dashboard
+            </button>
+          </motion.div>
         </div>
       </div>
     );
@@ -409,205 +466,233 @@ export default function DashboardPage() {
       )}
 
       {/* ─── HEADER ───────────────────────────────────────────────── */}
-      <div className="fade-up" style={{ marginBottom: '32px' }}>
-        <div className="accent-line" />
-        <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>🕵️‍♂️ Painel Administrativo</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Métricas detalhadas e análise de comportamento</p>
-      </div>
+      <motion.div initial="hidden" animate="visible" variants={fUp} style={{ marginBottom: '40px', position: 'relative', zIndex: 1 }}>
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <motion.div 
+            style={{ width: '48px', height: '4px', background: 'var(--grad-primary)', borderRadius: '2px', marginBottom: '16px' }}
+            animate={{ scaleX: [1, 1.5, 1] }} transition={{ duration: 3, repeat: Infinity }}
+          />
+          <h1 className="gradient-text" style={{ fontSize: '2.5rem', marginBottom: '8px', fontWeight: 800 }}>
+            Painel Administrativo
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Visão analítica profunda e inteligência de dados.</p>
+        </div>
+      </motion.div>
 
       {/* ─── PAINEL DE AÇÕES ADMIN ─────────────────────────────────── */}
-      <div className="card fade-up" style={{ marginBottom: '32px', padding: '24px' }}>
-        {/* Grupo 1: Navegação & Atividade */}
-        <div style={{ marginBottom: '20px' }}>
-          <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--accent)', marginBottom: '12px' }}>
-            🧭 Navegação & Atividade
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
-            <Link to="/vote" style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 600,
-              background: 'linear-gradient(135deg, var(--accent), #8b5cf6)', color: '#fff',
-              border: 'none', borderRadius: '10px', cursor: 'pointer',
-              textDecoration: 'none', transition: 'all 0.2s', textAlign: 'center',
-            }}>
-              🗳️ Votar
-            </Link>
-            <button onClick={fetchData} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
-              background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
-              border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}>
-              🔄 Atualizar
-            </button>
-            <Link to="/admin/users" style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
-              background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
-              border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
-              textDecoration: 'none', transition: 'all 0.2s', textAlign: 'center',
-            }}>
-              👥 Usuários
-            </Link>
-            <button onClick={handleResetMyVotes} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
-              background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
-              border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}>
-              🔄 Refazer Votos
-            </button>
-            <button onClick={handleChangePassword} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
-              background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
-              border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}>
-              🔑 Mudar Senha
-            </button>
-          </div>
-        </div>
-
-        {/* Divisor */}
-        <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0 20px' }} />
-
-        {/* Grupo 2: Sistema & Dados */}
-        <div>
-          <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-            ⚙️ Sistema & Dados
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
-            <button onClick={handleExportData} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
-              background: 'rgba(16, 217, 142, 0.08)', color: '#10d98e',
-              border: '1px solid rgba(16, 217, 142, 0.2)', borderRadius: '10px', cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}>
-              📥 Baixar Backup
-            </button>
-            {window.location.hostname === 'localhost' && (
-              <label style={{
+      {isAdmin && (
+        <motion.div 
+          className="card" initial="hidden" animate="visible" variants={fUp}
+          style={{ marginBottom: '40px', padding: '32px', background: 'var(--grad-glass)', border: '1px solid rgba(255,255,255,0.05)' }}
+        >
+          {/* Grupo 1: Navegação & Atividade */}
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--accent)', marginBottom: '12px' }}>
+              🧭 Navegação & Atividade
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+              <Link to="/vote" style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '12px 16px', fontSize: '0.85rem', fontWeight: 600,
+                background: 'linear-gradient(135deg, var(--accent), #8b5cf6)', color: '#fff',
+                border: 'none', borderRadius: '10px', cursor: 'pointer',
+                textDecoration: 'none', transition: 'all 0.2s', textAlign: 'center',
+              }}>
+                🗳️ Votar
+              </Link>
+              <button onClick={fetchData} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
-                background: 'rgba(108, 99, 255, 0.08)', color: '#a78bfa',
+                background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
                 border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
                 transition: 'all 0.2s',
               }}>
-                📤 Restaurar Backup
-                <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
-              </label>
-            )}
-            <button onClick={handleResetData} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
-              background: 'rgba(255, 77, 109, 0.08)', color: '#ff8fa3',
-              border: '1px solid rgba(255, 77, 109, 0.2)', borderRadius: '10px', cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}>
-              🗑️ Zerar Sistema
-            </button>
+                🔄 Atualizar
+              </button>
+              <Link to="/admin/users" style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+                background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
+                border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+                textDecoration: 'none', transition: 'all 0.2s', textAlign: 'center',
+              }}>
+                👥 Usuários
+              </Link>
+              <button onClick={handleResetMyVotes} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+                background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
+                border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}>
+                🔄 Refazer Votos
+              </button>
+              <button onClick={handleChangePassword} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+                background: 'rgba(108, 99, 255, 0.08)', color: 'var(--accent-light)',
+                border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}>
+                🔑 Mudar Senha
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
+
+          {/* Divisor */}
+          <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0 20px' }} />
+
+          {/* Grupo 2: Sistema & Dados */}
+          <div>
+            <p style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+              ⚙️ Sistema & Dados
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+              <button onClick={handleExportData} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+                background: 'rgba(16, 217, 142, 0.08)', color: '#10d98e',
+                border: '1px solid rgba(16, 217, 142, 0.2)', borderRadius: '10px', cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}>
+                📥 Baixar Backup
+              </button>
+              {window.location.hostname === 'localhost' && (
+                <label style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+                  background: 'rgba(108, 99, 255, 0.08)', color: '#a78bfa',
+                  border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}>
+                  📤 Restaurar Backup
+                  <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
+                </label>
+              )}
+              <button onClick={handleResetData} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '12px 16px', fontSize: '0.85rem', fontWeight: 500,
+                background: 'rgba(255, 77, 109, 0.08)', color: '#ff8fa3',
+                border: '1px solid rgba(255, 77, 109, 0.2)', borderRadius: '10px', cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}>
+                🗑️ Zerar Sistema
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* ─── ESTATÍSTICAS GERAIS ───────────────────────────────────── */}
-      <div className="grid-4 fade-up delay-1" style={{ marginBottom: '32px' }}>
-        <StatCard value={totalVotes}     label="Total de votos"       icon="🗳️" />
-        <StatCard value={totalResponses} label="Questionários"        icon="📋" />
-        <StatCard value={useForStudy}    label="Usam para estudar"    icon="📚" />
-        <StatCard value={useForWork}     label="Usam para trabalho"   icon="💼" />
-      </div>
+      <motion.div 
+        className="grid-4" initial="hidden" animate="visible" variants={stagger}
+        style={{ marginBottom: '40px' }}
+      >
+        <StatCard value={totalVotes}     label="Total de votos"       icon="🗳️" delay={0.1} />
+        <StatCard value={totalResponses} label="Questionários"        icon="📋" delay={0.2} />
+        <StatCard value={useForStudy}    label="Usam para estudar"    icon="📚" delay={0.3} />
+        <StatCard value={useForWork}     label="Usam para trabalho"   icon="💼" delay={0.4} />
+      </motion.div>
 
       {/* ─── RANKING + DONUT ──────────────────────────────────────── */}
-      <div className="grid-2 fade-up delay-2" style={{ marginBottom: '24px' }}>
+      <motion.div className="grid-2" initial="hidden" animate="visible" variants={stagger} style={{ marginBottom: '32px' }}>
 
         {/* Ranking */}
-        <div className="card">
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '24px' }}>🏆 Ranking das IAs</h2>
+        <motion.div className="card" variants={fUp} style={{ background: 'var(--grad-glass)' }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: '32px', fontFamily: 'var(--font-display)' }}>🏆 Ranking das IAs</h2>
           {totalVotes === 0 ? (
             <EmptyState text="Nenhum voto registrado ainda." />
           ) : (
             aiRanking.map(([name, count], i) => {
               const pct = Math.round((count / totalVotes) * 100);
               return (
-                <div key={name} className="progress-wrap">
+                <div key={name} className="progress-wrap" style={{ marginBottom: '24px' }}>
                   <div className="progress-label">
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 600 }}>
                       <span style={{
-                        width: '22px', height: '22px', borderRadius: '50%',
+                        width: '24px', height: '24px', borderRadius: '50%',
                         background: PALETTE[i % PALETTE.length],
                         display: 'inline-flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: '0.7rem',
+                        justifyContent: 'center', fontSize: '0.75rem',
                         fontWeight: 800, color: '#fff',
+                        boxShadow: `0 0 10px ${PALETTE[i % PALETTE.length]}44`
                       }}>{i + 1}</span>
                       {name}
                     </span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                      {count} voto{count !== 1 ? 's' : ''} · {pct}%
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 700 }}>
+                      <span className="gradient-text">{count}</span> votos · {pct}%
                     </span>
                   </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${pct}%`, background: PALETTE[i % PALETTE.length] }} />
+                  <div className="progress-bar" style={{ height: '8px', background: 'rgba(255,255,255,0.05)' }}>
+                    <motion.div 
+                      className="progress-fill" 
+                      initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.2, delay: i * 0.1 + 0.3 }}
+                      style={{ background: PALETTE[i % PALETTE.length] }} 
+                    />
                   </div>
                 </div>
               );
             })
           )}
-        </div>
+        </motion.div>
 
         {/* Donut */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '24px', alignSelf: 'flex-start' }}>
-            🎯 Distribuição de Votos
+        <motion.div className="card" variants={fUp} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--grad-glass)' }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: '32px', alignSelf: 'flex-start', fontFamily: 'var(--font-display)' }}>
+            🎯 Distribuição
           </h2>
           {totalVotes === 0 ? (
-            <EmptyState text="Nenhum voto registrado ainda." />
+            <EmptyState text="Nenhum dado disponível." />
           ) : (
-            <div style={{ maxWidth: '280px', width: '100%' }}>
-              <Doughnut data={donutData} options={chartOpts()} />
+            <div style={{ maxWidth: '280px', width: '100%', position: 'relative' }}>
+               <Doughnut data={donutData} options={chartOpts()} />
+               <div style={{ 
+                 position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                 textAlign: 'center', pointerEvents: 'none'
+               }}>
+                 <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{totalVotes}</div>
+                 <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', opacity: 0.5, letterSpacing: '1px' }}>Votos</div>
+               </div>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* ─── BARRA — VOTOS POR IA ─────────────────────────────────── */}
       {totalVotes > 0 && (
-        <div className="card fade-up delay-2" style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '24px' }}>📈 Votos por IA</h2>
+        <motion.div className="card" initial="hidden" animate="visible" variants={fUp} style={{ marginBottom: '40px', background: 'var(--grad-glass)' }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: '32px', fontFamily: 'var(--font-display)' }}>📊 Performance Comercial</h2>
           <Bar data={barData} options={barOpts()} height={90} />
-        </div>
+        </motion.div>
       )}
 
       {/* ─── VOTOS POR USUÁRIO (Apenas Admin) ────────────────────── */}
       {isAdmin && recentVotes.length > 0 && (
-        <div className="card fade-up delay-3" style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '24px' }}>📢 Votos por Usuário (Recentes)</h2>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+        <motion.div className="card" initial="hidden" animate="visible" variants={fUp} style={{ marginBottom: '40px', background: 'var(--grad-glass)' }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: '32px', fontFamily: 'var(--font-display)' }}>📢 Atividade em Tempo Real</h2>
+          <div style={{ overflowX: 'auto', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.95rem' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-                  <th style={{ padding: '12px 8px' }}>Usuário</th>
-                  <th style={{ padding: '12px 8px' }}>Curso</th>
-                  <th style={{ padding: '12px 8px' }}>IA Votada</th>
+                <tr style={{ background: 'rgba(255,255,255,0.02)', color: 'var(--text-muted)' }}>
+                  <th style={{ padding: '20px 16px', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>Usuário</th>
+                  <th style={{ padding: '20px 16px', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>Origem/Curso</th>
+                  <th style={{ padding: '20px 16px', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px' }}>Preferência</th>
                 </tr>
               </thead>
               <tbody>
                 {recentVotes.map((v, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                    <td style={{ padding: '12px 8px', fontWeight: 600 }}>{v.userName}</td>
-                    <td style={{ padding: '12px 8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{v.userCourse}</td>
-                    <td style={{ padding: '12px 8px' }}>
+                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }}>
+                    <td style={{ padding: '16px', fontWeight: 600 }}>{v.userName}</td>
+                    <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{v.userCourse}</td>
+                    <td style={{ padding: '16px' }}>
                       <span style={{ 
-                        background: 'rgba(108, 99, 255, 0.1)', 
-                        color: 'var(--accent)', 
-                        padding: '4px 10px', 
+                        background: 'var(--accent-glow)', 
+                        color: 'var(--accent-light)', 
+                        padding: '6px 14px', 
                         borderRadius: '99px',
-                        fontSize: '0.8rem',
-                        fontWeight: 700
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        border: '1px solid rgba(99, 102, 241, 0.2)'
                       }}>
                         {v.aiName}
                       </span>
@@ -617,168 +702,187 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* ─── ÁREAS PROFISSIONAIS ──────────────────────────────────── */}
-      <div className="grid-2 fade-up delay-3" style={{ marginBottom: '24px' }}>
-        <div className="card">
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '24px' }}>💼 Áreas Profissionais</h2>
+      <motion.div className="grid-2" initial="hidden" animate="visible" variants={stagger} style={{ marginBottom: '40px' }}>
+        <motion.div className="card" variants={fUp} style={{ background: 'var(--grad-glass)' }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: '32px', fontFamily: 'var(--font-display)' }}>💼 Ecossistema Profissional</h2>
           {workAreaEntries.length === 0 ? (
-            <EmptyState text="Sem dados ainda." />
+            <EmptyState text="Aguardando dados demográficos..." />
           ) : (
             <Bar data={workAreaBar} options={barOpts()} height={160} />
           )}
-        </div>
+        </motion.div>
 
-        <div className="card">
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '24px' }}>📍 Onde usam IA</h2>
+        <motion.div className="card" variants={fUp} style={{ background: 'var(--grad-glass)' }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: '32px', fontFamily: 'var(--font-display)' }}>📍 Contexto de Uso</h2>
           {whereEntries.length === 0 ? (
-            <EmptyState text="Sem dados ainda." />
+            <EmptyState text="Aguardando dados..." />
           ) : (
             <Doughnut data={whereDonut} options={chartOpts()} />
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* ─── POR QUE USAM ─────────────────────────────────────────── */}
       {Object.keys(whyUseAi).length > 0 && (
-        <div className="card fade-up delay-3" style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '24px' }}>🤔 Por que usam IA</h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+        <motion.div className="card" initial="hidden" animate="visible" variants={fUp} style={{ marginBottom: '40px', background: 'var(--grad-glass)' }}>
+          <h2 style={{ fontSize: '1.2rem', marginBottom: '32px', fontFamily: 'var(--font-display)' }}>🤔 Motivações e Insights</h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
             {Object.entries(whyUseAi)
               .sort((a, b) => b[1] - a[1])
               .map(([label, count], i) => (
-                <div key={label} style={{
-                  padding: '10px 18px',
-                  background: 'var(--bg-input)',
-                  border: `1px solid ${PALETTE[i % PALETTE.length]}55`,
-                  borderRadius: '99px',
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                }}>
-                  <span style={{ fontSize: '0.9rem' }}>{label}</span>
+                <motion.div 
+                  key={label} 
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  style={{
+                    padding: '12px 20px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${PALETTE[i % PALETTE.length]}44`,
+                    borderRadius: '99px',
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    transition: 'border-color 0.3s'
+                  }}
+                >
+                  <span style={{ fontSize: '0.95rem', fontWeight: 500 }}>{label}</span>
                   <span style={{
                     background: PALETTE[i % PALETTE.length],
                     color: '#fff', borderRadius: '99px',
-                    padding: '2px 8px', fontSize: '0.78rem', fontWeight: 700,
+                    padding: '2px 10px', fontSize: '0.8rem', fontWeight: 800,
+                    boxShadow: `0 0 10px ${PALETTE[i % PALETTE.length]}66`
                   }}>{count}</span>
-                </div>
+                </motion.div>
               ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* ─── QR CODE + SHARE ──────────────────────────────────────── */}
-      <div className="card fade-up" style={{ display: 'flex', alignItems: 'center', gap: '40px', flexWrap: 'wrap', padding: '32px 40px' }}>
+      <motion.div 
+        className="card" initial="hidden" animate="visible" variants={fUp}
+        style={{ display: 'flex', alignItems: 'center', gap: '48px', flexWrap: 'wrap', padding: '40px', background: 'var(--grad-glass)' }}
+      >
         <div style={{
-          background: '#fff', borderRadius: '12px',
-          padding: '12px', display: 'inline-block', flexShrink: 0,
+          background: '#fff', borderRadius: '16px',
+          padding: '16px', display: 'inline-block', flexShrink: 0,
+          boxShadow: '0 0 30px rgba(255,255,255,0.1)'
         }}>
-          <QRCodeSVG value={SYSTEM_URL} size={120} bgColor="#ffffff" fgColor="#0a0a0f" level="H" />
+          <QRCodeSVG value={SYSTEM_URL} size={140} bgColor="#ffffff" fgColor="#0a0a0f" level="H" />
         </div>
-        <div>
-          <h3 style={{ marginBottom: '8px' }}>📱 Compartilhe o sistema</h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '0.95rem' }}>
-            Escaneie o QR Code ou compartilhe o link para mais pessoas participarem.
+        <div style={{ flex: 1, minWidth: '300px' }}>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '12px', fontFamily: 'var(--font-display)' }}>📱 Expandir a Amostra</h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '1.05rem', lineHeight: '1.6' }}>
+            Aumente o engajamento compartilhando o link direto ou utilizando o QR Code em apresentações físicas.
           </p>
-          <code style={{
-            background: 'var(--bg-input)', border: '1px solid var(--border)',
-            padding: '8px 16px', borderRadius: 'var(--radius-sm)',
-            fontSize: '0.9rem', color: 'var(--accent)',
-          }}>{SYSTEM_URL}</code>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <code style={{
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              padding: '12px 20px', borderRadius: '12px',
+              fontSize: '1rem', color: 'var(--accent-light)', flex: 1
+            }}>{SYSTEM_URL}</code>
+            <button className="btn btn-ghost" onClick={() => navigator.clipboard.writeText(SYSTEM_URL)}>📋 Copiar</button>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ─── PAINEL DO PROJETO ─────────────────────────────────────── */}
-      <div className="card fade-up" style={{ marginTop: '24px', padding: '40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-          <span style={{ fontSize: '2rem' }}>🛠️</span>
+      <motion.div 
+        className="card" initial="hidden" animate="visible" variants={fUp}
+        style={{ marginTop: '40px', padding: '50px', background: 'var(--grad-glass)' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '48px' }}>
+          <div style={{ 
+            width: '64px', height: '64px', borderRadius: '16px', 
+            background: 'var(--grad-primary)', display: 'flex', 
+            alignItems: 'center', justifyContent: 'center', fontSize: '2rem' 
+          }}>🛠️</div>
           <div>
-            <h2 style={{ fontSize: '1.4rem', marginBottom: '4px' }}>Desenvolvimento do Projeto</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Tudo que foi construído neste sistema com auxílio de IA</p>
+            <h2 style={{ fontSize: '1.8rem', marginBottom: '4px', fontFamily: 'var(--font-display)' }}>Arquitetura do Ecossistema</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Visão técnica das camadas de inovação aplicadas</p>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', marginBottom: '48px' }}>
           {[
-            { icon: '🔐', title: 'Autenticação JWT', desc: 'Sistema completo de login e cadastro com tokens JWT, criptografia BCrypt e controle de sessão.' },
-            { icon: '👨‍💻', title: 'Painel Administrativo', desc: 'Dashboard exclusivo para admin com gráficos, rankings, métricas detalhadas e gestão de usuários.' },
-            { icon: '📊', title: 'Dashboard de Usuário', desc: 'Versão simplificada do dashboard para usuários comuns visualizarem resultados da pesquisa.' },
-            { icon: '🗳️', title: 'Sistema de Votação', desc: 'Votação em até 2 IAs favoritas com validação e prevenção de votos duplicados.' },
-            { icon: '📝', title: 'Questionário Integrado', desc: 'Coleta de dados sobre uso de IA: onde, por quê, área profissional e finalidade.' },
-            { icon: '✨', title: 'UI Premium (Glassmorphism)', desc: 'Interface moderna com efeitos de vidro, partículas animadas, gradientes e micro-animações.' },
-            { icon: '🚀', title: 'Deploy Automático (Railway)', desc: 'CI/CD via GitHub com deploy automático no Railway. Frontend Nginx + Backend Spring Boot.' },
-            { icon: '🤖', title: '7 IAs como Opções', desc: 'ChatGPT, Claude, Gemini, Grok, Meta AI, Copilot e DeepSeek disponíveis para votação.' },
-            { icon: '🖨️', title: 'QR Code Imprimível', desc: 'Botão de impressão que gera página A4 otimizada com QR Code em alta resolução.' },
-            { icon: '🔄', title: 'Reset de Dados', desc: 'Endpoint admin para limpar todos os dados e recriar o admin automaticamente.' },
-            { icon: '🌐', title: 'CORS & Segurança', desc: 'Configuração de CORS, proteção de rotas por role (ADMIN/USER) e interceptors Axios.' },
-            { icon: '⚡', title: 'Performance Otimizada', desc: 'HikariCP tunado, conexões rápidas ao PostgreSQL e Gzip no Nginx.' },
-          ].map(item => (
-            <div key={item.title} style={{
-              padding: '20px',
-              background: 'rgba(108, 99, 255, 0.04)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              transition: 'all 0.3s ease',
-            }}>
-              <div style={{ fontSize: '1.8rem', marginBottom: '10px' }}>{item.icon}</div>
-              <h4 style={{ fontSize: '0.95rem', marginBottom: '6px', color: 'var(--text)' }}>{item.title}</h4>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{item.desc}</p>
-            </div>
+            { icon: '🔐', title: 'Infraestrutura Serverless', desc: 'Migração completa de legado Java/Docker para Supabase, reduzindo latência e custos.' },
+            { icon: '👨‍💻', title: 'Data Intelligence', desc: 'Análise de dados demográficos cruzada com preferências tecnológicas em tempo real.' },
+            { icon: '✨', title: 'Design System Premium', desc: 'Uso de tokens modernos, Glassmorphism e Framer Motion para uma UX de classe mundial.' },
+            { icon: '🚀', title: 'Continuous Delivery', desc: 'Esteira de CI/CD via Railway com deploys atômicos e seguros via GitHub.' },
+            { icon: '🤖', title: 'IA-Powered Workflow', desc: 'Desenvolvimento acelerado com pair programming entre humano e Antigravity IA.' },
+            { icon: '🛡️', title: 'Segurança Granular', desc: 'Políticas de RLS (Row Level Security) garantindo integridade e privacidade dos dados.' },
+          ].map((item, idx) => (
+            <motion.div 
+              key={item.title} 
+              whileHover={{ y: -5, background: 'rgba(255,255,255,0.06)' }}
+              style={{
+                padding: '28px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: 'var(--radius)',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '16px' }}>{item.icon}</div>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '10px', color: '#fff', fontWeight: 700 }}>{item.title}</h4>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{item.desc}</p>
+            </motion.div>
           ))}
         </div>
 
         {/* ─── EQUIPE E CRÉDITOS ────────────────────────────────────── */}
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '32px', marginTop: '16px' }}>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '8px', textAlign: 'center' }}>📜 Resumo do Trabalho</h3>
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px', maxWidth: '800px', margin: '0 auto 32px auto', lineHeight: '1.6' }}>
-            O projeto <strong>AI Voting System</strong> é uma plataforma integrada para pesquisa de opinião sobre o uso de Inteligência Artificial Generativa. 
-            Desenvolvido com uma arquitetura moderna em Java (Spring Boot) e React, o sistema permite o cadastro seguro de participantes, coleta de dados demográficos e profissionais, 
-            e realização de votações em tempo real entre as principais IAs do mercado. O administrador dispõe de um painel analítico completo, relatórios exportáveis e 
-            ferramentas de sincronização de dados, garantindo uma base sólida para estudos acadêmicos e técnicos sobre a evolução da IA.
-          </p>
-
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', textAlign: 'center' }}>👥 Equipe e Participação</h3>
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '32px' }}>
-            Tema: <strong>Utilidades da Inteligência Artificial e Pesquisas com IA</strong>
-          </p>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '48px' }}>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '40px', textAlign: 'center', fontFamily: 'var(--font-display)' }}>👥 Time de Elite</h3>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '32px', maxWidth: '1000px', margin: '0 auto' }}>
             
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🥇</div>
-              <h4 style={{ color: 'var(--accent)', marginBottom: '4px' }}>Victor Fonseca</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Líder e Desenvolvedor (Código Base e Lógica)</p>
-            </div>
+            <motion.div whileHover={{ scale: 1.05 }} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🥇</div>
+              <h4 className="gradient-text" style={{ fontSize: '1.2rem', marginBottom: '4px', fontWeight: 800 }}>Victor Fonseca</h4>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Product Vision & Lead Architecture</p>
+            </motion.div>
 
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>💻</div>
-              <h4 style={{ marginBottom: '4px' }}>Desenvolvimento Real</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Erick Fernando e Gabriel Calixto</p>
-            </div>
+            <motion.div whileHover={{ scale: 1.05 }} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '12px' }}>💻</div>
+              <h4 style={{ fontSize: '1.2rem', marginBottom: '4px', fontWeight: 700 }}>Core Dev Team</h4>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Erick Fernando & Gabriel Calixto</p>
+            </motion.div>
 
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>💡</div>
-              <h4 style={{ marginBottom: '4px' }}>Ideias e Pesquisa Real</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>João Lucas, Luiz, Mikael e Pablo</p>
-            </div>
+            <motion.div whileHover={{ scale: 1.05 }} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '12px' }}>💡</div>
+              <h4 style={{ fontSize: '1.2rem', marginBottom: '4px', fontWeight: 700 }}>Research & UX</h4>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>João Lucas, Luiz, Mikael & Pablo</p>
+            </motion.div>
 
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🤖</div>
-              <h4 style={{ color: '#10d98e', marginBottom: '4px' }}>Antigravity (IA)</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pair Programming (Expansões, Backend, UI e Segurança)</p>
-            </div>
+            <motion.div whileHover={{ scale: 1.05 }} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🤖</div>
+              <h4 style={{ color: 'var(--success)', fontSize: '1.2rem', marginBottom: '4px', fontWeight: 800 }}>Antigravity</h4>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>AI Technical Partner</p>
+            </motion.div>
 
           </div>
           
-          <div style={{ marginTop: '40px', padding: '20px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', textAlign: 'center' }}>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-              "Este trabalho é o resultado da colaboração entre inteligência humana e artificial, 
-              focado em mapear as tendências tecnológicas de 2026."
+          <motion.div 
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+            style={{ marginTop: '60px', padding: '32px', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}
+          >
+            <p style={{ fontSize: '1.05rem', color: 'var(--text-muted)', fontStyle: 'italic', maxWidth: '700px', margin: '0 auto', marginBottom: '24px' }}>
+              "Este trabalho é o resultado da colaboração entre inteligência humana e artificial, focado em mapear as tendências tecnológicas de 2026."
             </p>
-          </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 20px', background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                color: '#fff', borderRadius: '12px', textDecoration: 'none', fontWeight: 700, fontSize: '0.9rem',
+                boxShadow: '0 10px 20px rgba(220, 39, 67, 0.2)'
+              }}>
+                📸 @aivote.oficial
+              </a>
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
     </div>
   );
@@ -786,13 +890,42 @@ export default function DashboardPage() {
 
 /* ─── COMPONENTES AUXILIARES ──────────────────────────────────────── */
 
-function StatCard({ value, label, icon }) {
+function StatCard({ value, label, icon, delay = 0 }) {
   return (
-    <div className="stat-card">
-      <span style={{ fontSize: '1.5rem' }}>{icon}</span>
-      <div className="stat-value">{value}</div>
-      <div className="stat-label">{label}</div>
-    </div>
+    <motion.div 
+      className="stat-card hover-glow"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      whileHover={{ y: -8, transition: { duration: 0.2 } }}
+      style={{ 
+        background: 'var(--grad-glass)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <span style={{ fontSize: '2rem', marginBottom: '12px', display: 'block' }}>{icon}</span>
+        <motion.div 
+          className="stat-value gradient-text"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: delay + 0.3 }}
+        >
+          {value}
+        </motion.div>
+        <div className="stat-label" style={{ color: 'var(--text-muted)', letterSpacing: '2px', fontSize: '0.7rem' }}>
+          {label}
+        </div>
+      </div>
+      <div style={{ 
+        position: 'absolute', top: '-20%', right: '-10%', 
+        width: '100px', height: '100px', 
+        background: 'var(--accent)', opacity: 0.05, 
+        filter: 'blur(30px)', borderRadius: '50%' 
+      }} />
+    </motion.div>
   );
 }
 

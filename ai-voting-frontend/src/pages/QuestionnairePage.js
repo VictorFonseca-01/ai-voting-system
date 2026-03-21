@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { participationAPI } from '../api';
 
 // Opções das perguntas
@@ -8,7 +9,6 @@ const WHY_OPTIONS   = ['Economizar tempo', 'Aprender mais', 'Resolver problemas'
 const HOW_OPTIONS   = ['Digitando perguntas', 'Por voz', 'Enviando imagens', 'Via API/código', 'Dentro de outros apps', 'Todas as alternativas'];
 const WORK_AREAS    = ['Direito', 'Engenharia', 'TI', 'Mecânica', 'Administração', 'Outros'];
 
-// Lista de cursos da faculdade
 const COURSES = [
   'Administração', 'Agronomia', 'Análise e Desenvolvimento de Sistemas', 'Arquitetura e Urbanismo',
   'Banco de Dados', 'Biomedicina', 'Ciências da Computação', 'Ciências Contábeis', 'Ciências Econômicas',
@@ -19,6 +19,13 @@ const COURSES = [
   'Nutrição', 'Pedagogia', 'Podologia', 'Processos Químicos', 'Psicologia', 'Publicidade e Propaganda',
   'Sistemas de Informação', 'Terapia Ocupacional', 'Outro (Digitar)'
 ];
+
+const fUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+};
+
+// BackgroundOrbs removido para visual mais limpo
 
 export default function QuestionnairePage() {
   const [form, setForm] = useState({
@@ -44,7 +51,6 @@ export default function QuestionnairePage() {
   const courseDropdownRef = useRef(null);
   const identSectionRef = useRef(null);
 
-  // Recupera as IAs selecionadas no passo anterior
   useEffect(() => {
     const saved = sessionStorage.getItem('selectedIAs');
     if (saved) {
@@ -62,13 +68,11 @@ export default function QuestionnairePage() {
 
   const set = (key, val) => setForm(p => ({ ...p, [key]: val }));
 
-  // Lógica de seleção (Limita 2 ou Todas)
   const handleMultiSelect = (key, option) => {
     const current = [...form[key]];
     const isAll = option === 'Todas as alternativas';
 
     if (isAll) {
-      // Se clicou em "Todas", tira o resto ou desmarca se já tava
       if (current.includes(option)) {
         set(key, []);
       } else {
@@ -77,19 +81,13 @@ export default function QuestionnairePage() {
       return;
     }
 
-    // Se clicar em outra coisa e "Todas" tava marcado, limpa "Todas"
     let updated = current.filter(x => x !== 'Todas as alternativas');
-
     if (updated.includes(option)) {
-      // Desmarca
       updated = updated.filter(x => x !== option);
     } else {
-      // Tenta marcar (limite 2)
       if (updated.length < 2) {
         updated.push(option);
       } else {
-        // Opcional: rotacionar ou só não deixar? Vou só não deixar.
-        // Ou trocar o primeiro pelo novo
         updated.shift();
         updated.push(option);
       }
@@ -98,17 +96,16 @@ export default function QuestionnairePage() {
   };
 
   const handleSubmit = async () => {
-    // Validação básica
     setFieldErrors({});
     if (!form.fullName || !form.course) {
-        setError('Nome Completo e Curso são obrigatórios.');
+        setError('Campos obrigatórios ausentes.');
         setFieldErrors({ fullName: !form.fullName, course: !form.course });
         identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
     if (!form.fullName.trim().includes(' ') || form.fullName.trim().split(/\s+/).length < 2) {
-      setError('Por favor, digite seu nome completo (ex: Victor Fonseca).');
+      setError('Por favor, informe seu nome completo.');
       setFieldErrors({ fullName: true });
       identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -117,14 +114,10 @@ export default function QuestionnairePage() {
     setLoading(true);
     setError('');
 
-    // Prepara o Course final
-    const finalCourse = form.course;
-
-    // Prepara dados de Participação Completa
     const payload = {
       aiNames: selectedIAs,
       fullName: form.fullName,
-      course: finalCourse,
+      course: form.course,
       institution: form.institution,
       instagram: form.instagram,
       whereUseAi: form.whereUseAi.join(','),
@@ -138,275 +131,267 @@ export default function QuestionnairePage() {
 
     try {
       await participationAPI.submit(payload);
-      // Limpa dados da sessão após sucesso
       sessionStorage.removeItem('selectedIAs');
       setSuccess(true);
     } catch (err) {
-      setError(err.message || 'Erro ao salvar participação.');
+      setError(err.message || 'Erro ao processar sua participação.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '48px 24px' }}>
-      {/* Header */}
-      <div className="fade-up" style={{ marginBottom: '40px' }}>
-        <div className="accent-line" />
-        <h1 style={{ fontSize: '2rem', marginBottom: '12px' }}>📋 Questionário</h1>
-        <p style={{ color: 'var(--text-muted)' }}>
-          Ajude-nos a entender melhor como as pessoas usam IA. Selecione até 2 opções por pergunta!
-        </p>
-      </div>
-
-      {/* Overlay de Sucesso / Confirmação Final */}
-      {success && (
-        <div className="confirm-overlay">
-          <div className="confirm-card">
-            <div className="confirm-icon">🎉</div>
-            <h2 className="confirm-title">Resposta Enviada!</h2>
-            <p className="confirm-text">
-              Sua participação foi registrada com sucesso. 
-              <br/>
-              Deseja confirmar e ver os resultados?
-            </p>
-            <div className="confirm-actions" style={{ flexDirection: 'column' }}>
-              <Link to="/dashboard" className="btn btn-primary" style={{ width: '100%' }}>
-                ✅ Sim, Tudo certo! (Ver Dashboard)
+    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', paddingBottom: '100px' }}>
+      
+      {/* Overlay de Sucesso Premium */}
+      <AnimatePresence>
+        {success && (
+          <motion.div 
+            className="confirm-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            style={{ zIndex: 1000 }}
+          >
+            <motion.div 
+              className="confirm-card"
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              style={{ background: 'var(--grad-glass)', padding: '60px', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <div style={{ fontSize: '5rem', marginBottom: '24px', filter: 'drop-shadow(0 0 20px var(--success))' }}>🌟</div>
+              <h2 className="gradient-text" style={{ fontSize: '2.4rem', fontWeight: 800, marginBottom: '16px' }}>Missão Cumprida!</h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: '40px', maxWidth: '400px' }}>
+                Sua voz foi ouvida. Agora, junte-se aos outros e veja as tendências mundiais.
+              </p>
+              <Link to="/dashboard" className="btn btn-primary" style={{ width: '100%', padding: '18px', fontSize: '1.1rem', background: 'var(--grad-primary)', border: 'none' }}>
+                Explorar Dashboard →
               </Link>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {error && <div className="alert alert-error">{error}</div>}
+      <div style={{ maxWidth: '850px', margin: '0 auto', padding: '60px 24px', position: 'relative', zIndex: 1 }}>
+        
+        {/* Header */}
+        <motion.div initial="hidden" animate="visible" variants={fUp} style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <motion.div 
+            style={{ width: '60px', height: '4px', background: 'var(--grad-primary)', borderRadius: '2px', margin: '0 auto 20px' }}
+            animate={{ width: [40, 80, 40] }} transition={{ duration: 4, repeat: Infinity }}
+          />
+          <h1 className="gradient-text" style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '16px' }}>
+            Ecossistema de Dados
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto' }}>
+            Contribua para a maior pesquisa sobre inteligência artificial da nossa comunidade.
+          </p>
+        </motion.div>
 
-      {/* ─── IDENTIFICAÇÃO (Passo 0) ─────────────────────────────────── */}
-      <div ref={identSectionRef}>
-        <QuestionCard num={0} title="Identificação" delay="fade-in">
-          <div style={{ display: 'grid', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                  Nome Completo <span style={{ color: 'var(--accent)' }}>*</span>
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Digite seu nome completo"
-                value={form.fullName}
-                onChange={(e) => {
-                    set('fullName', e.target.value);
-                    if (fieldErrors.fullName) setFieldErrors(p => ({...p, fullName: false}));
-                }}
-                style={{ 
-                    padding: '12px',
-                    borderColor: fieldErrors.fullName ? 'var(--danger)' : 'var(--border)',
-                    boxShadow: fieldErrors.fullName ? '0 0 0 1px var(--danger)' : 'none'
-                }}
-              />
-            </div>
+        {error && (
+          <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="alert alert-error" style={{ marginBottom: '32px' }}>
+            {error}
+          </motion.div>
+        )}
 
-            <div ref={courseDropdownRef} style={{ position: 'relative' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                  Curso <span style={{ color: 'var(--accent)' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                  <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Comece a digitar seu curso..."
-                      value={form.course}
-                      onChange={(e) => {
-                          set('course', e.target.value);
-                          setShowCourseSuggestions(true);
-                          if (fieldErrors.course) setFieldErrors(p => ({...p, course: false}));
-                      }}
-                      onFocus={() => setShowCourseSuggestions(true)}
-                      onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === 'Tab') {
-                              const filtered = COURSES.filter(c => c !== 'Outro (Digitar)')
-                                  .filter(c => !form.course || c.toLowerCase().includes(form.course.toLowerCase()));
-                              if (filtered.length > 0) {
-                                  set('course', filtered[0]);
-                                  setShowCourseSuggestions(false);
-                              } else {
-                                  setShowCourseSuggestions(false);
-                              }
-                              if (e.key === 'Enter') e.preventDefault();
-                          }
-                      }}
-                      style={{ 
-                          padding: '12px', 
-                          background: 'var(--bg-input)',
-                          borderColor: fieldErrors.course ? 'var(--danger)' : 'var(--border)',
-                          boxShadow: fieldErrors.course ? '0 0 0 1px var(--danger)' : 'none'
-                      }}
-                  />
-                  <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }}>
-                      🔍
-                  </span>
+        {/* ─── IDENTIFICAÇÃO ─────────────────────────────────── */}
+        <div ref={identSectionRef}>
+          <QuestionCard num={0} title="Identidade Profissional" delay="delay-1">
+            <div style={{ display: 'grid', gap: '24px' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>
+                  Nome Completo <span style={{ color: 'var(--accent-light)' }}>*</span>
+                </label>
+                <input
+                  type="text" className="form-control"
+                  placeholder="Seu nome completo"
+                  value={form.fullName}
+                  onChange={(e) => {
+                      set('fullName', e.target.value);
+                      if (fieldErrors.fullName) setFieldErrors(p => ({...p, fullName: false}));
+                  }}
+                  style={{ 
+                      padding: '16px', borderRadius: '14px',
+                      background: 'rgba(255,255,255,0.03)',
+                      borderColor: fieldErrors.fullName ? '#f43f5e' : 'rgba(255,255,255,0.05)',
+                  }}
+                />
               </div>
 
-            {showCourseSuggestions && (
-                <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    zIndex: 100,
-                    background: '#0d0d12',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    marginTop: '4px',
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
-                }}>
-                    {COURSES.filter(c => c !== 'Outro (Digitar)')
-                        .filter(c => !form.course || c.toLowerCase().includes(form.course.toLowerCase()))
-                        .map(c => (
-                            <div
-                                key={c}
-                                onClick={() => {
-                                    set('course', c);
-                                    setShowCourseSuggestions(false);
-                                }}
-                                style={{
-                                    padding: '10px 12px',
-                                    cursor: 'pointer',
-                                    borderBottom: '1px solid var(--border)',
-                                    fontSize: '0.9rem',
-                                    transition: 'background 0.2s'
-                                }}
-                                onMouseEnter={(e) => e.target.style.background = 'rgba(108, 99, 255, 0.1)'}
-                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                            >
-                                {c}
-                            </div>
-                        ))
-                    }
-                    {form.course && !COURSES.some(c => c.toLowerCase() === form.course.toLowerCase()) && (
-                        <div style={{ padding: '10px 12px', fontSize: '0.85rem', color: 'var(--accent)', fontStyle: 'italic' }}>
-                            Pressione Enter, Tab ou clique fora para usar "{form.course}"
-                        </div>
-                    )}
-                </div>
-            )}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                    Sua Instituição/Empresa (Opcional)
+              <div ref={courseDropdownRef} style={{ position: 'relative' }}>
+                <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>
+                  Curso / Especialização <span style={{ color: 'var(--accent-light)' }}>*</span>
                 </label>
-                <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Ex: Faculdade, Empresa..."
+                <div style={{ position: 'relative' }}>
+                    <input
+                        type="text" className="form-control"
+                        placeholder="Pesquisar curso..."
+                        value={form.course}
+                        onChange={(e) => {
+                            set('course', e.target.value);
+                            setShowCourseSuggestions(true);
+                            if (fieldErrors.course) setFieldErrors(p => ({...p, course: false}));
+                        }}
+                        onFocus={() => setShowCourseSuggestions(true)}
+                        style={{ 
+                            padding: '16px', borderRadius: '14px',
+                            background: 'rgba(255,255,255,0.03)',
+                            borderColor: fieldErrors.course ? '#f43f5e' : 'rgba(255,255,255,0.05)',
+                        }}
+                    />
+                </div>
+
+                <AnimatePresence>
+                  {showCourseSuggestions && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                      style={{
+                        position: 'absolute', top: '100%', left: 0, right: 0,
+                        zIndex: 100, background: 'var(--grad-glass)',
+                        backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '16px', marginTop: '8px', maxHeight: '250px', overflowY: 'auto',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+                      }}
+                    >
+                      {COURSES.filter(c => c !== 'Outro (Digitar)')
+                          .filter(c => !form.course || c.toLowerCase().includes(form.course.toLowerCase()))
+                          .map(c => (
+                              <div
+                                  key={c}
+                                  onClick={() => { set('course', c); setShowCourseSuggestions(false); }}
+                                  style={{
+                                      padding: '14px 20px', cursor: 'pointer',
+                                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                      fontSize: '0.95rem', transition: 'all 0.2s',
+                                  }}
+                                  onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                              >
+                                  {c}
+                              </div>
+                          ))
+                      }
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="grid-2" style={{ gap: '20px' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instituição</label>
+                  <input
+                    type="text" className="form-control"
+                    placeholder="Faculdade/Empresa"
                     value={form.institution}
                     onChange={(e) => set('institution', e.target.value)}
-                    style={{ padding: '12px' }}
-                />
-            </div>
-            <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                    Instagram (Opcional)
-                </label>
-                <input
-                    type="text"
-                    className="form-control"
+                    style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instagram</label>
+                  <input
+                    type="text" className="form-control"
                     placeholder="@seu.perfil"
                     value={form.instagram}
                     onChange={(e) => set('instagram', e.target.value)}
-                    style={{ padding: '12px' }}
-                />
+                    style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)' }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          </QuestionCard>
         </div>
-      </QuestionCard>
-    </div>
 
-      {/* ─── PERGUNTA 1 ────────────────────────────────────────────── */}
-      <QuestionCard num={1} title="Onde você mais usa IA? (Escolha até 2)" delay="delay-1">
-        <OptionGrid
-          options={WHERE_OPTIONS}
-          selected={form.whereUseAi}
-          onSelect={(v) => handleMultiSelect('whereUseAi', v)}
-        />
-      </QuestionCard>
-
-      {/* ─── PERGUNTA 2 ────────────────────────────────────────────── */}
-      <QuestionCard num={2} title="Por que você usa IA? (Escolha até 2)" delay="delay-1">
-        <OptionGrid
-          options={WHY_OPTIONS}
-          selected={form.whyUseAi}
-          onSelect={(v) => handleMultiSelect('whyUseAi', v)}
-        />
-      </QuestionCard>
-
-      {/* ─── PERGUNTA 3 ────────────────────────────────────────────── */}
-      <QuestionCard num={3} title="Como você usa IA? (Escolha até 2)" delay="delay-2">
-        <OptionGrid
-          options={HOW_OPTIONS}
-          selected={form.howUseAi}
-          onSelect={(v) => handleMultiSelect('howUseAi', v)}
-        />
-      </QuestionCard>
-
-      {/* ─── PERGUNTA 4 ────────────────────────────────────────────── */}
-      <QuestionCard num={4} title="Você usa IA para estudar?" delay="delay-2">
-        <BooleanToggle
-          value={form.useForStudy}
-          onChange={(v) => set('useForStudy', v)}
-        />
-      </QuestionCard>
-
-      {/* ─── PERGUNTA 5 ────────────────────────────────────────────── */}
-      <QuestionCard num={5} title="Você usa IA para trabalho?" delay="delay-3">
-        <BooleanToggle
-          value={form.useForWork}
-          onChange={(v) => set('useForWork', v)}
-        />
-      </QuestionCard>
-
-      {/* ─── PERGUNTA 6 ────────────────────────────────────────────── */}
-      <QuestionCard num={6} title="Com o que você trabalha?" delay="delay-3">
-        <OptionGrid
-          options={WORK_AREAS}
-          selected={form.workArea}
-          onSelect={(v) => set('workArea', v)}
-          columns={3}
-        />
-        {form.workArea === 'Outros' && (
-          <div style={{ marginTop: '12px' }}>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Descreva sua área de atuação..."
-              value={form.workAreaOther}
-              onChange={(e) => set('workAreaOther', e.target.value)}
+        {/* ─── PERGUNTAS ────────────────────────────────────────────── */}
+        <div style={{ display: 'grid', gap: '24px' }}>
+          <QuestionCard num={1} title="Contexto de Utilização" delay="delay-2">
+            <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 ambientes onde a IA é indispensável para você.</p>
+            <OptionGrid
+              options={WHERE_OPTIONS}
+              selected={form.whereUseAi}
+              onSelect={(v) => handleMultiSelect('whereUseAi', v)}
             />
+          </QuestionCard>
+
+          <QuestionCard num={2} title="Motivação Principal" delay="delay-2">
+            <OptionGrid
+              options={WHY_OPTIONS}
+              selected={form.whyUseAi}
+              onSelect={(v) => handleMultiSelect('whyUseAi', v)}
+            />
+          </QuestionCard>
+
+          <QuestionCard num={3} title="Método de Interação" delay="delay-3">
+            <OptionGrid
+              options={HOW_OPTIONS}
+              selected={form.howUseAi}
+              onSelect={(v) => handleMultiSelect('howUseAi', v)}
+            />
+          </QuestionCard>
+
+          <div className="grid-2" style={{ gap: '24px' }}>
+            <QuestionCard num={4} title="Uso Acadêmico" delay="delay-3">
+              <BooleanToggle
+                value={form.useForStudy}
+                onChange={(v) => set('useForStudy', v)}
+              />
+            </QuestionCard>
+
+            <QuestionCard num={5} title="Uso Profissional" delay="delay-3">
+              <BooleanToggle
+                value={form.useForWork}
+                onChange={(v) => set('useForWork', v)}
+              />
+            </QuestionCard>
           </div>
-        )}
-      </QuestionCard>
 
-      {/* Botão de envio */}
-      <button
-        className="btn btn-primary btn-full fade-up"
-        style={{ padding: '16px', fontSize: '1rem', marginTop: '8px' }}
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading
-          ? <><span className="spinner" style={{ width: 20, height: 20 }} /> Salvando...</>
-          : '✅ Finalizar e Ver Resultados'
-        }
-      </button>
+          <QuestionCard num={6} title="Campo de Atuação" delay="delay-4">
+            <OptionGrid
+              options={WORK_AREAS}
+              selected={form.workArea}
+              onSelect={(v) => set('workArea', v)}
+              columns={3}
+            />
+            <AnimatePresence>
+              {form.workArea === 'Outros' && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                  style={{ marginTop: '20px' }}
+                >
+                  <input
+                    type="text" className="form-control"
+                    placeholder="Especifique sua área de atuação..."
+                    value={form.workAreaOther}
+                    onChange={(e) => set('workAreaOther', e.target.value)}
+                    style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)' }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </QuestionCard>
+        </div>
 
-      <div style={{ textAlign: 'center', marginTop: '16px' }}>
-        <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          Ver resultados no dashboard →
-        </Link>
+        {/* Finalize CTA */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }} style={{ marginTop: '40px' }}>
+          <button
+            className="btn btn-primary btn-full"
+            style={{ 
+              padding: '22px', fontSize: '1.2rem', fontWeight: 800, 
+              background: 'var(--grad-primary)', border: 'none', borderRadius: '20px',
+              boxShadow: '0 15px 35px rgba(99, 102, 241, 0.3)'
+            }}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading
+              ? <><span className="spinner" style={{ width: 24, height: 24 }} /> Processando Dados...</>
+              : '💎 Finalizar Participação de Elite'
+            }
+          </button>
+
+          <div style={{ textAlign: 'center', marginTop: '24px' }}>
+            <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1rem', textDecoration: 'none', opacity: 0.6 }}>
+              Pular para Dashboard →
+            </Link>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -416,20 +401,30 @@ export default function QuestionnairePage() {
 
 function QuestionCard({ num, title, children, delay = '' }) {
   return (
-    <div className={`card fade-up ${delay}`} style={{ marginBottom: '20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+    <motion.div 
+      variants={fUp} initial="hidden" animate="visible"
+      className="card" 
+      style={{ 
+        marginBottom: '0', 
+        background: 'var(--grad-glass)', 
+        padding: '32px',
+        border: '1px solid rgba(255,255,255,0.05)',
+        borderRadius: '24px'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
         <div style={{
-          width: '32px', height: '32px', borderRadius: '50%',
-          background: 'var(--accent)', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800,
+          width: '40px', height: '40px', borderRadius: '12px',
+          background: 'var(--grad-primary)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontSize: '1.1rem', fontWeight: 800,
           fontFamily: 'var(--font-display)', flexShrink: 0,
         }}>
           {num}
         </div>
-        <h3 style={{ fontSize: '1.05rem', fontWeight: 600 }}>{title}</h3>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-display)' }}>{title}</h3>
       </div>
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -440,30 +435,43 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
     <div style={{
       display: 'grid',
       gridTemplateColumns: `repeat(${columns}, 1fr)`,
-      gap: '8px',
+      gap: '12px',
     }}>
       {options.map(opt => {
         const active = isSelected(opt);
         return (
-          <button
+          <motion.button
             key={opt}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => onSelect(opt)}
             style={{
-              padding: '10px 14px',
-              background: active ? 'var(--accent-glow)' : 'var(--bg-input)',
-              border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-              borderRadius: 'var(--radius-sm)',
-              color: active ? 'var(--accent-light)' : 'var(--text-muted)',
+              padding: '14px 16px',
+              background: active ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.02)',
+              border: `1px solid ${active ? 'var(--accent-light)' : 'rgba(255,255,255,0.05)'}`,
+              borderRadius: '16px',
+              color: active ? '#fff' : 'var(--text-muted)',
               cursor: 'pointer',
-              fontSize: '0.88rem',
-              fontFamily: 'var(--font-body)',
-              fontWeight: active ? 600 : 400,
-              transition: 'all 0.15s',
+              fontSize: '0.95rem',
+              fontWeight: active ? 700 : 500,
+              transition: 'all 0.2s',
               textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
             }}
           >
-            {active ? '✓ ' : ''}{opt}
-          </button>
+            <div style={{
+              width: '18px', height: '18px', borderRadius: '4px',
+              border: `2px solid ${active ? 'var(--accent-light)' : 'rgba(255,255,255,0.2)'}`,
+              background: active ? 'var(--accent-light)' : 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '12px', color: '#fff', transition: 'all 0.2s'
+            }}>
+              {active && '✓'}
+            </div>
+            {opt}
+          </motion.button>
         );
       })}
     </div>
@@ -472,30 +480,33 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
 
 function BooleanToggle({ value, onChange }) {
   return (
-    <div style={{ display: 'flex', gap: '12px' }}>
-      {[{ label: '✅ Sim', val: true }, { label: '❌ Não', val: false }].map(({ label, val }) => (
-        <button
+    <div style={{ display: 'flex', gap: '16px' }}>
+      {[{ label: 'Sim, utilizo', val: true, icon: '✨' }, { label: 'Não utilizo', val: false, icon: '✖' }].map(({ label, val, icon }) => (
+        <motion.button
           key={label}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => onChange(val)}
           style={{
-            flex: 1, padding: '14px',
+            flex: 1, padding: '20px',
             background: value === val
-              ? (val ? 'rgba(16,217,142,0.12)' : 'rgba(255,77,109,0.1)')
-              : 'var(--bg-input)',
-            border: `2px solid ${value === val
-              ? (val ? 'var(--success)' : 'var(--danger)')
-              : 'var(--border)'}`,
-            borderRadius: 'var(--radius-sm)',
-            color: value === val ? (val ? 'var(--success)' : '#ff8fa3') : 'var(--text-muted)',
+              ? (val ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)')
+              : 'rgba(255,255,255,0.02)',
+            border: `1px solid ${value === val
+              ? (val ? '#10b981' : '#ef4444')
+              : 'rgba(255,255,255,0.05)'}`,
+            borderRadius: '18px',
+            color: value === val ? '#fff' : 'var(--text-muted)',
             cursor: 'pointer',
-            fontSize: '0.95rem',
-            fontWeight: value === val ? 700 : 400,
-            fontFamily: 'var(--font-display)',
-            transition: 'all 0.15s',
+            fontSize: '1rem',
+            fontWeight: 700,
+            transition: 'all 0.2s',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
           }}
         >
+          <span style={{ fontSize: '1.5rem', marginBottom: '4px' }}>{icon}</span>
           {label}
-        </button>
+        </motion.button>
       ))}
     </div>
   );

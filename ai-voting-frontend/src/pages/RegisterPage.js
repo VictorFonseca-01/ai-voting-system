@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { authAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
+
+const fUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+};
+
+// BackgroundOrbs removido para visual mais limpo
 
 export default function RegisterPage() {
   const { login } = useAuth();
@@ -12,7 +20,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // ─── Filtro de nomes ofensivos (client-side) ────────────────────
+  // ─── FILTRO DE NOMES (CLIENT-SIDE) ─────────────────────────────
   const BLOCKED_TERMS = [
     'porra','caralho','merda','foder','fodase','foda-se','fodasse',
     'puta','putaria','arrombado','arrombada','cuzao','cuzão',
@@ -35,12 +43,11 @@ export default function RegisterPage() {
 
   const containsProfanity = (text) => {
     const normalized = text.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z\s]/g, '');
     
     return BLOCKED_TERMS.some(term => {
       const normTerm = term.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z\s]/g, '');
-      // Usa word boundaries (\b) para evitar falsos positivos
       const regex = new RegExp(`\\b${normTerm}\\b`, 'i');
       return regex.test(normalized);
     });
@@ -54,142 +61,124 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmedName = form.name.trim();
-    if (trimmedName.length < 2) {
-      setError('O nome deve ter pelo menos 2 caracteres.');
-      return;
-    }
-    if (containsProfanity(trimmedName)) {
-      setError('O nome contém termos inadequados. Por favor, escolha outro nome.');
-      return;
-    }
+    if (trimmedName.length < 2) { setError('Nome muito curto.'); return; }
+    if (containsProfanity(trimmedName)) { setError('Nome inadequado detectado.'); return; }
+    
     const trimmedCourse = form.course.trim();
-    if (trimmedCourse.length < 2) {
-      setError('O curso deve ter pelo menos 2 caracteres.');
-      return;
-    }
-    if (containsProfanity(trimmedCourse)) {
-      setError('O curso contém termos inadequados.');
-      return;
-    }
+    if (trimmedCourse.length < 2) { setError('Curso inválido.'); return; }
+    if (containsProfanity(trimmedCourse)) { setError('Curso inadequado.'); return; }
+
     const trimmedInst = form.institution.trim();
-    if (trimmedInst.length < 2) {
-      setError('A faculdade/empresa deve ter pelo menos 2 caracteres.');
-      return;
-    }
-    if (containsProfanity(trimmedInst)) {
-      setError('A faculdade/empresa contém termos inadequados.');
-      return;
-    }
-    if (form.password.length < 5) {
-      setError('A senha deve ter pelo menos 5 caracteres.');
-      return;
-    }
+    if (trimmedInst.length < 2) { setError('Instituição muito curta.'); return; }
+    if (containsProfanity(trimmedInst)) { setError('Instituição inadequada.'); return; }
+
+    if (form.password.length < 5) { setError('Senha deve ter 5+ caracteres.'); return; }
+
     setLoading(true);
     setError('');
     try {
       await authAPI.register(form);
-      // Se o usuário já estiver logado (confirmação auto), navega. 
-      // Caso contrário, ele pode precisar confirmar o email.
       navigate('/vote');
     } catch (err) {
-      setError(err.message || 'Erro ao criar conta. Tente novamente.');
+      setError(err.message || 'Falha no cadastro. Verifique os dados.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page">
-      <div className="card fade-up" style={{ width: '100%', maxWidth: '440px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <div className="accent-line" />
-          <h1 style={{ fontSize: '1.8rem', marginBottom: '8px' }}>Criar conta</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Cadastre-se para participar da votação
+    <div className="page" style={{ position: 'relative', overflow: 'hidden', padding: '100px 24px' }}>
+      
+      <motion.div 
+        initial="hidden" animate="visible" variants={fUp}
+        className="card" 
+        style={{ 
+          width: '100%', maxWidth: '500px', 
+          padding: '48px', background: 'var(--grad-glass)',
+          border: '1px solid rgba(255,255,255,0.05)',
+          position: 'relative', zIndex: 1,
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <motion.div 
+            style={{ width: '40px', height: '4px', background: 'var(--grad-vibrant)', borderRadius: '2px', margin: '0 auto 20px' }}
+            animate={{ width: [30, 60, 30] }} transition={{ duration: 3, repeat: Infinity }}
+          />
+          <h1 className="gradient-text" style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '12px' }}>
+            Nova Conta
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+            Junte-se a milhares de mentes brilhantes.
           </p>
         </div>
 
-        {/* Error */}
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && (
+          <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="alert alert-error">
+            {error}
+          </motion.div>
+        )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
           <div className="form-group">
-            <label htmlFor="name">Nome completo</label>
+            <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Identidade</label>
             <input
-              id="name"
-              name="name"
-              type="text"
+              name="name" type="text"
               className="form-control"
-              placeholder="Seu nome"
-              value={form.name}
-              onChange={handleChange}
-              required
+              placeholder="Nome Completo"
+              value={form.name} onChange={handleChange} required
+              style={{ background: 'rgba(255,255,255,0.03)', padding: '14px' }}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>E-mail</label>
             <input
-              id="email"
-              name="email"
-              type="email"
+              name="email" type="email"
               className="form-control"
-              placeholder="seu@email.com"
-              value={form.email}
-              onChange={handleChange}
-              required
+              placeholder="seu@exemplo.com"
+              value={form.email} onChange={handleChange} required
+              style={{ background: 'rgba(255,255,255,0.03)', padding: '14px' }}
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="course">Curso</label>
-            <input
-              id="course"
-              name="course"
-              type="text"
-              className="form-control"
-              placeholder="Ex: Engenharia da Computação"
-              value={form.course}
-              onChange={handleChange}
-              required
-            />
+          <div className="grid-2" style={{ gap: '20px' }}>
+            <div className="form-group">
+              <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Curso</label>
+              <input
+                name="course" type="text"
+                className="form-control"
+                placeholder="Ex: IA"
+                value={form.course} onChange={handleChange} required
+                style={{ background: 'rgba(255,255,255,0.03)', padding: '14px' }}
+              />
+            </div>
+            <div className="form-group">
+              <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Instituição</label>
+              <input
+                name="institution" type="text"
+                className="form-control"
+                placeholder="Facul/Empresa"
+                value={form.institution} onChange={handleChange} required
+                style={{ background: 'rgba(255,255,255,0.03)', padding: '14px' }}
+              />
+            </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="institution">Faculdade ou Empresa</label>
-            <input
-              id="institution"
-              name="institution"
-              type="text"
-              className="form-control"
-              placeholder="Sua instituição/Empresa"
-              value={form.institution}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Senha</label>
+            <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Senha de Segurança</label>
             <div className="password-field-wrap">
               <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
+                name="password" type={showPassword ? 'text' : 'password'}
                 className="form-control"
                 placeholder="Mínimo 5 caracteres"
-                value={form.password}
-                onChange={handleChange}
-                required
-                minLength={5}
+                value={form.password} onChange={handleChange} required
+                style={{ background: 'rgba(255,255,255,0.03)', padding: '14px' }}
               />
               <button
-                type="button"
-                className="password-toggle"
+                type="button" className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
-                title={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+                style={{ height: '100%', top: 0, padding: '0 16px' }}
               >
                 {showPassword ? '👁️‍🗨️' : '👁️'}
               </button>
@@ -197,24 +186,28 @@ export default function RegisterPage() {
           </div>
 
           <button
-            type="submit"
-            className="btn btn-primary btn-full"
+            type="submit" className="btn btn-primary btn-full"
             disabled={loading}
-            style={{ marginTop: '8px' }}
+            style={{ 
+              padding: '18px', fontSize: '1.1rem', fontWeight: 800, 
+              background: 'var(--grad-primary)', border: 'none',
+              marginTop: '12px',
+              boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)'
+            }}
           >
-            {loading ? <><span className="spinner" style={{ width: 18, height: 18 }} /> Cadastrando...</> : 'Criar conta'}
+            {loading ? <span className="spinner" style={{ width: 22, height: 22 }} /> : 'Finalizar Cadastro'}
           </button>
         </form>
 
-        <div className="divider">ou</div>
+        <div className="divider" style={{ margin: '32px 0', opacity: 0.2 }}>OU</div>
 
-        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          Já tem conta?{' '}
-          <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
-            Entrar
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '1rem' }}>
+          Já possui conta?{' '}
+          <Link to="/login" style={{ color: 'var(--accent-light)', textDecoration: 'none', fontWeight: 700 }}>
+            Fazer login
           </Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
