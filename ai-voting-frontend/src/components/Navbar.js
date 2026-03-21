@@ -99,19 +99,18 @@ export default function Navbar() {
       {/* Action buttons — ALWAYS visible, never inside the scrollable area */}
       <div className="navbar-actions" ref={dropdownRef} style={{ 
         display: 'flex', 
+        flexDirection: 'row',
         alignItems: 'center', 
-        gap: '4px',
+        justifyContent: 'flex-end',
+        gap: '8px',
         flexShrink: 0
       }}>
         {isAdmin && (
           <button 
             style={{ 
-              padding: '8px 12px', fontSize: '1.2rem', position: 'relative',
               background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)',
-              WebkitTapHighlightColor: 'transparent',
-              touchAction: 'manipulation',
-              minWidth: '40px', minHeight: '40px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.2rem', position: 'relative', padding: '6px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}
             onClick={handleOpenNotifications}
             title="Notificações"
@@ -119,15 +118,8 @@ export default function Navbar() {
             🔔
             {hasNew && (
               <span style={{
-                position: 'absolute',
-                top: '2px',
-                right: '4px',
-                width: '10px',
-                height: '10px',
-                background: '#ff4d6d',
-                borderRadius: '50%',
-                border: '2px solid var(--bg-body)',
-                boxShadow: '0 0 8px rgba(255, 77, 109, 0.5)'
+                position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px',
+                background: '#ff4d6d', borderRadius: '50%', border: '1px solid var(--bg)'
               }} />
             )}
           </button>
@@ -136,11 +128,9 @@ export default function Navbar() {
         {isAuthenticated && (
           <button 
             style={{ 
-              background: 'none', border: '1px solid rgba(255,77,109,0.25)', cursor: 'pointer', 
-              color: '#ff8fa3', padding: '6px 12px', borderRadius: '8px', fontSize: '0.82rem',
-              fontWeight: 600, whiteSpace: 'nowrap',
-              WebkitTapHighlightColor: 'transparent',
-              touchAction: 'manipulation',
+              background: 'none', border: '1px solid rgba(255,77,109,0.3)', cursor: 'pointer', 
+              color: '#ff8fa3', padding: '5px 10px', borderRadius: '8px', fontSize: '0.8rem',
+              fontWeight: 600, whiteSpace: 'nowrap'
             }} 
             onClick={handleLogout}
           >
@@ -151,14 +141,11 @@ export default function Navbar() {
         <button 
           style={{ 
             background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', 
-            padding: '6px 8px', fontSize: '1rem',
-            WebkitTapHighlightColor: 'transparent',
-            touchAction: 'manipulation',
-            minWidth: '36px', minHeight: '36px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '6px', fontSize: '1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }} 
           onClick={() => window.location.reload()}
-          title="Recarregar Site"
+          title="Recarregar"
         >
           🔄
         </button>

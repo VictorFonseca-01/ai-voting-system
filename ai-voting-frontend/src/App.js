@@ -24,9 +24,9 @@ export default function App() {
           {/* Página inicial */}
           <Route path="/" element={<HomePage />} />
 
-          {/* Autenticação Admin */}
-          <Route path="/admin/login" element={<LoginPage />} />
-          <Route path="/login" element={<Navigate to="/admin/login" replace />} />
+          {/* Autenticação */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin/login" element={<Navigate to="/login" replace />} />
 
           {/* Rotas Públicas de Participação */}
           <Route path="/dashboard" element={<DashboardPage />} />
