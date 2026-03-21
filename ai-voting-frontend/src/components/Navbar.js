@@ -71,7 +71,7 @@ export default function Navbar() {
         ⚡ AI<span>Vote</span>
       </Link>
 
-      {/* Nav links */}
+      {/* Nav links (scrollable on mobile) */}
       <div className="navbar-nav">
         <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           🏠 Início
@@ -92,50 +92,66 @@ export default function Navbar() {
             <NavLink to="/admin/report" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ color: '#0866ff' }}>
               📄 Relatório
             </NavLink>
-
-            {/* Sino de Notificações — fora do scroll para funcionar no mobile */}
           </>
         )}
+      </div>
 
+      {/* Action buttons — ALWAYS visible, never inside the scrollable area */}
+      <div className="navbar-actions" ref={dropdownRef}>
         {isAdmin && (
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flexShrink: 0 }} ref={dropdownRef}>
-            <button 
-              style={{ 
-                padding: '8px 10px', fontSize: '1.2rem', position: 'relative',
-                background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)',
-                WebkitTapHighlightColor: 'transparent',
-                touchAction: 'manipulation',
-              }}
-              onClick={handleOpenNotifications}
-              title="Notificações"
-            >
-              🔔
-              {hasNew && (
-                <span style={{
-                  position: 'absolute',
-                  top: '4px',
-                  right: '6px',
-                  width: '10px',
-                  height: '10px',
-                  background: '#ff4d6d',
-                  borderRadius: '50%',
-                  border: '2px solid var(--bg-body)',
-                  boxShadow: '0 0 8px rgba(255, 77, 109, 0.5)'
-                }} />
-              )}
-            </button>
-          </div>
+          <button 
+            style={{ 
+              padding: '8px 12px', fontSize: '1.2rem', position: 'relative',
+              background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)',
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+              minWidth: '40px', minHeight: '40px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            onClick={handleOpenNotifications}
+            title="Notificações"
+          >
+            🔔
+            {hasNew && (
+              <span style={{
+                position: 'absolute',
+                top: '2px',
+                right: '4px',
+                width: '10px',
+                height: '10px',
+                background: '#ff4d6d',
+                borderRadius: '50%',
+                border: '2px solid var(--bg-body)',
+                boxShadow: '0 0 8px rgba(255, 77, 109, 0.5)'
+              }} />
+            )}
+          </button>
         )}
 
         {isAuthenticated && (
-          <button className="nav-link" style={{ background: 'none', border: '1px solid rgba(255,77,109,0.25)', cursor: 'pointer', color: '#ff8fa3', flexShrink: 0 }} onClick={handleLogout}>
+          <button 
+            style={{ 
+              background: 'none', border: '1px solid rgba(255,77,109,0.25)', cursor: 'pointer', 
+              color: '#ff8fa3', padding: '6px 12px', borderRadius: '8px', fontSize: '0.82rem',
+              fontWeight: 600, whiteSpace: 'nowrap',
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+            }} 
+            onClick={handleLogout}
+          >
             🚪 Sair
           </button>
         )}
         
         <button 
-          className="nav-link" 
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', padding: '6px 10px', fontSize: '1rem', flexShrink: 0 }} 
+          style={{ 
+            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', 
+            padding: '6px 8px', fontSize: '1rem',
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation',
+            minWidth: '36px', minHeight: '36px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }} 
           onClick={() => window.location.reload()}
           title="Recarregar Site"
         >
@@ -143,10 +159,10 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* ─── PAINEL DE NOTIFICAÇÕES (renderizado fora do navbar-nav) ─── */}
+      {/* ─── PAINEL DE NOTIFICAÇÕES (fixed overlay) ─── */}
       {isAdmin && showPanel && (
         <>
-          {/* Backdrop — visível no mobile, sutil no desktop */}
+          {/* Backdrop */}
           <div 
             onClick={() => setShowPanel(false)}
             style={{
@@ -158,10 +174,10 @@ export default function Navbar() {
           />
           <div className="card fade-up" style={{
             position: 'fixed',
-            top: '72px',
-            right: '16px',
-            width: 'min(340px, calc(100vw - 32px))',
-            maxHeight: 'min(480px, calc(100vh - 100px))',
+            top: '60px',
+            right: '12px',
+            width: 'min(340px, calc(100vw - 24px))',
+            maxHeight: 'min(480px, calc(100vh - 80px))',
             overflowY: 'auto',
             zIndex: 1001,
             padding: '20px',
@@ -176,8 +192,9 @@ export default function Navbar() {
                 onClick={() => setShowPanel(false)} 
                 style={{ 
                   background: 'none', border: 'none', cursor: 'pointer', 
-                  color: 'var(--text-muted)', fontSize: '1.2rem', padding: '4px 8px',
-                  lineHeight: 1,
+                  color: 'var(--text-muted)', fontSize: '1.4rem', padding: '4px 8px',
+                  lineHeight: 1, minWidth: '36px', minHeight: '36px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
                 ✕
