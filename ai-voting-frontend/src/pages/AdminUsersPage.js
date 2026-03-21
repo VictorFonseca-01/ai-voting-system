@@ -33,6 +33,31 @@ export default function AdminUsersPage() {
     setShowModal(true);
   };
 
+  const handleResetAdminVotes = () => {
+    setModalConfig({
+      title: 'Resetar Meus Votos',
+      message: 'Você deseja apagar seus próprios votos e respostas para poder participar novamente? (Isso não afeta outros usuários)',
+      onConfirm: confirmResetAdmin,
+      type: 'confirm'
+    });
+    setShowModal(true);
+  };
+
+  const confirmResetAdmin = async () => {
+    setShowModal(false);
+    try {
+      await adminAPI.resetMyAdminVotes();
+      fetchUsers();
+    } catch (err) {
+      setModalConfig({
+        title: 'Erro',
+        message: 'Não foi possível resetar seus votos.',
+        type: 'alert'
+      });
+      setShowModal(true);
+    }
+  };
+
   const confirmDelete = async (userId) => {
     setShowModal(false);
     try {
@@ -119,7 +144,15 @@ export default function AdminUsersPage() {
                   <td style={{ padding: '12px' }}>{u.hasVoted ? '✅ Sim' : '⏳ Não'}</td>
                   <td style={{ padding: '12px' }}>{u.hasAnswered ? '✅ Sim' : '⏳ Não'}</td>
                   <td style={{ padding: '12px' }}>
-                    {u.email !== 'admin@aivoting.com' && (
+                    {u.email === 'admin@aivoting.com' ? (
+                      <button 
+                        onClick={() => handleResetAdminVotes()}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#ff8fa3', padding: '4px' }}
+                        title="Limpar Meus Votos (Admin)"
+                      >
+                         🔄
+                      </button>
+                    ) : (
                       <button 
                         onClick={() => handleDeleteUser(u)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#ff4d6d', padding: '4px' }}
