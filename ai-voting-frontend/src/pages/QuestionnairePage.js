@@ -244,10 +244,10 @@ export default function QuestionnairePage() {
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                       style={{
                         position: 'absolute', top: '100%', left: 0, right: 0,
-                        zIndex: 100, background: '#1a1a2e', // Fundo sólido/escuro padrão do site
-                        backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)',
+                        zIndex: 100, background: '#0d0d12', // Cor sólida dos painéis do site
+                        backdropFilter: 'blur(20px)', border: '1px solid var(--accent)',
                         borderRadius: '16px', marginTop: '8px', maxHeight: '250px', overflowY: 'auto',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.9)'
                       }}
                     >
                       {COURSES.filter(c => c !== 'Outro (Digitar)')

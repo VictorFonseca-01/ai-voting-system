@@ -43,8 +43,6 @@
   padding: 0;
 }
 
-html { scroll-behavior: smooth; }
-
 body {
   font-family: var(--font-body);
   background: var(--bg-gradient);
@@ -53,6 +51,14 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+html { 
+  scroll-behavior: smooth; 
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* ─── SCROLLBAR ──────────────────────────────────────────────── */
@@ -456,6 +462,14 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
 .hide-mobile { display: flex !important; }
 @media (max-width: 500px) {
   .hide-mobile { display: none !important; }
+  
+  /* Global Typography Scale for Ultra Mobile */
+  h1 { font-size: clamp(1.6rem, 8vw, 2.2rem) !important; }
+  h2 { font-size: clamp(1.2rem, 6vw, 1.8rem) !important; }
+  .gradient-text { letter-spacing: -1px !important; }
+  
+  /* Reset overflow-x safely */
+  .container { padding: 0 16px; overflow: hidden; }
 }
 
 /* ─── DIVIDER ────────────────────────────────────────────────── */
