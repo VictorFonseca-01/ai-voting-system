@@ -299,32 +299,67 @@ export default function QuestionnairePage() {
           </QuestionCard>
         </div>
 
-        {/* ─── PERGUNTAS ────────────────────────────────────────────── */}
+        {/* ─── PERGUNTAS CONDICIONAIS ────────────────────────────────────── */}
         <div style={{ display: 'grid', gap: '24px' }}>
-          <QuestionCard num={1} title="Contexto de Utilização" delay="delay-2">
-            <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 ambientes onde a IA é indispensável para você.</p>
-            <OptionGrid
-              options={WHERE_OPTIONS}
-              selected={form.whereUseAi}
-              onSelect={(v) => handleMultiSelect('whereUseAi', v)}
-            />
-          </QuestionCard>
+          {selectedIAs.includes('none') ? (
+            <>
+              <QuestionCard num={1} title="Motivo do Não Uso" delay="delay-2">
+                <OptionGrid
+                  options={['Privacidade', 'Falta de Necessidade', 'Incerteza/Erros', 'Complexidade', 'Tradição', 'Custo']}
+                  selected={form.whyNot || []}
+                  onSelect={(v) => {
+                    const curr = form.whyNot || [];
+                    set('whyNot', curr.includes(v) ? curr.filter(x => x !== v) : [...curr, v]);
+                  }}
+                />
+              </QuestionCard>
+              <QuestionCard num={2} title="Fontes Alternativas" delay="delay-2">
+                <OptionGrid
+                  options={['Google', 'Livros', 'Cursos', 'Mentores', 'Colegas', 'Própria Base']}
+                  selected={form.alts || []}
+                  onSelect={(v) => {
+                    const curr = form.alts || [];
+                    set('alts', curr.includes(v) ? curr.filter(x => x !== v) : [...curr, v]);
+                  }}
+                />
+              </QuestionCard>
+              <QuestionCard num={3} title="Interesse Futuro" delay="delay-3">
+                <OptionGrid
+                  options={['Muito Alto', 'Moderado', 'Baixo', 'Nenhum']}
+                  selected={form.interest || ''}
+                  onSelect={(v) => set('interest', v)}
+                  columns={4}
+                />
+              </QuestionCard>
+            </>
+          ) : (
+            <>
+              <QuestionCard num={1} title="Contexto de Utilização" delay="delay-2">
+                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 ambientes onde a IA é indispensável para você.</p>
+                <OptionGrid
+                  options={WHERE_OPTIONS}
+                  selected={form.whereUseAi}
+                  onSelect={(v) => handleMultiSelect('whereUseAi', v)}
+                />
+              </QuestionCard>
 
-          <QuestionCard num={2} title="Motivação Principal" delay="delay-2">
-            <OptionGrid
-              options={WHY_OPTIONS}
-              selected={form.whyUseAi}
-              onSelect={(v) => handleMultiSelect('whyUseAi', v)}
-            />
-          </QuestionCard>
+              <QuestionCard num={2} title="Motivação Principal" delay="delay-2">
+                <OptionGrid
+                  options={WHY_OPTIONS}
+                  selected={form.whyUseAi}
+                  onSelect={(v) => handleMultiSelect('whyUseAi', v)}
+                />
+              </QuestionCard>
 
-          <QuestionCard num={3} title="Método de Interação" delay="delay-3">
-            <OptionGrid
-              options={HOW_OPTIONS}
-              selected={form.howUseAi}
-              onSelect={(v) => handleMultiSelect('howUseAi', v)}
-            />
-          </QuestionCard>
+              <QuestionCard num={3} title="Método de Interação" delay="delay-3">
+                <OptionGrid
+                  options={HOW_OPTIONS}
+                  selected={form.howUseAi}
+                  onSelect={(v) => handleMultiSelect('howUseAi', v)}
+                />
+              </QuestionCard>
+            </>
+          )}
 
           <div className="grid-2" style={{ gap: '24px' }}>
             <QuestionCard num={4} title="Uso Acadêmico" delay="delay-3">
@@ -349,22 +384,6 @@ export default function QuestionnairePage() {
               onSelect={(v) => set('workArea', v)}
               columns={3}
             />
-            <AnimatePresence>
-              {form.workArea === 'Outros' && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                  style={{ marginTop: '20px' }}
-                >
-                  <input
-                    type="text" className="form-control"
-                    placeholder="Especifique sua área de atuação..."
-                    value={form.workAreaOther}
-                    onChange={(e) => set('workAreaOther', e.target.value)}
-                    style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)' }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
           </QuestionCard>
         </div>
 

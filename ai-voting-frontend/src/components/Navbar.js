@@ -80,7 +80,7 @@ export default function Navbar() {
           🗳️ Votar
         </NavLink>
         <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          📊 Dashboard
+          📊 Dashboard Geral
         </NavLink>
 
         {isAdmin && (
@@ -205,9 +205,13 @@ export default function Navbar() {
                     fontSize: '0.85rem',
                     borderLeft: '3px solid var(--accent)'
                   }}>
-                    <div style={{ fontWeight: 700, marginBottom: '3px', cursor: 'pointer', color: 'var(--accent)' }} onClick={() => { navigate('/dashboard'); setShowPanel(false); }}>
+                    <Link 
+                      to="/admin/users" 
+                      onClick={() => setShowPanel(false)} 
+                      style={{ textDecoration: 'none', fontWeight: 700, marginBottom: '3px', display: 'block', color: 'var(--accent)' }}
+                    >
                       {n.userName}
-                    </div>
+                    </Link>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '4px' }}>
                       {n.userCourse}
                     </div>

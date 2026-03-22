@@ -31,7 +31,9 @@ export function AuthProvider({ children }) {
   };
 
   const isAuthenticated = !!user;
-  const isAdmin = user?.role === 'ROLE_ADMIN' || user?.email === 'admin@aivoting.com';
+  const isAdmin = user?.role === 'ROLE_ADMIN' || 
+                   user?.email === 'admin@aivoting.com' || 
+                   user?.email === 'v.fonseca062@gmail.com';
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isAdmin, loading }}>

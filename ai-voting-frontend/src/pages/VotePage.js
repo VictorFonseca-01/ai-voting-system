@@ -3,16 +3,15 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { votesAPI } from '../api';
 
-// IAs disponíveis para votação
 const AI_OPTIONS = [
-  { name: 'ChatGPT',       emoji: '🤖', color: '#10a37f' },
-  { name: 'Claude',        emoji: '🟠', color: '#d97557' },
-  { name: 'Gemini',        emoji: '✨', color: '#4285f4' },
-  { name: 'Grok',          emoji: '⚡', color: '#1da1f2' },
-  { name: 'Meta AI',       emoji: '🔵', color: '#0866ff' },
-  { name: 'Copilot',       emoji: '🪟', color: '#00adef' },
-  { name: 'DeepSeek',      emoji: '🧠', color: '#4d6eff' },
-  { name: 'Não utilizo IA / Outra', emoji: '🚫', color: '#6b7280' },
+  { id: 'chatgpt', name: 'ChatGPT',   emoji: '🤖',   color: '#10a37f' },
+  { id: 'claude',  name: 'Claude',    emoji: '🧠',   color: '#d97557' },
+  { id: 'gemini',  name: 'Gemini',    emoji: '✨',   color: '#4285f4' },
+  { id: 'grok',    name: 'Grok',      emoji: '⚡',   color: '#1da1f2' },
+  { id: 'meta',    name: 'Meta AI',   emoji: '🔵',   color: '#0866ff' },
+  { id: 'copilot', name: 'Copilot',   emoji: '🚀',   color: '#00adef' },
+  { id: 'deepseek',name: 'DeepSeek',  emoji: '🔍',   color: '#4d6eff' },
+  { id: 'none',    name: 'Não utilizo IA', emoji: '🚫',   color: '#6b7280' },
 ];
 
 const fUp = {
@@ -54,31 +53,43 @@ export default function VotePage() {
     checkStatus();
   }, []);
 
-  // Alterna seleção de uma IA (máx. 2)
-  const toggleAI = (aiName) => {
+  // Alterna seleção de uma IA (Lógica de Exclusão Mútua)
+  const toggleAI = (aiId) => {
     if (success) return;
     setError('');
     setSelected(prev => {
-      if (prev.includes(aiName)) {
-        return prev.filter(n => n !== aiName);
+      // Se clicar em "Não utilizo IA"
+      if (aiId === 'none') {
+        if (prev.includes('none')) return []; // Desmarcar
+        return ['none']; // Seleciona apenas "none" e remove as outras
       }
-      if (prev.length >= 2) {
+
+      // Se clicar em qualquer outra IA
+      let next = prev.filter(id => id !== 'none'); // Remove "none" se estiver selecionado
+
+      if (next.includes(aiId)) {
+        return next.filter(n => n !== aiId);
+      }
+      
+      if (next.length >= 2) {
         setError('Você só pode votar em 2 IAs. Remova uma seleção antes de adicionar outra.');
-        return prev;
+        return next;
       }
-      return [...prev, aiName];
+      return [...next, aiId];
     });
   };
 
   // Pula direto para o questionário após confirmar as IAs
   const confirmSubmit = () => {
     sessionStorage.setItem('selectedIAs', JSON.stringify(selected));
-    window.location.href = '/questionnaire';
+    const isNone = selected.includes('none');
+    window.location.href = isNone ? '/questionnaire?type=none' : '/questionnaire';
   };
 
   const handleSubmit = () => {
-    if (selected.length !== 2) {
-      setError('Selecione 2 IAs para continuar.');
+    const isNone = selected.includes('none');
+    if (!isNone && selected.length !== 2) {
+      setError('Selecione 2 IAs para continuar (ou selecione "Não utilizo IA").');
       return;
     }
     setShowConfirm(true);
@@ -130,7 +141,7 @@ export default function VotePage() {
                   style={{ marginTop: '16px', fontWeight: 800, fontSize: '1.4rem' }}
                   className="gradient-text"
                 >
-                  {selected.join(' & ')}
+                  {selected.map(id => AI_OPTIONS.find(o => o.id === id)?.name).join(' & ')}
                 </motion.div>
               </p>
               <div className="confirm-actions" style={{ gap: '16px' }}>
@@ -159,15 +170,15 @@ export default function VotePage() {
         {/* Header */}
         <motion.div initial="hidden" animate="visible" variants={fUp} style={{ textAlign: 'center', marginBottom: '60px' }}>
           <motion.div 
-            style={{ width: '60px', height: '4px', background: 'var(--grad-vibrant)', borderRadius: '2px', margin: '0 auto 20px' }}
-            animate={{ width: [40, 80, 40] }} transition={{ duration: 4, repeat: Infinity }}
+            style={{ width: '80px', height: '5px', background: 'linear-gradient(90deg, #ff4d4d, #f9cb28)', borderRadius: '2.5px', margin: '0 auto 24px' }}
+            animate={{ width: [60, 100, 60] }} transition={{ duration: 4, repeat: Infinity }}
           />
-          <h1 className="gradient-text" style={{ fontSize: '3rem', marginBottom: '16px', fontWeight: 800 }}>
-            Votação de Elite
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto' }}>
-            Selecione as <strong style={{ color: '#fff' }}>duas</strong> interfaces que melhor atendem suas necessidades diárias.
-          </p>
+                <h2 className="gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '20px', letterSpacing: '-2px', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                  Votação de Elite
+                </h2>
+                <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '650px', margin: '0 auto 40px', fontWeight: 500 }}>
+                  Selecione as <strong style={{color: '#fff'}}>duas</strong> interfaces que melhor atendem suas necessidades diárias.
+                </p>
         </motion.div>
 
         {/* Status: Já votou */}
@@ -245,68 +256,52 @@ export default function VotePage() {
               </div>
             </motion.div>
 
-            {/* Cards das IAs */}
+            {/* Cards das IAs (Pill Format like Mockup) */}
             <motion.div 
-              className="grid-2" initial="hidden" animate="visible" variants={stagger}
-              style={{ marginBottom: '40px', gap: '16px' }}
+              initial="hidden" animate="visible" variants={stagger}
+              style={{ 
+                marginBottom: '60px', 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '16px', 
+                justifyContent: 'center',
+                maxWidth: '600px',
+                margin: '0 auto 60px'
+              }}
             >
-              {AI_OPTIONS.map(({ name, emoji, color }, idx) => {
-                const isSelected = selected.includes(name);
+              {AI_OPTIONS.map(({ id, name, emoji, color }, idx) => {
+                const isSelected = selected.includes(id);
                 return (
                   <motion.button
-                    key={name}
+                    key={id}
                     variants={fUp}
-                    whileHover={{ y: -5, scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => toggleAI(name)}
+                    whileHover={{ y: -3, scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => toggleAI(id)}
                     style={{
-                      background: isSelected ? `linear-gradient(135deg, ${color}22 0%, rgba(255,255,255,0.02) 100%)` : 'var(--grad-glass)',
-                      border: `1px solid ${isSelected ? color : 'rgba(255,255,255,0.05)'}`,
-                      borderRadius: '24px',
-                      padding: '24px 32px',
-                      display: 'flex', alignItems: 'center', gap: '24px',
+                      background: isSelected ? `linear-gradient(135deg, ${color}33 0%, rgba(255,255,255,0.05) 100%)` : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${isSelected ? color : 'rgba(255,255,255,0.1)'}`,
+                      borderRadius: '999px',
+                      padding: '12px 24px',
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
-                      textAlign: 'left',
                       position: 'relative',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      boxShadow: isSelected ? `0 0 20px ${color}44` : 'none'
                     }}
                   >
-                    <div style={{ 
-                      fontSize: '2.5rem', 
-                      background: isSelected ? `${color}33` : 'rgba(255,255,255,0.03)',
-                      width: '64px', height: '64px', borderRadius: '16px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.3s'
-                    }}>{emoji}</div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.1rem', color: isSelected ? color : '#fff', marginBottom: '4px' }}>
-                        {name}
-                      </p>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                        {isSelected ? '✓ Selecionada para votação' : 'Toque para selecionar'}
-                      </span>
-                    </div>
-                    {isSelected && (
-                      <motion.div 
-                        initial={{ scale: 0 }} animate={{ scale: 1 }}
-                        style={{
-                          width: '28px', height: '28px',
-                          borderRadius: '50%', background: color,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: '#fff', fontSize: '16px', fontWeight: 800,
-                          boxShadow: `0 0 15px ${color}66`
-                        }}
-                      >✓</motion.div>
-                    )}
-                    {/* Decorative color orb */}
-                    {isSelected && (
-                      <div style={{ 
-                        position: 'absolute', bottom: '-20px', right: '-20px', 
-                        width: '80px', height: '80px', background: color, opacity: 0.1, 
-                        filter: 'blur(30px)', borderRadius: '50%' 
-                      }} />
-                    )}
+                    <span style={{ 
+                      fontSize: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      filter: isSelected ? `drop-shadow(0 0 15px ${color})` : 'none'
+                    }}>
+                      {emoji}
+                    </span>
+                    <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
+                      {name}
+                    </span>
                   </motion.button>
                 );
               })}
@@ -317,20 +312,20 @@ export default function VotePage() {
               <button
                 className="btn btn-primary btn-full"
                 onClick={handleSubmit}
-                disabled={selected.length !== 2 || loading}
+                disabled={(selected.length !== 2 && !selected.includes('none')) || loading}
                 style={{ 
                   padding: '20px', fontSize: '1.1rem', borderRadius: '20px',
-                  background: selected.length === 2 ? 'var(--grad-primary)' : 'rgba(255,255,255,0.05)',
-                  border: 'none', fontWeight: 800, boxShadow: selected.length === 2 ? '0 10px 30px rgba(99, 102, 241, 0.3)' : 'none',
-                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                  background: (selected.length === 2 || selected.includes('none')) ? 'var(--grad-primary)' : 'rgba(255,255,255,0.05)',
+                  border: 'none', fontWeight: 800, boxShadow: (selected.length === 2 || selected.includes('none')) ? '0 10px 30px rgba(99, 102, 241, 0.3)' : 'none',
+                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                  cursor: (selected.length === 2 || selected.includes('none')) ? 'pointer' : 'not-allowed'
                 }}
               >
                 {loading
                   ? <><span className="spinner" style={{ width: 24, height: 24 }} /> Processando...</>
-                  : selected.length === 2
-                    ? `🚀 Confirmar Escolhas: ${selected.join(' & ')}`
-                    : `Selecione ${2 - selected.length} IA's para desbloquear`
-                }
+                  : (selected.length === 2 || selected.includes('none'))
+                      ? 'Confirmar Votos →' 
+                      : 'Selecione suas Opções'}
               </button>
             </motion.div>
           </>
