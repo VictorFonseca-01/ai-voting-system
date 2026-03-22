@@ -159,21 +159,35 @@ export const dashboardAPI = {
 
 export const participationAPI = {
   submit: async (payload) => {
+    // Tenta pegar usuário logado (ex: admin)
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Usuário não autenticado");
+    
+    // Se não houver usuário, gera um ID único para este voto (Visitante)
+    const userId = user ? user.id : (crypto.randomUUID ? crypto.randomUUID() : `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
-    // 1. Atualiza dados básicos do usuário
-    const { error: userErr } = await supabase.from('users').update({
-      name: payload.fullName,
-      course: payload.course,
-      institution: payload.institution,
-      instagram: payload.instagram
-    }).eq('id', user.id);
-    if (userErr) throw new Error("Erro ao atualizar perfil");
+    // 1. Registra o usuário (ou atualiza se logado)
+    if (user) {
+      const { error: userErr } = await supabase.from('users').update({
+        name: payload.fullName,
+        course: payload.course,
+        institution: payload.institution,
+        instagram: payload.instagram
+      }).eq('id', user.id);
+      if (userErr) throw new Error("Erro ao atualizar perfil");
+    } else {
+      const { error: userErr } = await supabase.from('users').insert({
+        id: userId,
+        name: payload.fullName,
+        course: payload.course,
+        institution: payload.institution,
+        instagram: payload.instagram
+      });
+      if (userErr) throw new Error("Erro ao registrar participação anônima");
+    }
 
-    // 2. Registra os votos (aiNames vem do payload)
+    // 2. Registra os votos
     const voteInserts = payload.aiNames.map(name => ({
-      user_id: user.id,
+      user_id: userId,
       ai_name: name
     }));
     const { error: voteErr } = await supabase.from('votes').insert(voteInserts);
@@ -181,7 +195,7 @@ export const participationAPI = {
 
     // 3. Salva questionário
     const { error: questErr } = await supabase.from('question_responses').upsert({
-      user_id: user.id,
+      user_id: userId,
       work_area: payload.workArea,
       where_use_ai: payload.whereUseAi,
       why_use_ai: payload.whyUseAi,

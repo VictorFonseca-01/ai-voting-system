@@ -399,19 +399,21 @@ export default function DashboardPage() {
       hoverOffset: 12
     }]
   };
+  const isSmallScreen = window.innerWidth < 600;
+
   const whereOptions = {
     responsive: true,
     maintainAspectRatio: false,
     cutout: '80%', 
     plugins: {
       legend: {
-        position: 'right',
+        position: isSmallScreen ? 'bottom' : 'right',
         labels: {
-          color: '#d0d0f0', // Lavanda Brilhante
-          font: { family: 'var(--font-display)', size: 12, weight: 600 },
+          color: '#d0d0f0', 
+          font: { family: 'var(--font-display)', size: isSmallScreen ? 11 : 12, weight: 600 },
           usePointStyle: true,
           pointStyle: 'circle',
-          padding: 24
+          padding: isSmallScreen ? 12 : 24
         }
       },
       tooltip: {
@@ -477,16 +479,19 @@ export default function DashboardPage() {
         grid: { display: false },
         ticks: { 
           color: '#d0d0f0', 
-          font: { size: 11, weight: 700 }, // Aumentado de 10 para 11
-          maxRotation: 0,
-          minRotation: 0,
-          autoSkip: sortedWorkArea.length > 6, 
+          font: { size: isSmallScreen ? 8.5 : 11, weight: 700 }, 
+          maxRotation: isSmallScreen ? 90 : 0,
+          minRotation: isSmallScreen ? 90 : 0,
+          autoSkip: false, 
           maxTicksLimit: 20,
           display: true, 
-          padding: 8, // Adicionado padding
+          padding: 4,
           callback: function(value) {
             const label = this.getLabelForValue(value);
-            if (sortedWorkArea.length > 8) return ''; 
+            if (!isSmallScreen && sortedWorkArea.length > 8) return ''; 
+            if (isSmallScreen) {
+              return label.length > 10 ? label.substring(0, 8) + '...' : label;
+            }
             return label.length > 15 ? label.substring(0, 12) + '...' : label;
           }
         }
