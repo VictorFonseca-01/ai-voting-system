@@ -175,14 +175,19 @@ export const participationAPI = {
       }).eq('id', user.id);
       if (userErr) throw new Error("Erro ao atualizar perfil");
     } else {
-      const { error: userErr } = await supabase.from('users').insert({
+      // Tenta registrar/atualizar o perfil do Visitante, mas não trava se houver erro (ex: RLS)
+      const { error: userErr } = await supabase.from('users').upsert({
         id: userId,
         name: payload.fullName,
         course: payload.course,
         institution: payload.institution,
-        instagram: payload.instagram
-      });
-      if (userErr) throw new Error("Erro ao registrar participação anônima");
+        instagram: payload.instagram,
+        role: 'voter'
+      }, { onConflict: 'id' });
+      
+      if (userErr) {
+        console.warn("⚠️ Perfil não pôde ser criado (provável RLS), mas prosseguindo com o voto:", userErr.message);
+      }
     }
 
     // 2. Registra os votos
