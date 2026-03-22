@@ -51,10 +51,10 @@ export const votesAPI = {
 export const questionnaireAPI = {
   submit: async (responses) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Não autenticado");
+    const userId = user ? user.id : (crypto.randomUUID ? crypto.randomUUID() : `guest_${Date.now()}`);
     
-    const { data, error } = await supabase.from('question_responses').insert({
-      user_id: user.id,
+    const { data, error } = await supabase.from('question_responses').upsert({
+      user_id: userId,
       work_area: responses.workArea,
       where_use_ai: responses.whereUseAi,
       why_use_ai: responses.whyUseAi,
@@ -159,7 +159,7 @@ export const dashboardAPI = {
 
 export const participationAPI = {
   submit: async (payload) => {
-    // Tenta pegar usuário logado (ex: admin)
+    console.log("🚀 Iniciando submissão de participação...", payload);
     const { data: { user } } = await supabase.auth.getUser();
     
     // Se não houver usuário, gera um ID único para este voto (Visitante)
