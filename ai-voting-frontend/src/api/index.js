@@ -51,7 +51,17 @@ export const votesAPI = {
 export const questionnaireAPI = {
   submit: async (responses) => {
     const { data: { user } } = await supabase.auth.getUser();
-    const userId = user ? user.id : (crypto.randomUUID ? crypto.randomUUID() : `guest_${Date.now()}`);
+    
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+
+    const userId = user ? user.id : generateUUID();
     
     const { data, error } = await supabase.from('question_responses').upsert({
       user_id: userId,
@@ -162,8 +172,17 @@ export const participationAPI = {
     console.log("🚀 Iniciando submissão de participação...", payload);
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Se não houver usuário, gera um ID único para este voto (Visitante)
-    const userId = user ? user.id : (crypto.randomUUID ? crypto.randomUUID() : `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+    // Fallback robusto para gerar UUID v4 válido se crypto.randomUUID não existir
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+
+    const userId = user ? user.id : generateUUID();
 
     // 1. Registra o usuário (ou atualiza se logado)
     if (user) {
