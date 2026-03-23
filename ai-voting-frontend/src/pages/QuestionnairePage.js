@@ -9,6 +9,12 @@ const WHY_OPTIONS   = ['Economizar tempo', 'Aprender mais', 'Resolver problemas'
 const HOW_OPTIONS   = ['Digitando perguntas', 'Por voz', 'Enviando imagens', 'Via API/código', 'Dentro de outros apps', 'Todas as alternativas'];
 const WORK_AREAS    = ['Direito', 'Engenharia', 'TI', 'Mecânica', 'Administração', 'Outros'];
 
+// Termos proibidos para evitar poluição no mural
+const PROHIBITED_WORDS = [
+  'puto', 'puta', 'caralho', 'porra', 'merda', 'bosta', 'viado', 'cu ', ' cu', 'buceta', 'pinto', 'rola', 
+  'cacete', 'foda', 'foder', 'chupa', 'desgraça', 'corno', 'idiota', 'imbecil'
+];
+
 const COURSES = [
   'Administração', 'Agronomia', 'Análise e Desenvolvimento de Sistemas', 'Arquitetura e Urbanismo',
   'Banco de Dados', 'Biomedicina', 'Ciências da Computação', 'Ciências Contábeis', 'Ciências Econômicas',
@@ -104,8 +110,31 @@ export default function QuestionnairePage() {
         return;
     }
 
-    if (!form.fullName.trim().includes(' ') || form.fullName.trim().split(/\s+/).length < 2) {
-      setError('Por favor, informe seu nome completo.');
+    const trimmedName = form.fullName.trim();
+    const nameParts = trimmedName.split(/\s+/);
+
+    // 1. Validação de Nome e Sobrenome
+    if (nameParts.length < 2 || trimmedName.length < 5) {
+      setError('Por favor, informe seu nome e sobrenome real.');
+      setFieldErrors({ fullName: true });
+      identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // 2. Filtro de Palavras Proibidas
+    const hasProfanity = PROHIBITED_WORDS.some(bad => 
+      trimmedName.toLowerCase().split(/[\s._-]+/).some(word => word === bad || (word.length > 3 && word.includes(bad)))
+    );
+    if (hasProfanity) {
+      setError('O nome contém termos não permitidos. Use seu nome profissional.');
+      setFieldErrors({ fullName: true });
+      identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // 3. Validação de Caracteres (Apenas letras e espaços)
+    if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(trimmedName)) {
+      setError('O nome deve conter apenas letras.');
       setFieldErrors({ fullName: true });
       identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
