@@ -50,6 +50,7 @@ export default function DashboardPage() {
 
   const [showModal, setShowModal] = useState(false);
 
+  const [showInstaModal, setShowInstaModal] = useState(false);
   const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
   const [newPass, setNewPass] = useState('');
 
@@ -136,6 +137,60 @@ export default function DashboardPage() {
   };
   
 
+
+  const handleExportData = async () => {
+    try {
+      const { data: backup } = await adminAPI.exportData();
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `backup_aivoting_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Erro ao exportar backup.');
+    }
+  };
+
+  const handleImportData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setModalConfig({
+      title: 'Restaurar Backup',
+      message: `ATENÇÃO: Isso apagará TODOS os dados atuais e substituirá pelos dados do arquivo "${file.name}". Deseja continuar?`,
+      onConfirm: () => confirmImport(file),
+      type: 'confirm'
+    });
+    setShowModal(true);
+  };
+
+  const confirmImport = async (file) => {
+    setShowModal(false);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const backup = JSON.parse(event.target.result);
+        await adminAPI.importData(backup);
+        setModalConfig({
+          title: 'Sucesso! 🚀',
+          message: 'Banco de dados restaurado com sucesso! Recarregando...',
+          type: 'alert'
+        });
+        setShowModal(true);
+        setTimeout(() => window.location.reload(), 2000);
+      } catch (err) {
+        setModalConfig({
+          title: 'Erro na Restauração',
+          message: err.response?.data?.error || 'Arquivo de backup inválido ou erro no servidor.',
+          type: 'alert'
+        });
+        setShowModal(true);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
   
@@ -414,6 +469,86 @@ export default function DashboardPage() {
             </motion.div>
           </motion.div>
         )}
+        {showInstaModal && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="modal-overlay" onClick={() => setShowInstaModal(false)}
+            style={{ zIndex: 10000 }}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="modal-content" style={{ maxWidth: '600px', background: '#120524', border: '1px solid #7000ff' }} onClick={e => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>CONECTE-SE</h2>
+                <button onClick={() => setShowInstaModal(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+              </div>
+              <p style={{ textAlign: 'center', color: '#d0d0f0', marginBottom: '32px' }}>Siga os desenvolvedores e acompanhe as novidades.</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+                {[
+                  { name: 'Victor', handle: '@ovittinn_062', link: 'https://instagram.com/ovittinn_062' },
+                  { name: 'Erick', handle: '@erick_fernando_lx', link: 'https://instagram.com/erick_fernando_lx' },
+                  { name: 'Calixto', handle: '@calixto.sxz', link: 'https://instagram.com/calixto.sxz' }
+                ].map((p, idx) => (
+                  <motion.a 
+                    key={idx} href={p.link} target="_blank" rel="noopener noreferrer"
+                    whileHover={{ scale: 1.05, background: 'rgba(112,0,255,0.2)' }}
+                    style={{ 
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', 
+                      background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(112,0,255,0.3)',
+                      textDecoration: 'none', color: '#fff'
+                    }}
+                  >
+                    <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📸</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{p.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#00f0ff' }}>{p.handle}</div>
+                  </motion.a>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        {showInstaModal && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="modal-overlay" onClick={() => setShowInstaModal(false)}
+            style={{ zIndex: 10000 }}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="modal-content" style={{ maxWidth: '600px', background: '#120524', border: '1px solid #7000ff' }} onClick={e => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>CONECTE-SE</h2>
+                <button onClick={() => setShowInstaModal(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+              </div>
+              <p style={{ textAlign: 'center', color: '#d0d0f0', marginBottom: '32px' }}>Siga os desenvolvedores e acompanhe as novidades.</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+                {[
+                  { name: 'Victor', handle: '@ovittinn_062', link: 'https://instagram.com/ovittinn_062' },
+                  { name: 'Erick', handle: '@erick_fernando_lx', link: 'https://instagram.com/erick_fernando_lx' },
+                  { name: 'Calixto', handle: '@calixto.sxz', link: 'https://instagram.com/calixto.sxz' }
+                ].map((p, idx) => (
+                  <motion.a 
+                    key={idx} href={p.link} target="_blank" rel="noopener noreferrer"
+                    whileHover={{ scale: 1.05, background: 'rgba(112,0,255,0.2)' }}
+                    style={{ 
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', 
+                      background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(112,0,255,0.3)',
+                      textDecoration: 'none', color: '#fff'
+                    }}
+                  >
+                    <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📸</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{p.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#00f0ff' }}>{p.handle}</div>
+                  </motion.a>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
                {/* ─── HEADER ─────────────────────────────────────────────── */}
@@ -537,22 +672,97 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── TRABALHO & ARQUITETURA ──────────────────────────────── */}
-      <motion.div variants={fUp} className="card" style={{ background: 'var(--grad-glass)', padding: '40px', textAlign: 'center', marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '16px' }}>Resumo do Trabalho</h2>
-        <p style={{ color: 'var(--text-muted)', lineHeight: 1.8 }}>
-          O AI Vote 2026 mapeia a percepção humana sobre IAs através de uma interface de alta performance. 
-          Capturamos insights sobre o futuro do trabalho e criatividade em tempo real.
+      <motion.div variants={fUp} className="card" style={{ background: 'var(--grad-glass)', padding: '40px', textAlign: 'center', marginBottom: '40px' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>📄</div>
+        <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px' }}>Resumo do Trabalho</h2>
+        <p style={{ color: 'var(--text-muted)', lineHeight: 1.8, maxWidth: '900px', margin: '0 auto', fontSize: '1.05rem' }}>
+          O <span style={{ background: 'var(--grad-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900 }}>AI Vote 2026</span> é um ecossistema analítico desenvolvido para mapear a eficiência e a percepção humana sobre as principais Inteligências Artificiais do mercado. 
+          Através de uma interface de alta performance e processamento de dados em tempo real, capturamos insights valiosos sobre como a tecnologia está moldando o futuro do trabalho e da criatividade.
         </p>
       </motion.div>
 
+      <div style={{ marginBottom: '60px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+          <div style={{ width: '48px', height: '48px', background: 'var(--grad-primary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🛠️</div>
+          <div>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>Arquitetura do Ecossistema</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Visão técnica das camadas de inovação aplicadas</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+          {[
+            { icon: '☁️', title: 'Infraestrutura Serverless', desc: 'Migração completa de legado Java/Docker para Supabase, reduzindo latência e custos.' },
+            { icon: '📊', title: 'Data Intelligence', desc: 'Análise de dados demográficos cruzada com preferências tecnológicas em tempo real.' },
+            { icon: '🎨', title: 'Design System Premium', desc: 'Uso de tokens modernos, Glassmorphism e Framer Motion para uma UX de classe mundial.' },
+            { icon: '🚚', title: 'Continuous Delivery', desc: 'Esteira de CI/CD via Railway com deploys atômicos e seguros via GitHub.' },
+            { icon: '🤖', title: 'IA-Powered Workflow', desc: 'Desenvolvimento acelerado com pair programming entre humano e Antigravity IA.' },
+            { icon: '🛡️', title: 'Segurança Granular', desc: 'Políticas de RLS (Row Level Security) garantindo integridade e privacidade dos dados.' }
+          ].map((item, idx) => (
+            <motion.div 
+              key={idx} variants={fUp} whileHover={{ y: -5 }}
+              className="card" style={{ padding: '32px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '20px' }}>{item.icon}</div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '12px' }}>{item.title}</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>{item.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
+            <div style={{ fontSize: '1.5rem' }}>👥</div>
+            <h2 style={{ fontSize: '2rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '3px' }}>Time de Elite</h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+          {[
+            { emoji: '🥇', name: 'Victor Fonseca', role: 'PRODUCT VISION & LEAD ARCHITECTURE', desc: 'Líder técnico e Engenheiro Fullstack responsável pela visão estratégica do produto, arquitetura de sistemas escaláveis e integração de modelos de IA.' },
+            { emoji: '💻', name: 'Erick Fernando & Gabriel Calixto', role: 'CORE DEV TEAM', desc: 'Engenheiros responsáveis pela lógica de votação resiliente, infraestrutura de alta disponibilidade e performance do ecossistema.' },
+            { emoji: '💡', name: 'João Lucas, Luiz, Mikael & Pablo', role: 'RESEARCH & UX', desc: 'Especialistas focados em pesquisa de tendências, experiência do usuário e interface visual centrada no ser humano.' },
+            { emoji: '🤖', name: 'Antigravity', role: 'AI TECHNICAL PARTNER', desc: 'Parceiro tecnológico de IA auxiliando no desenvolvimento acelerado, auditoria de código e codificação assistida.' }
+          ].map((p, i) => (
+            <motion.div key={i} variants={fUp} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '20px' }}>{p.emoji}</div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '4px' }}>{p.name}</h3>
+              <div style={{ fontSize: '0.75rem', color: '#6366f1', fontWeight: 800, marginBottom: '16px', letterSpacing: '1px' }}>{p.role}</div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>{p.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <p style={{ fontStyle: 'italic', color: 'var(--text-muted)', marginBottom: '24px' }}>
+            "Este trabalho é o resultado da colaboração entre inteligência humana e artificial, focado em mapear as tendências tecnológicas de 2026."
+        </p>
+        <button 
+            onClick={() => setShowInstaModal(true)}
+            className="btn btn-ghost" 
+            style={{ 
+                borderRadius: '12px', padding: '12px 24px', border: '1px solid rgba(112,0,255,0.5)',
+                display: 'inline-flex', alignItems: 'center', gap: '10px'
+            }}
+        >
+            📸 Instagram
+        </button>
+      </div>
+
       {/* ─── ADMIN ACTIONS ───────────────────────────────────────── */}
       {isAdmin && (
-        <div className="card" style={{ padding: '32px', background: 'rgba(255,255,255,1.1)' }}>
+        <div className="card" style={{ padding: '32px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <h3 style={{ fontSize: '0.9rem', color: 'var(--accent)', marginBottom: '20px' }}>⚙️ ADMINISTRAÇÃO</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <button onClick={fetchData} className="btn btn-ghost">Atualizar</button>
             <Link to="/admin/users" className="btn btn-ghost">Usuários</Link>
             <button onClick={handleChangePassword} className="btn btn-ghost">Alterar Senha</button>
+            <button onClick={handleExportData} className="btn btn-ghost">Exportar Backup</button>
+            <label className="btn btn-ghost" style={{ cursor: 'pointer' }}>
+              Importar Backup
+              <input type="file" hidden accept=".json" onChange={handleImportData} />
+            </label>
             <button onClick={handleResetData} className="btn btn-ghost" style={{ color: 'var(--rose)' }}>Zerar Sistema</button>
           </div>
         </div>
