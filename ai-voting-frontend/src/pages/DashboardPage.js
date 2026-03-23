@@ -626,6 +626,7 @@ export default function DashboardPage() {
       <MainSynthChart 
         data={totalChartData} opts={totalChartOpts} 
         totalVotes={totalVotes} totalResponses={totalResponses} 
+        useForStudy={useForStudy} useForWork={useForWork}
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '32px' }}>
