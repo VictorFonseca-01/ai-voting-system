@@ -23,7 +23,7 @@ export default function StatCard({ value, label, delay, trend, chartConfig, icon
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
             {label}
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: '#fff', lineHeight: 1 }}>
+          <div style={{ fontSize: '2.5rem', fontWeight: 800, fontFamily: 'var(--font-body)', color: '#fff', lineHeight: 1, fontVariantNumeric: 'lining-nums tabular-nums' }}>
             {value}
           </div>
         </div>
