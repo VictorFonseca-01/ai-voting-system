@@ -194,10 +194,12 @@ export const participationAPI = {
       }).eq('id', user.id);
       if (userErr) throw new Error("Erro ao atualizar perfil");
     } else {
-      // Tenta registrar/atualizar o perfil do Visitante, mas não trava se houver erro (ex: RLS)
+      // Tenta registrar/atualizar o perfil do Visitante. 
+      // Adicionamos um email placeholder pois o Supabase pode exigir este campo (NOT NULL).
       const { error: userErr } = await supabase.from('users').upsert({
         id: userId,
         name: payload.fullName,
+        email: `${userId.substring(0, 8)}@anon.aivote.com`, // Email único placeholder
         course: payload.course,
         institution: payload.institution,
         instagram: payload.instagram,
@@ -205,7 +207,8 @@ export const participationAPI = {
       }, { onConflict: 'id' });
       
       if (userErr) {
-        console.warn("⚠️ Perfil não pôde ser criado (provável RLS), mas prosseguindo com o voto:", userErr.message);
+        console.warn("⚠️ Perfil não pôde ser criado:", userErr.message);
+        // Não travamos o fluxo aqui para garantir o registro do voto se possível
       }
     }
 

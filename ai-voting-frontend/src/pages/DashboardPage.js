@@ -814,34 +814,15 @@ export default function DashboardPage() {
             <h3 style={{ margin: 0, fontSize: 'clamp(10px, 3vw, 14px)', letterSpacing: '2px', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>
               Volume Total de Dados
             </h3>
-            <h1 className="gradient-text" style={{ 
-              fontSize: isSmallScreen ? '1.8rem' : '3.5rem', 
-              fontWeight: 900, 
-              letterSpacing: '-2px',
-              lineHeight: 1.1,
-              marginBottom: '10px'
-            }}>
-              TIME DE ELITE
-            </h1>
             <div style={{ 
               fontSize: 'clamp(2.5rem, 15vw, 4.5rem)', 
               fontWeight: 900, 
-              color: '#d0d0f0', 
-              lineHeight: '1', 
-              marginTop: '16px', 
-              textShadow: '0 0 40px rgba(208, 208, 240, 0.4)' 
+              margin: '10px 0',
+              lineHeight: 1,
+              textShadow: '0 0 40px rgba(var(--accent-rgb), 0.3)'
             }}>
               {estatisticaGeral}
             </div>
-            {!isSmallScreen && (
-              <p className="syne-italic-fix" style={{ 
-                fontFamily: 'Syne', 
-                fontStyle: 'italic', 
-                fontSize: '1.2rem', 
-                opacity: 0.8,
-                color: 'var(--accent-light)',
-                marginTop: '10px'
-              }}>
                 Victor Fonseca
               </p>
             )}
