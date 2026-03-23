@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { dashboardAPI } from '../api';
 
 export default function Navbar() {
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [hasNew, setHasNew] = useState(false);

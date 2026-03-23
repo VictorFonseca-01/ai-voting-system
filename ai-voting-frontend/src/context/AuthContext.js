@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { authAPI } from '../api';
 
 /** Contexto global de autenticação */
 const AuthContext = createContext(null);

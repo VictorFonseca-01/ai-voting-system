@@ -2,13 +2,13 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
-import ProtectedRoute from './components/ProtectedRoute';
+
 import AdminRoute from './components/AdminRoute';
 
 // Pages
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+
 import VotePage from './pages/VotePage';
 import QuestionnairePage from './pages/QuestionnairePage';
 import DashboardPage from './pages/DashboardPage';

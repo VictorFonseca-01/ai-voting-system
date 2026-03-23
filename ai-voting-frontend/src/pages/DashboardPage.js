@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement,
   BarElement, Title, Tooltip, Legend, ArcElement, Filler
 } from 'chart.js';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
+
 
 // Novos componentes modulares
 import StatCard from '../components/Dashboard/StatCard';
@@ -12,22 +12,12 @@ import MainSynthChart from '../components/Dashboard/MainSynthChart';
 import DonutChartCard from '../components/Dashboard/DonutChartCard';
 import BarChartCard from '../components/Dashboard/BarChartCard';
 import AiRankingList from '../components/Dashboard/AiRankingList';
-import { QRCodeSVG } from 'qrcode.react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { dashboardAPI, adminAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 
-const emojiMap = {
-  'chatgpt': '🤖',
-  'gemini': '✨',
-  'claude': '🧠',
-  'deepseek': '🔍',
-  'copilot': '🚀',
-  'meta': '🔵',
-  'grok': '⚡',
-  'none': '🚫'
-};
 
 // Registra os componentes do Chart.js
 ChartJS.register(ArcElement, BarElement, PointElement, LineElement, CategoryScale, LinearScale, Tooltip, Legend, Title, Filler);
@@ -41,15 +31,6 @@ ChartJS.register(ArcElement, BarElement, PointElement, LineElement, CategoryScal
 // Paleta de cores para os gráficos
 // Paleta de cores vibrantes e modernas
 const PALETTE = ['#6366f1', '#10b981', '#f43f5e', '#fbbf24', '#06b6d4', '#8b5cf6', '#d946ef'];
-const SITE_COLORS = {
-  purple: '#6366f1',
-  green: '#10b981',
-  red: '#f43f5e',
-  yellow: '#fbbf24',
-  cyan: '#06b6d4'
-};
-
-const SYSTEM_URL = window.location.origin;
 
 // Variantes de animação para Framer Motion
 const fUp = {
@@ -57,9 +38,6 @@ const fUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-const stagger = {
-  visible: { transition: { staggerChildren: 0.1 } }
-};
 
 // BackgroundOrbs removido conforme solicitado ("sem as ondas")
 
@@ -69,10 +47,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
   
-  const [showSyncStatus, setShowSyncStatus] = useState(false);
-  const [showInstagramCards, setShowInstagramCards] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
-  const [showInstaModal, setShowInstaModal] = useState(false);
+
   const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
   const [newPass, setNewPass] = useState('');
 
@@ -158,106 +135,18 @@ export default function DashboardPage() {
     }
   };
   
-  const handleResetMyVotes = () => {
-    setModalConfig({
-      title: 'Refazer Meus Votos',
-      message: 'Isso apagará apenas os SEUS votos para que você possa votar novamente. Deseja continuar?',
-      onConfirm: confirmResetMyVotes,
-      type: 'confirm'
-    });
-    setShowModal(true);
-  };
 
-  const confirmResetMyVotes = async () => {
-    setShowModal(false);
-    try {
-      await adminAPI.resetMyAdminVotes();
-      setModalConfig({
-        title: 'Sucesso',
-        message: 'Seus votos foram removidos. Redirecionando para a página de votação...',
-        type: 'alert'
-      });
-      setShowModal(true);
-      setTimeout(() => {
-        window.location.href = '/vote';
-      }, 2000);
-    } catch (err) {
-      setModalConfig({
-        title: 'Erro',
-        message: 'Não foi possível remover seus votos.',
-        type: 'alert'
-      });
-      setShowModal(true);
-    }
-  };
-
-  const handleExportData = async () => {
-    try {
-      const { data: backup } = await adminAPI.exportData();
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `backup_aivoting_${new Date().toISOString().split('T')[0]}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setError('Erro ao exportar backup.');
-    }
-  };
-
-  const handleImportData = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setModalConfig({
-      title: 'Restaurar Backup',
-      message: `ATENÇÃO: Isso apagará TODOS os dados atuais do Localhost e substituirá pelos dados do arquivo "${file.name}". Deseja continuar?`,
-      onConfirm: () => confirmImport(file),
-      type: 'confirm'
-    });
-    setShowModal(true);
-  };
-
-  const confirmImport = async (file) => {
-    setShowModal(false);
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const backup = JSON.parse(event.target.result);
-        await adminAPI.importData(backup);
-        setModalConfig({
-          title: 'Sucesso! 🚀',
-          message: 'Banco de dados restaurado com sucesso! Recarregando...',
-          type: 'alert'
-        });
-        setShowModal(true);
-        setTimeout(() => window.location.reload(), 2000);
-      } catch (err) {
-        setModalConfig({
-          title: 'Erro na Restauração',
-          message: err.response?.data?.error || 'Arquivo de backup inválido ou erro no servidor.',
-          type: 'alert'
-        });
-        setShowModal(true);
-      }
-    };
-    reader.readAsText(file);
-  };
 
   // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
   
-  // Dados de votos por IA
-  const votesByAi     = data?.votesByAi     || {};
+  const aiRanking = useMemo(() => {
+    return Object.entries(data?.votesByAi || {}).sort((a, b) => b[1] - a[1]);
+  }, [data?.votesByAi]);
   const totalVotes    = data?.totalVotes     || 0;
   const totalResponses= data?.totalResponses || 0;
   const useForStudy   = data?.useForStudy    || 0;
   const useForWork    = data?.useForWork     || 0;
   const recentVotes   = data?.recentVotes    || [];
-
-  const aiRanking = useMemo(() => {
-    return Object.entries(votesByAi || {}).sort((a, b) => b[1] - a[1]);
-  }, [votesByAi]);
 
   const lineB = useMemo(() => {
     const metricValues = [totalVotes, totalResponses, useForStudy, useForWork, ...aiRanking.map(a=>a[1])].filter(v => v > 0);
@@ -336,17 +225,18 @@ export default function DashboardPage() {
     }
   }), []);
 
-  const mapCoresCyberpunk = ['#d946ef', '#9333ea', '#6b21a8', '#3b0764', '#0f172a', '#020617'];
-
-  const whereDonut = useMemo(() => ({
-    labels: Object.keys(data?.whereUseAi || {}),
-    datasets: [{
-      data: Object.values(data?.whereUseAi || {}),
-      backgroundColor: mapCoresCyberpunk, 
-      borderWidth: 0,
-      hoverOffset: 12
-    }]
-  }), [data?.whereUseAi, mapCoresCyberpunk]);
+  const whereDonut = useMemo(() => {
+    const colors = ['#d946ef', '#9333ea', '#6b21a8', '#3b0764', '#0f172a', '#020617'];
+    return {
+      labels: Object.keys(data?.whereUseAi || {}),
+      datasets: [{
+        data: Object.values(data?.whereUseAi || {}),
+        backgroundColor: colors, 
+        borderWidth: 0,
+        hoverOffset: 12
+      }]
+    };
+  }, [data?.whereUseAi]);
 
   const isSmallScreen = window.innerWidth < 600;
 
@@ -662,6 +552,7 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <button onClick={fetchData} className="btn btn-ghost">Atualizar</button>
             <Link to="/admin/users" className="btn btn-ghost">Usuários</Link>
+            <button onClick={handleChangePassword} className="btn btn-ghost">Alterar Senha</button>
             <button onClick={handleResetData} className="btn btn-ghost" style={{ color: 'var(--rose)' }}>Zerar Sistema</button>
           </div>
         </div>
