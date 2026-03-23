@@ -14,6 +14,12 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # Cache para Assets estáticos do React (JS/CSS/Images)
+    location /static/ {
+        expires 1y;
+        add_header Cache-Control "public, no-transform";
+    }
+
     # Proxy para o Backend (Docker)
     location /api/ {
         proxy_pass http://backend:8080/api/;

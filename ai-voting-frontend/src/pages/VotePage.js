@@ -173,10 +173,23 @@ export default function VotePage() {
             style={{ width: '80px', height: '5px', background: 'linear-gradient(90deg, #ff4d4d, #f9cb28)', borderRadius: '2.5px', margin: '0 auto 24px' }}
             animate={{ width: [60, 100, 60] }} transition={{ duration: 4, repeat: Infinity }}
           />
-                <h2 className="gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '20px', letterSpacing: '-2px', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                <h2 className="gradient-text syne-italic-fix" style={{ 
+                  fontSize: 'clamp(2rem, 8vw, 3.5rem)', 
+                  fontWeight: 900, 
+                  marginBottom: '20px', 
+                  letterSpacing: '-2px', 
+                  fontFamily: 'var(--font-display)', 
+                  textTransform: 'uppercase' 
+                }}>
                   Votação de Elite
                 </h2>
-                <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '650px', margin: '0 auto 40px', fontWeight: 500 }}>
+                <p style={{ 
+                  fontSize: 'clamp(1rem, 4vw, 1.25rem)', 
+                  color: 'var(--text-muted)', 
+                  maxWidth: '650px', 
+                  margin: '0 auto 40px', 
+                  fontWeight: 500 
+                }}>
                   Selecione as <strong style={{color: '#fff'}}>duas</strong> interfaces que melhor atendem suas necessidades diárias.
                 </p>
         </motion.div>
@@ -185,22 +198,22 @@ export default function VotePage() {
         {hasVoted && !success && (
           <motion.div 
             className="card" initial="hidden" animate="visible" variants={fUp}
-            style={{ textAlign: 'center', padding: '60px 40px', background: 'var(--grad-glass)' }}
+            style={{ textAlign: 'center', padding: 'clamp(30px, 8vw, 60px) 20px', background: 'var(--grad-glass)' }}
           >
-            <div style={{ fontSize: '4rem', marginBottom: '24px', filter: 'drop-shadow(0 0 15px var(--success))' }}>🏆</div>
-            <h2 style={{ fontSize: '1.8rem', marginBottom: '12px' }}>Voto Registrado</h2>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '40px', fontSize: '1.1rem' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '24px', filter: 'drop-shadow(0 0 15px var(--success))' }}>🏆</div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '12px' }}>Voto Registrado</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '40px', fontSize: '1rem' }}>
               Suas escolhas atuais: <span className="gradient-text" style={{ fontWeight: 800 }}>{myVotes.join(' & ')}</span>
             </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button 
                 onClick={handleEdit} className="btn btn-ghost" 
-                style={{ background: 'rgba(255,255,255,0.05)', padding: '14px 28px' }}
+                style={{ background: 'rgba(255,255,255,0.05)', padding: '12px 20px', fontSize: '0.85rem' }}
               >
-                ✏️ Editar Escolhas
+                ✏️ Editar
               </button>
-              <Link to="/questionnaire" className="btn btn-primary" style={{ padding: '14px 32px' }}>Responder Pesquisa →</Link>
-              <Link to="/dashboard" className="btn btn-ghost" style={{ padding: '14px 28px' }}>Ver Dashboard</Link>
+              <Link to="/questionnaire" className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '0.9rem' }}>Pesquisa →</Link>
+              <Link to="/dashboard" className="btn btn-ghost" style={{ padding: '12px 20px', fontSize: '0.85rem' }}>Dashboard</Link>
             </div>
           </motion.div>
         )}
@@ -211,8 +224,8 @@ export default function VotePage() {
             <AnimatePresence>
               {error && (
                 <motion.div 
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="alert alert-error" style={{ marginBottom: '24px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid #f43f5e' }}
+                   initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                   className="alert alert-error" style={{ marginBottom: '24px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid #f43f5e', fontSize: '0.85rem' }}
                 >
                   {error}
                 </motion.div>
@@ -224,17 +237,16 @@ export default function VotePage() {
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                marginBottom: '32px', padding: '20px 32px',
+                marginBottom: '32px', padding: '16px 20px',
                 background: 'rgba(255,255,255,0.02)', borderRadius: '20px',
                 border: '1px solid rgba(255,255,255,0.05)',
-                boxShadow: 'inset 0 0 20px rgba(255,255,255,0.02)'
               }}
             >
-              <span style={{ color: 'var(--text-muted)', fontSize: '1.1rem', fontWeight: 500, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                Progresso da Seleção
+              <span style={{ color: 'var(--text-muted)', fontSize: 'clamp(0.7rem, 3vw, 0.9rem)', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                Seleção
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '100px', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '60px', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
                   <motion.div 
                     initial={{ width: 0 }} animate={{ width: `${(selected.length / 2) * 100}%` }}
                     style={{ height: '100%', background: 'var(--grad-vibrant)' }}
@@ -243,15 +255,10 @@ export default function VotePage() {
                 <span style={{ 
                   fontFamily: 'var(--font-display)', 
                   fontWeight: 800, 
-                  fontSize: '2rem', 
+                  fontSize: '1.5rem', 
                   color: selected.length === 2 ? 'var(--success)' : '#fff',
-                  minWidth: '100px',
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  alignItems: 'baseline',
-                  gap: '4px'
                 }}>
-                  {selected.length} <span style={{ fontSize: '1.2rem', opacity: 0.3, fontWeight: 400 }}>/ 2</span>
+                  {selected.length} <span style={{ fontSize: '1rem', opacity: 0.3 }}>/ 2</span>
                 </span>
               </div>
             </motion.div>
@@ -260,13 +267,13 @@ export default function VotePage() {
             <motion.div 
               initial="hidden" animate="visible" variants={stagger}
               style={{ 
-                marginBottom: '60px', 
+                marginBottom: '40px', 
                 display: 'flex', 
                 flexWrap: 'wrap', 
-                gap: '16px', 
+                gap: 'clamp(8px, 2vw, 16px)', 
                 justifyContent: 'center',
-                maxWidth: '600px',
-                margin: '0 auto 60px'
+                maxWidth: '700px',
+                margin: '0 auto 40px'
               }}
             >
               {AI_OPTIONS.map(({ id, name, emoji, color }, idx) => {
@@ -282,24 +289,23 @@ export default function VotePage() {
                       background: isSelected ? `linear-gradient(135deg, ${color}33 0%, rgba(255,255,255,0.05) 100%)` : 'rgba(255,255,255,0.02)',
                       border: `1px solid ${isSelected ? color : 'rgba(255,255,255,0.1)'}`,
                       borderRadius: '999px',
-                      padding: '12px 24px',
+                      padding: 'clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px)',
                       display: 'flex', 
                       alignItems: 'center', 
-                      gap: '12px',
+                      gap: '8px',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       position: 'relative',
-                      overflow: 'hidden',
                       boxShadow: isSelected ? `0 0 20px ${color}44` : 'none'
                     }}
                   >
                     <span style={{ 
-                      fontSize: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      filter: isSelected ? `drop-shadow(0 0 15px ${color})` : 'none'
+                      fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
                       {emoji}
                     </span>
-                    <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
+                    <span style={{ fontWeight: 700, fontSize: 'clamp(0.75rem, 3vw, 0.9rem)', color: '#fff' }}>
                       {name}
                     </span>
                   </motion.button>

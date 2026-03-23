@@ -101,69 +101,81 @@ export default function QuestionnairePage() {
     set(key, updated);
   };
 
-  const handleSubmit = async () => {
-    setFieldErrors({});
-    if (!form.fullName || !form.course) {
-        setError('Campos obrigatórios ausentes.');
-        setFieldErrors({ fullName: !form.fullName, course: !form.course });
-        identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
+  const validateFullName = (name) => {
+    if (!name) return { valid: false, msg: "Por favor, digite seu nome." };
+    const trimmed = name.trim();
+    const words = trimmed.split(/\s+/);
+    
+    // 1. Validação de Conteúdo (Pelo menos duas palavras)
+    if (words.length < 2 || trimmed.length < 5) {
+      return { valid: false, msg: "Por favor, digite seu Nome e Sobrenome completo." };
+    }
+    
+    // 2. Apenas letras e espaços (inclui acentos PT-BR)
+    const onlyLetters = /^[a-zA-ZÀ-ÿ\s]+$/;
+    if (!onlyLetters.test(trimmed)) {
+      return { valid: false, msg: "O nome deve conter apenas letras." };
     }
 
-    const trimmedName = form.fullName.trim();
-    const nameParts = trimmedName.split(/\s+/);
-
-    // 1. Validação de Nome e Sobrenome
-    if (nameParts.length < 2 || trimmedName.length < 5) {
-      setError('Por favor, informe seu nome e sobrenome real.');
-      setFieldErrors({ fullName: true });
-      identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-
-    // 2. Filtro de Palavras Proibidas
+    // 3. Filtro de profanidade
+    const lowerName = trimmed.toLowerCase();
     const hasProfanity = PROHIBITED_WORDS.some(bad => 
-      trimmedName.toLowerCase().split(/[\s._-]+/).some(word => word === bad || (word.length > 3 && word.includes(bad)))
+      lowerName.split(/[\s._-]+/).some(word => word === bad || (word.length > 3 && word.includes(bad)))
     );
     if (hasProfanity) {
-      setError('O nome contém termos não permitidos. Use seu nome profissional.');
-      setFieldErrors({ fullName: true });
+      return { valid: false, msg: "Por favor, utilize um nome apropriado (sem termos proibidos)." };
+    }
+
+    return { valid: true };
+  };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setError('');
+    setFieldErrors({});
+
+    // Validação de campos obrigatórios
+    if (!form.fullName || !form.course) {
+      setError('Campos obrigatórios ausentes.');
+      setFieldErrors({ fullName: !form.fullName, course: !form.course });
       identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
-    // 3. Validação de Caracteres (Apenas letras e espaços)
-    if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(trimmedName)) {
-      setError('O nome deve conter apenas letras.');
+    // Validação estrita de Nome
+    const nameEval = validateFullName(form.fullName);
+    if (!nameEval.valid) {
+      setError(nameEval.msg);
       setFieldErrors({ fullName: true });
       identSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
     setLoading(true);
-    setError('');
-
-    const payload = {
-      aiNames: selectedIAs,
-      fullName: form.fullName,
-      course: form.course,
-      institution: form.institution,
-      instagram: form.instagram,
-      whereUseAi: form.whereUseAi.join(','),
-      whyUseAi: form.whyUseAi.join(','),
-      howUseAi: form.howUseAi.join(','),
-      useForStudy: form.useForStudy,
-      useForWork: form.useForWork,
-      workArea: form.workArea,
-      workAreaOther: form.workAreaOther,
-    };
-
     try {
+      const selectedIAs = JSON.parse(sessionStorage.getItem('selectedIAs') || '[]');
+      const payload = {
+        aiNames: selectedIAs,
+        fullName: form.fullName.trim(),
+        course: form.course,
+        institution: form.institution,
+        instagram: form.instagram,
+        workArea: form.workArea,
+        whereUseAi: form.whereUseAi,
+        whyUseAi: form.whyUseAi,
+        howUseAi: form.howUseAi,
+        useForStudy: form.useForStudy,
+        useForWork: form.useForWork,
+        workAreaOther: form.workAreaOther
+      };
+      
       await participationAPI.submit(payload);
-      sessionStorage.removeItem('selectedIAs');
       setSuccess(true);
+      sessionStorage.removeItem('selectedIAs');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      setError(err.message || 'Erro ao processar sua participação.');
+      console.error("Erro ao enviar questionário:", err);
+      setError("Houve um erro ao registrar sua participação. Tente novamente.");
     } finally {
       setLoading(false);
     }

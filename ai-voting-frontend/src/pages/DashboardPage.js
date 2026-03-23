@@ -267,31 +267,30 @@ export default function DashboardPage() {
   const whyUseAi      = data?.whyUseAi       || {};
   const recentVotes   = data?.recentVotes    || [];
 
-  // Ranking de IAs ordenado por votos decrescente
-  const aiRanking = Object.entries(votesByAi || {})
-    .sort((a, b) => b[1] - a[1]);
-
-  // =============== GRÁFICO TOTAL (SÍNTESE) ===============
-  // Geramos a curva "jagged" (afiada) baseada na imagem de referência - Apenas Roxo
-  const metricValues = [totalVotes, totalResponses, useForStudy, useForWork, ...aiRanking.map(a=>a[1])].filter(v => v > 0);
-  const avgMetric = metricValues.length > 0 ? metricValues.reduce((a,b)=>a+b, 0) / metricValues.length : 5;
+  // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES ===============
   
-  let currentB = avgMetric;
-  const lineB = Array.from({length: 30}).map((_, i) => {
-    const noise = metricValues[(i+2) % metricValues.length] || avgMetric;
-    currentB += (Math.random() * (noise/2)) - (noise/4); 
-    return Math.max(0, currentB + (i * 0.8)); // Curva com tendência de subida
-  });
+  const aiRanking = useMemo(() => {
+    return Object.entries(votesByAi || {}).sort((a, b) => b[1] - a[1]);
+  }, [votesByAi]);
 
-  const estatisticaGeral = metricValues.reduce((acc, curr) => acc + curr, 0) - 18; // Soma global total de todos os dados do BD (-18 a pedido)
+  const lineB = useMemo(() => {
+    const metricValues = [totalVotes, totalResponses, useForStudy, useForWork, ...aiRanking.map(a=>a[1])].filter(v => v > 0);
+    const avgMetric = metricValues.length > 0 ? metricValues.reduce((a,b)=>a+b, 0) / metricValues.length : 5;
+    let currentB = avgMetric;
+    return Array.from({length: 30}).map((_, i) => {
+      const noise = metricValues[(i+2) % metricValues.length] || avgMetric;
+      currentB += (Math.random() * (noise/2)) - (noise/4); 
+      return Math.max(0, currentB + (i * 0.8));
+    });
+  }, [totalVotes, totalResponses, useForStudy, useForWork, aiRanking]);
 
-  const totalChartData = {
+  const totalChartData = useMemo(() => ({
     labels: Array.from({length: 30}).map((_, i) => i.toString()),
     datasets: [
       {
         type: 'line',
         data: lineB,
-        borderColor: 'rgba(255, 0, 204, 0.4)', // Outer neon aura
+        borderColor: 'rgba(255, 0, 204, 0.4)',
         borderWidth: 16,
         tension: 0, 
         fill: true,
@@ -300,8 +299,8 @@ export default function DashboardPage() {
           const chartArea = context.chart.chartArea;
           if (!chartArea) return 'rgba(255, 0, 204, 0.4)';
           const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, 'rgba(255, 0, 204, 0.6)'); // Rosa forte
-          gradient.addColorStop(1, 'rgba(12, 2, 24, 0.0)'); // Fades para preto
+          gradient.addColorStop(0, 'rgba(255, 0, 204, 0.6)');
+          gradient.addColorStop(1, 'rgba(12, 2, 24, 0.0)');
           return gradient;
         },
         pointRadius: 0,
@@ -311,7 +310,7 @@ export default function DashboardPage() {
       {
         type: 'line',
         data: lineB,
-        borderColor: '#ff00cc', // Core magenta vibrante
+        borderColor: '#ff00cc',
         borderWidth: 3,
         tension: 0,
         fill: false,
@@ -322,7 +321,7 @@ export default function DashboardPage() {
       {
         type: 'line',
         data: lineB,
-        borderColor: '#ffffff', // Núcleo quente branco (laser)
+        borderColor: '#ffffff',
         borderWidth: 1.5,
         tension: 0,
         fill: false,
@@ -331,7 +330,25 @@ export default function DashboardPage() {
         order: 1
       }
     ]
-  };
+  }), [lineB]);
+
+  const totalChartOpts = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false },
+    },
+    scales: {
+      y: { display: false, min: 0 },
+      x: { display: false }
+    },
+    interaction: { mode: 'none' },
+    animation: {
+      duration: 2500,
+      easing: 'easeOutQuart'
+    }
+  }), []);
 
   const drawCustomFeaturesPlugin = {
     id: 'drawCustomFeaturesPlugin',
@@ -368,29 +385,12 @@ export default function DashboardPage() {
 
 
 
-  const totalChartOpts = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: false },
-    },
-    scales: {
-      y: { display: false, min: 0 },
-      x: { display: false }
-    },
-    interaction: { mode: 'none' },
-    animation: {
-      duration: 2500, // Animação longa e luxuosa de entrada
-      easing: 'easeOutQuart'
-    }
-  };
 
   // ─── GRÁFICOS SECUNDÁRIOS: CONTEXTO E ECOSSISTEMA MODO PREMIUM ──
   // Escala Cyberpunk Futurística: Roxo Claro -> Roxo Escuro -> Azul Meia-Noite
   const mapCoresCyberpunk = ['#d946ef', '#9333ea', '#6b21a8', '#3b0764', '#0f172a', '#020617'];
 
-  const whereDonut = {
+  const whereDonut = useMemo(() => ({
     labels: Object.keys(whereUseAi),
     datasets: [{
       data: Object.values(whereUseAi),
@@ -398,10 +398,11 @@ export default function DashboardPage() {
       borderWidth: 0,
       hoverOffset: 12
     }]
-  };
+  }), [whereUseAi]);
+
   const isSmallScreen = window.innerWidth < 600;
 
-  const whereOptions = {
+  const whereOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     cutout: '80%', 
@@ -425,10 +426,13 @@ export default function DashboardPage() {
         cornerRadius: 8,
       }
     }
-  };
+  }), [isSmallScreen]);
 
-  const sortedWorkArea = Object.entries(workAreas).sort((a, b) => b[1] - a[1]);
-  const workAreaBar = {
+  const sortedWorkArea = useMemo(() => {
+    return Object.entries(workAreas || {}).sort((a, b) => b[1] - a[1]);
+  }, [workAreas]);
+
+  const workAreaBar = useMemo(() => ({
     labels: sortedWorkArea.map(w => w[0]),
     datasets: [{
       label: 'Votos',
@@ -446,8 +450,9 @@ export default function DashboardPage() {
       maxBarThickness: 32, 
       borderWidth: 0
     }]
-  };
-  const workAreaOpts = {
+  }), [sortedWorkArea]);
+
+  const workAreaOpts = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -467,7 +472,7 @@ export default function DashboardPage() {
         grid: { display: true, color: 'rgba(255,255,255,0.05)' },
         ticks: { 
           color: '#d0d0f0', 
-          font: { size: 11, weight: 600 }, // Aumentado para 11
+          font: { size: 11, weight: 600 },
           precision: 0,
           padding: 8,
           callback: (value) => Number.isInteger(value) ? value : null
@@ -497,7 +502,7 @@ export default function DashboardPage() {
         }
       }
     }
-  };
+  }), [isSmallScreen, sortedWorkArea]);
   // =======================================================
 
   // Se FOR Admin, mostra a versão COMPLETA (Elaborada)
@@ -676,7 +681,7 @@ export default function DashboardPage() {
           flexShrink: 0
         }}>
            <div style={{ textAlign: 'right' }}>
-             <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>Victor Fonseca</div>
+             <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>Perfil</div>
              <div style={{ fontSize: '0.7rem', color: 'var(--accent-light)' }}>{isAdmin ? 'Admin do Sistema' : 'Visualizador Público'}</div>
            </div>
            <div style={{ 
@@ -1084,29 +1089,7 @@ export default function DashboardPage() {
              ))}
           </div>
 
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-                <span style={{ fontSize: '1.5rem' }}>👥</span>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Time de Elite</h2>
-             </div>
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '40px' }}>
-                {[
-                  { icon: '🥇', name: 'Victor Fonseca', role: 'Product Vision & Lead Architecture', desc: 'Líder técnico e Engenheiro Fullstack responsável pela visão estratégica do produto, arquitetura de sistemas escaláveis e integração de modelos de IA.' },
-                  { icon: '💻', name: 'Erick Fernando & Gabriel Calixto', role: 'Core Dev Team', desc: 'Engenheiros responsáveis pela lógica de votação resiliente, infraestrutura de alta disponibilidade e performance do ecossistema.' },
-                  { icon: '💡', name: 'João Lucas, Luiz, Mikael & Pablo', role: 'Research & UX', desc: 'Especialistas focados em pesquisa de tendências, experiência do usuário e interface visual centrada no ser humano.' },
-                  { icon: '🤖', name: 'Antigravity', role: 'AI Technical Partner', desc: 'Parceiro tecnológico de IA auxiliando no desenvolvimento acelerado, auditoria de código e codificação assistida.' }
-                ].map((member, i) => (
-                  <div key={i} style={{ textAlign: 'center', padding: '12px' }}>
-                     <div style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', marginBottom: '12px' }}>{member.icon}</div>
-                     <div style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: '6px', color: '#fff', fontStyle: 'italic' }}>{member.name}</div>
-                     <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.8rem', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>{member.role}</div>
-                     <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', lineHeight: 1.6, maxWidth: '280px', margin: '0 auto' }}>
-                       {member.desc}
-                     </div>
-                  </div>
-                ))}
-             </div>
-          </div>
+          {/* Seção de Time de Elite removida conforme solicitado */}
       </div>
 
       {/* ─── PAINEL DE AÇÕES ADMIN ─────────────────────────────────── */}

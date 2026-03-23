@@ -184,32 +184,24 @@ export const participationAPI = {
 
     const userId = user ? user.id : generateUUID();
 
-    // 1. Registra o usuário (ou atualiza se logado)
-    if (user) {
-      const { error: userErr } = await supabase.from('users').update({
-        name: payload.fullName,
-        course: payload.course,
-        institution: payload.institution,
-        instagram: payload.instagram
-      }).eq('id', user.id);
-      if (userErr) throw new Error("Erro ao atualizar perfil");
-    } else {
-      // Tenta registrar/atualizar o perfil do Visitante. 
-      // Adicionamos um email placeholder pois o Supabase pode exigir este campo (NOT NULL).
-      const { error: userErr } = await supabase.from('users').upsert({
-        id: userId,
-        name: payload.fullName,
-        email: `${userId.substring(0, 8)}@anon.aivote.com`, // Email único placeholder
-        course: payload.course,
-        institution: payload.institution,
-        instagram: payload.instagram,
-        role: 'voter'
-      }, { onConflict: 'id' });
-      
-      if (userErr) {
-        console.warn("⚠️ Perfil não pôde ser criado:", userErr.message);
-        // Não travamos o fluxo aqui para garantir o registro do voto se possível
-      }
+    // 1. Registra ou Atualiza o perfil do usuário (Logado ou Anônimo)
+    // Garantimos o e-mail para satisfazer restrições NOT NULL do banco
+    const userEmail = user?.email || `${userId.substring(0, 8)}@anon.aivote.com`;
+    
+    const { error: userErr } = await supabase.from('users').upsert({
+      id: userId,
+      name: payload.fullName,
+      email: userEmail,
+      course: payload.course,
+      institution: payload.institution,
+      instagram: payload.instagram,
+      role: user ? (user.app_metadata?.role || 'voter') : 'voter'
+    }, { onConflict: 'id' });
+    
+    if (userErr) {
+      console.warn("⚠️ Perfil não pôde ser sincronizado:", userErr.message);
+      // Se for um erro crítico de RLS/Constraint que impeça o FK em 'votes', 
+      // o erro será capturado no passo seguinte (votos).
     }
 
     // 2. Registra os votos
