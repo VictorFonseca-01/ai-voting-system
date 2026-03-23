@@ -28,7 +28,6 @@ const stagger = {
 export default function VotePage() {
   const [selected, setSelected] = useState([]);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [checkLoading, setCheckLoading] = useState(true);
   const [hasVoted, setHasVoted] = useState(false);
   const [myVotes, setMyVotes] = useState([]);
@@ -157,7 +156,7 @@ export default function VotePage() {
                   onClick={confirmSubmit}
                   style={{ padding: '14px 40px', background: 'var(--grad-primary)', border: 'none' }}
                 >
-                  {loading ? 'Processando...' : 'Confirmar e Continuar →'}
+                  Confirmar e Continuar →
                 </button>
               </div>
             </motion.div>
@@ -318,7 +317,7 @@ export default function VotePage() {
               <button
                 className="btn btn-primary btn-full"
                 onClick={handleSubmit}
-                disabled={(selected.length !== 2 && !selected.includes('none')) || loading}
+                disabled={(selected.length !== 2 && !selected.includes('none'))}
                 style={{ 
                   padding: '20px', fontSize: '1.1rem', borderRadius: '20px',
                   background: (selected.length === 2 || selected.includes('none')) ? 'var(--grad-primary)' : 'rgba(255,255,255,0.05)',
@@ -327,11 +326,9 @@ export default function VotePage() {
                   cursor: (selected.length === 2 || selected.includes('none')) ? 'pointer' : 'not-allowed'
                 }}
               >
-                {loading
-                  ? <><span className="spinner" style={{ width: 24, height: 24 }} /> Processando...</>
-                  : (selected.length === 2 || selected.includes('none'))
-                      ? 'Confirmar Votos →' 
-                      : 'Selecione suas Opções'}
+                {(selected.length === 2 || selected.includes('none'))
+                    ? 'Confirmar Votos →' 
+                    : 'Selecione suas Opções'}
               </button>
             </motion.div>
           </>

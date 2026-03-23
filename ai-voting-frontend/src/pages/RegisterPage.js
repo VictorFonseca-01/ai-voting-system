@@ -12,7 +12,7 @@ const fUp = {
 // BackgroundOrbs removido para visual mais limpo
 
 export default function RegisterPage() {
-  const { login } = useAuth();
+  useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ name: '', email: '', password: '', course: '', institution: '' });

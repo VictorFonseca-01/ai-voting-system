@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +12,7 @@ const fUp = {
 // BackgroundOrbs removido para visual mais limpo
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ email: '', password: '' });

@@ -1,5 +1,16 @@
 import { supabase } from '../supabaseClient';
 
+// ─── UTILS ────────────────────────────────────────────────────────────
+
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 // ─── AUTH ─────────────────────────────────────────────────────────────
 
 export const authAPI = {
@@ -51,16 +62,6 @@ export const votesAPI = {
 export const questionnaireAPI = {
   submit: async (responses) => {
     const { data: { user } } = await supabase.auth.getUser();
-    
-    const generateUUID = () => {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
-    };
-
     const userId = user ? user.id : generateUUID();
     
     const { data, error } = await supabase.from('question_responses').upsert({
@@ -92,16 +93,22 @@ export const questionnaireAPI = {
 
 export const dashboardAPI = {
   getData: async () => {
-    // Busca dados no Supabase para o Dashboard
-    const [usersRes, votesRes, questRes] = await Promise.all([
+    // Otimizado: Busca apenas contagens para os cards de topo
+    const [usersCount, votesCount, questCount] = await Promise.all([
       supabase.from('users').select('*', { count: 'exact', head: true }),
-      supabase.from('votes').select('ai_name'),
-      supabase.from('question_responses').select('*')
+      supabase.from('votes').select('*', { count: 'exact', head: true }),
+      supabase.from('question_responses').select('*', { count: 'exact', head: true })
     ]);
     
-    const totalUsers = usersRes.count || 0;
-    const totalVotes = votesRes.data ? votesRes.data.length : 0;
-    const totalResponses = questRes.data ? questRes.data.length : 0;
+    // Busca dados agrupados (ainda em memória por limitações do Client JS sem RPC, mas com select parcial)
+    const [votesRes, questRes] = await Promise.all([
+      supabase.from('votes').select('ai_name'),
+      supabase.from('question_responses').select('use_for_study, use_for_work, work_area, where_use_ai, why_use_ai')
+    ]);
+    
+    const totalUsers = usersCount.count || 0;
+    const totalVotes = votesCount.count || 0;
+    const totalResponses = questCount.count || 0;
     
     // 1. Contagem de votos por IA
     const votesByAi = (votesRes.data || []).reduce((acc, v) => {
@@ -121,45 +128,38 @@ export const dashboardAPI = {
 
     const whereUseAi = (questRes.data || []).reduce((acc, r) => {
       (r.where_use_ai || '').split(',').forEach(loc => {
-        if (loc) acc[loc] = (acc[loc] || 0) + 1;
+        const trimLoc = loc.trim();
+        if (trimLoc) acc[trimLoc] = (acc[trimLoc] || 0) + 1;
       });
       return acc;
     }, {});
 
     const whyUseAi = (questRes.data || []).reduce((acc, r) => {
       (r.why_use_ai || '').split(',').forEach(reason => {
-        if (reason) acc[reason] = (acc[reason] || 0) + 1;
+        const trimReason = reason.trim();
+        if (trimReason) acc[trimReason] = (acc[trimReason] || 0) + 1;
       });
       return acc;
     }, {});
     
-    // 3. Votos Recentes (Join com a tabela users)
-    const { data: recentRes, error: recentErr } = await supabase
+    // 3. Votos Recentes
+    const { data: recentRes } = await supabase
       .from('votes')
-      .select('id, ai_name, voted_at, user_id, users(name, course)')
+      .select('ai_name, voted_at, users(name)')
       .order('voted_at', { ascending: false })
-      .limit(10);
+      .limit(6);
     
     const recentVotes = (recentRes || []).map(v => ({
-      id: v.id,
       userName: v.users?.name || 'Votante',
-      userCourse: v.users?.course || 'Não informado',
       aiName: v.ai_name,
       votedAt: v.voted_at
     }));
     
     return {
       data: {
-        totalUsers,
-        totalVotes,
-        totalResponses,
-        useForStudy,
-        useForWork,
-        votesByAi,
-        workAreas,
-        whereUseAi,
-        whyUseAi,
-        recentVotes
+        totalUsers, totalVotes, totalResponses,
+        useForStudy, useForWork, votesByAi,
+        workAreas, whereUseAi, whyUseAi, recentVotes
       }
     };
   },
@@ -233,59 +233,65 @@ export const participationAPI = {
 
 export const adminAPI = {
   getUsers: async () => {
-    // Busca todos os usuários e verifica se já votaram/responderam
-    const { data: users, error: userErr } = await supabase.from('users').select('*');
-    const { data: votes } = await supabase.from('votes').select('user_id');
-    const { data: quests } = await supabase.from('question_responses').select('user_id');
+    // Otimizado: Busca usuários com contagens relacionadas via Supabase
+    const { data: users, error: userErr } = await supabase
+      .from('users')
+      .select('*, votes(count), question_responses(count)')
+      .order('name');
     
     if (userErr) throw new Error(userErr.message);
     
-    const votedIds = new Set(votes?.map(v => v.user_id));
-    const questIds = new Set(quests?.map(q => q.user_id));
-    
     const enrichedUsers = users.map(u => ({
       ...u,
-      hasVoted: votedIds.has(u.id),
-      hasAnswered: questIds.has(u.id)
+      hasVoted: (u.votes?.[0]?.count || 0) > 0,
+      hasAnswered: (u.question_responses?.[0]?.count || 0) > 0
     }));
     
     return { data: enrichedUsers };
   },
   
   getReport: async () => {
-    // Gera o relatório completo agregando dados do Supabase
+    // Otimizado: Busca apenas colunas necessárias e usa agregação
     const [usersRes, votesRes, questsRes] = await Promise.all([
-      supabase.from('users').select('*'),
-      supabase.from('votes').select('*'),
-      supabase.from('question_responses').select('*')
+      supabase.from('users').select('id, name, course, institution'),
+      supabase.from('votes').select('user_id, ai_name'),
+      supabase.from('question_responses').select('user_id, work_area, why_use_ai')
     ]);
     
     const users = usersRes.data || [];
     const votes = votesRes.data || [];
     const quests = questsRes.data || [];
     
-    const totalUsersVoted = new Set(votes.map(v => v.user_id)).size;
+    const voterIds = new Set(votes.map(v => v.user_id));
+    const totalUsersVoted = voterIds.size;
     
-    // Agrupa votos por IA
     const aiNames = [...new Set(votes.map(v => v.ai_name))];
     const aiReports = aiNames.map(name => {
       const aiVotes = votes.filter(v => v.ai_name === name);
-      const voterIds = new Set(aiVotes.map(v => v.user_id));
-      const aiUsers = users.filter(u => voterIds.has(u.id));
-      const aiQuests = quests.filter(q => voterIds.has(q.user_id));
+      const aiVoterIds = new Set(aiVotes.map(v => v.user_id));
+      const aiUsers = users.filter(u => aiVoterIds.has(u.id));
+      const aiQuests = quests.filter(q => aiVoterIds.has(q.user_id));
       
-      // Top áreas e motivos (simplificado)
       const areas = aiQuests.reduce((acc, q) => {
         acc[q.work_area || 'Outros'] = (acc[q.work_area || 'Outros'] || 0) + 1;
         return acc;
       }, {});
       const topWorkAreas = Object.entries(areas).sort((a,b)=>b[1]-a[1]).slice(0, 3).map(([k])=>k);
+
+      const reasons = aiQuests.reduce((acc, q) => {
+        (q.why_use_ai || '').split(',').forEach(r => {
+          const trimR = r.trim();
+          if (trimR) acc[trimR] = (acc[trimR] || 0) + 1;
+        });
+        return acc;
+      }, {});
+      const topReasons = Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0, 3).map(([k])=>k);
       
       return {
         aiName: name,
         totalVotes: aiVotes.length,
         topWorkAreas,
-        topReasons: [], // Pode ser implementado similarmente
+        topReasons,
         users: aiUsers.map(u => ({ name: u.name, institution: u.institution, course: u.course }))
       };
     });

@@ -1,12 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { useAuth } from '../context/AuthContext';
 
 const SYSTEM_URL = window.location.origin;
 
 export default function HomePage() {
-  const { isAuthenticated, isAdmin } = useAuth();
 
   return (
     <div style={{ minHeight: '100vh' }}>
