@@ -54,6 +54,44 @@ export default function DashboardPage() {
   const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
   const [newPass, setNewPass] = useState('');
 
+  const handleChangePassword = () => {
+    setModalConfig({
+      title: 'Alterar Senha do Admin',
+      type: 'password'
+    });
+    setNewPass('');
+    setShowModal(true);
+  };
+
+  const confirmChangePassword = async () => {
+    if (newPass.length < 6) {
+      setModalConfig({
+        title: 'Senha Curta',
+        message: 'A senha deve ter pelo menos 6 caracteres.',
+        type: 'alert'
+      });
+      setShowModal(true);
+      return;
+    }
+    setShowModal(false);
+    try {
+      await adminAPI.changePassword(newPass);
+      setModalConfig({
+        title: 'Sucesso! ✅',
+        message: 'Sua senha administrativa foi alterada com sucesso.',
+        type: 'alert'
+      });
+      setShowModal(true);
+    } catch (err) {
+      setModalConfig({
+        title: 'Erro de Segurança',
+        message: err.response?.data?.error || 'Não foi possível alterar a senha.',
+        type: 'alert'
+      });
+      setShowModal(true);
+    }
+  };
+
   const fetchData = async () => {
     try {
       const { data: d } = await dashboardAPI.getData();
@@ -103,42 +141,22 @@ export default function DashboardPage() {
     }
   };
 
-  const handleChangePassword = () => {
-    setModalConfig({
-      title: 'Alterar Minha Senha',
-      type: 'password'
-    });
-    setNewPass('');
-    setShowModal(true);
-  };
-
-  const confirmChangePassword = async () => {
-    if (newPass.length < 6) {
-      alert('A senha deve ter pelo menos 6 caracteres.');
-      return;
-    }
-    setShowModal(false);
-    try {
-      await adminAPI.changePassword(newPass);
-      setModalConfig({
-        title: 'Sucesso',
-        message: 'Sua senha foi alterada com sucesso.',
-        type: 'alert'
-      });
-      setShowModal(true);
-    } catch (err) {
-      setModalConfig({
-        title: 'Erro',
-        message: err.response?.data?.error || 'Não foi possível alterar a senha.',
-        type: 'alert'
-      });
-      setShowModal(true);
-    }
-  };
+  
   
 
 
   const handleExportData = async () => {
+    setModalConfig({
+      title: 'Exportar Backup',
+      message: 'Deseja gerar e baixar um backup completo do sistema agora?',
+      onConfirm: confirmExportData,
+      type: 'confirm'
+    });
+    setShowModal(true);
+  };
+
+  const confirmExportData = async () => {
+    setShowModal(false);
     try {
       const { data: backup } = await adminAPI.exportData();
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -509,46 +527,6 @@ export default function DashboardPage() {
             </motion.div>
           </motion.div>
         )}
-        {showInstaModal && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="modal-overlay" onClick={() => setShowInstaModal(false)}
-            style={{ zIndex: 10000 }}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="modal-content" style={{ maxWidth: '600px', background: '#120524', border: '1px solid #7000ff' }} onClick={e => e.stopPropagation()}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>CONECTE-SE</h2>
-                <button onClick={() => setShowInstaModal(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
-              </div>
-              <p style={{ textAlign: 'center', color: '#d0d0f0', marginBottom: '32px' }}>Siga os desenvolvedores e acompanhe as novidades.</p>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-                {[
-                  { name: 'Victor', handle: '@ovittinn_062', link: 'https://instagram.com/ovittinn_062' },
-                  { name: 'Erick', handle: '@erick_fernando_lx', link: 'https://instagram.com/erick_fernando_lx' },
-                  { name: 'Calixto', handle: '@calixto.sxz', link: 'https://instagram.com/calixto.sxz' }
-                ].map((p, idx) => (
-                  <motion.a 
-                    key={idx} href={p.link} target="_blank" rel="noopener noreferrer"
-                    whileHover={{ scale: 1.05, background: 'rgba(112,0,255,0.2)' }}
-                    style={{ 
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', 
-                      background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(112,0,255,0.3)',
-                      textDecoration: 'none', color: '#fff'
-                    }}
-                  >
-                    <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📸</div>
-                    <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{p.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#00f0ff' }}>{p.handle}</div>
-                  </motion.a>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
       </AnimatePresence>
 
                {/* ─── HEADER ─────────────────────────────────────────────── */}
@@ -755,15 +733,15 @@ export default function DashboardPage() {
         <div className="card" style={{ padding: '32px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <h3 style={{ fontSize: '0.9rem', color: 'var(--accent)', marginBottom: '20px' }}>⚙️ ADMINISTRAÇÃO</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-            <button onClick={fetchData} className="btn btn-ghost">Atualizar</button>
-            <Link to="/admin/users" className="btn btn-ghost">Usuários</Link>
-            <button onClick={handleChangePassword} className="btn btn-ghost">Alterar Senha</button>
-            <button onClick={handleExportData} className="btn btn-ghost">Exportar Backup</button>
-            <label className="btn btn-ghost" style={{ cursor: 'pointer' }}>
+            <button onClick={fetchData} className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Atualizar</button>
+            <Link to="/admin/users" className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Usuários</Link>
+            <button onClick={handleChangePassword} className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Alterar Senha</button>
+            <button onClick={handleExportData} className="btn btn-ghost" style={{ border: '1px solid #10b981', color: '#10b981' }}>Exportar Backup</button>
+            <label className="btn btn-ghost" style={{ cursor: 'pointer', border: '1px solid #fbbf24', color: '#fbbf24' }}>
               Importar Backup
               <input type="file" hidden accept=".json" onChange={handleImportData} />
             </label>
-            <button onClick={handleResetData} className="btn btn-ghost" style={{ color: 'var(--rose)' }}>Zerar Sistema</button>
+            <button onClick={handleResetData} className="btn btn-ghost" style={{ border: '1px solid var(--rose)', color: 'var(--rose)' }}>Zerar Sistema</button>
           </div>
         </div>
       )}
