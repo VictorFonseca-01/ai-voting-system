@@ -1,349 +1,552 @@
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
+import { hasInappropriateContent } from '../utils/moderation';
 
-// ─── UTILS ────────────────────────────────────────────────────────────
+/**
+ * Camada de API - Versão Supabase (Safe Mode)
+ * Todas as operações são realizadas diretamente via SDK do Supabase.
+ */
 
-const generateUUID = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : ((r & 0x3) | 0x8);
-    return v.toString(16);
-  });
+// ─── SEGURANÇA E AMBIENTE ─────────────────────────────────────────────
+const ENV = process.env.NODE_ENV || 'development';
+const isProduction = ENV === 'production';
+
+/**
+ * Registra ações críticas para auditoria.
+ */
+const logAuditAction = async (actionName, details = {}, result = 'success') => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const logEntry = {
+      user_id: user?.id || 'anonymous',
+      user_email: user?.email || 'anonymous',
+      action_name: actionName,
+      details: JSON.stringify(details),
+      environment: ENV,
+      result: result,
+      executed_at: new Date().toISOString()
+    };
+
+    console.log(`[AUDIT LOG] ${actionName}:`, logEntry);
+    
+    // Tenta persistir no Supabase (Requer tabela 'audit_logs')
+    const { error } = await supabase.from('audit_logs').insert([logEntry]);
+    if (error) console.warn("Aviso: Falha ao persistir log no banco (tabela pode não existir).");
+    
+    return true;
+  } catch (err) {
+    console.error("Erro ao gerar log de auditoria:", err);
+    return false;
+  }
 };
 
 // ─── AUTH ─────────────────────────────────────────────────────────────
-
 export const authAPI = {
-  register: async ({ email, password, ...rest }) => {
+  register: async ({ email, password, name, course, institution, instagram }) => {
+    // Moderação básica antes de enviar
+    if (hasInappropriateContent(name) || hasInappropriateContent(course) || hasInappropriateContent(institution)) {
+      throw new Error("Conteúdo inadequado detectado nos campos de cadastro.");
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { ...rest, role: 'ROLE_USER' } }
+      options: {
+        data: { name, course, institution, instagram, role: 'ROLE_USER' }
+      }
     });
-    if (error) throw new Error(error.message);
-    return { data: { user: { ...data.user, ...data.user.user_metadata }, token: data.session?.access_token } };
+    if (error) throw error;
+    return { data };
   },
+
   login: async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error("Email ou senha inválidos");
-    return { data: { user: { ...data.user, ...data.user.user_metadata }, token: data.session.access_token } };
+    if (error) throw error;
+    return { data: { ...data.user, ...data.user.user_metadata } };
   },
-  logout: async () => supabase.auth.signOut()
+
+  logout: async () => {
+    await supabase.auth.signOut();
+  }
 };
 
 // ─── VOTES ────────────────────────────────────────────────────────────
-
 export const votesAPI = {
-  // Verifica se o usuário logado já votou
+  submit: async (aiNames, user = null, forceUserId = null) => {
+    if (!user && !forceUserId) {
+      const { data } = await supabase.auth.getUser();
+      user = data?.user;
+    }
+
+    const targetId = forceUserId || user?.id;
+    if (!targetId) throw new Error("ID de destino não identificado para o voto.");
+
+    const votes = aiNames.map(ai => ({
+      user_id: targetId,
+      ai_name: ai,
+      voted_at: new Date().toISOString()
+    }));
+
+    const { error } = await supabase.from('votes').insert(votes);
+    if (error) throw error;
+    return { data: { success: true } };
+  },
+
+  getMyVotes: async () => {
+    const { data, error } = await supabase.from('votes').select('*');
+    if (error) throw error;
+    return { data };
+  },
+
   checkStatus: async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { data: { hasVoted: false } };
+    if (!user) return { data: { hasVoted: false, votes: [] } };
 
     const { data, error } = await supabase
       .from('votes')
       .select('ai_name')
       .eq('user_id', user.id);
-
-    if (error) throw new Error(error.message);
-    return { data: { hasVoted: data.length > 0, votes: data.map(v => v.ai_name) } };
-  },
-
-  getMyVotes: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { data: [] };
-    const { data, error } = await supabase.from('votes').select('ai_name').eq('user_id', user.id);
-    if (error) throw new Error(error.message);
-    return { data: data.map(v => v.ai_name) };
-  },
+      
+    if (error) throw error;
+    
+    return { 
+      data: { 
+        hasVoted: data.length > 0,
+        votes: data.map(v => v.ai_name)
+      } 
+    };
+  }
 };
 
 // ─── QUESTIONNAIRE ────────────────────────────────────────────────────
-
 export const questionnaireAPI = {
-  submit: async (responses) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user ? user.id : generateUUID();
+  submit: async (formData, user = null, forceUserId = null) => {
+    if (!user && !forceUserId) {
+      const { data } = await supabase.auth.getUser();
+      user = data?.user;
+    }
+
+    const targetId = forceUserId || user?.id;
+    if (!targetId) throw new Error("ID de destino não identificado para o questionário.");
     
-    const { data, error } = await supabase.from('question_responses').upsert({
-      user_id: userId,
-      work_area: responses.workArea,
-      where_use_ai: responses.whereUseAi,
-      why_use_ai: responses.whyUseAi,
-      how_use_ai: responses.howUseAi,
-      use_for_study: responses.useForStudy,
-      use_for_work: responses.useForWork,
-      work_area_other: responses.workAreaOther
-    });
-    if (error) throw new Error(error.message);
-    return { data };
+    const payload = {
+      user_id: targetId,
+      where_use_ai: formData.whereUseAi,
+      why_use_ai: formData.whyUseAi,
+      how_use_ai: formData.howUseAi,
+      use_for_study: formData.useAiStudy || formData.useForStudy,
+      use_for_work: formData.useAiWork || formData.useForWork,
+      work_area: formData.workArea,
+      work_area_other: formData.workAreaOther,
+      answered_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase
+      .from('question_responses')
+      .upsert(payload, { onConflict: 'user_id' });
+      
+    if (error) throw error;
+    return { data: { success: true } };
   },
+
   getStatus: async () => {
-    return { data: { general: [], detailed: [] } }; // Mocked or implement later
-  },
-  getMyResponse: async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { data: null };
-    const { data, error } = await supabase.from('question_responses').select('*').eq('user_id', user.id).single();
-    if (error && error.code !== 'PGRST116') throw new Error(error.message);
-    return { data };
-  },
+    if (!user) return { data: { hasResponded: false } };
+
+    const { count, error } = await supabase
+      .from('question_responses')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    if (error) throw error;
+    return { data: { hasResponded: count > 0 } };
+  }
 };
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────
-
 export const dashboardAPI = {
   getData: async () => {
-    // Otimizado: Busca apenas contagens para os cards de topo
-    const [usersCount, votesCount, questCount] = await Promise.all([
-      supabase.from('users').select('*', { count: 'exact', head: true }),
-      supabase.from('votes').select('*', { count: 'exact', head: true }),
-      supabase.from('question_responses').select('*', { count: 'exact', head: true })
+    // Agregação client-side robusta para o dashboard
+    const [votesRes, responsesRes, usersRes] = await Promise.all([
+      supabase.from('votes').select('*').order('voted_at', { ascending: false }),
+      supabase.from('question_responses').select('*'),
+      supabase.from('users').select('id, name')
     ]);
+
+    if (votesRes.error) throw votesRes.error;
+    if (responsesRes.error) throw responsesRes.error;
+    if (usersRes.error) throw usersRes.error;
+
+    const votes = votesRes.data || [];
+    const responses = responsesRes.data || [];
+    const users = usersRes.data || [];
+    const userMap = users.reduce((acc, u) => ({ 
+      ...acc, 
+      [u.id]: { name: u.name, course: u.course } 
+    }), {});
+
+    // 1. Participantes únicos que votaram (Excluindo Admin se possível)
+    // Para simplificar, contamos todos e filtramos na exibição se necessário
+    const uniqueVoters = new Set(votes.map(v => v.user_id));
     
-    // Busca dados agrupados (ainda em memória por limitações do Client JS sem RPC, mas com select parcial)
-    const [votesRes, questRes] = await Promise.all([
-      supabase.from('votes').select('ai_name'),
-      supabase.from('question_responses').select('use_for_study, use_for_work, work_area, where_use_ai, why_use_ai')
-    ]);
-    
-    const totalUsers = usersCount.count || 0;
-    const totalVotes = votesCount.count || 0;
-    const totalResponses = questCount.count || 0;
-    
-    // 1. Contagem de votos por IA
-    const votesByAi = (votesRes.data || []).reduce((acc, v) => {
-      acc[v.ai_name] = (acc[v.ai_name] || 0) + 1;
+    // 2. Ranking de IAs
+    const votesByAi = votes.reduce((acc, v) => {
+      const name = v.ai_name || 'Indefinido';
+      acc[name] = (acc[name] || 0) + 1;
       return acc;
     }, {});
-    
-    // 2. Estatísticas do Questionário
-    const useForStudy = (questRes.data || []).filter(r => r.use_for_study).length;
-    const useForWork = (questRes.data || []).filter(r => r.use_for_work).length;
-    
-    const workAreas = (questRes.data || []).reduce((acc, r) => {
-      const area = r.work_area || 'Outros';
+
+    // 3. Estatísticas de Uso
+    const useForStudy = responses.filter(r => r.use_for_study === true).length;
+    const useForWork = responses.filter(r => r.use_for_work === true).length;
+
+    // 4. Área de Atuação
+    const workAreas = responses.reduce((acc, r) => {
+      let area = r.work_area || 'Outros';
+      if (area === 'undefined' || area === 'null') area = 'Outros';
       acc[area] = (acc[area] || 0) + 1;
       return acc;
     }, {});
 
-    const whereUseAi = (questRes.data || []).reduce((acc, r) => {
-      (r.where_use_ai || '').split(',').forEach(loc => {
-        const trimLoc = loc.trim();
-        if (trimLoc) acc[trimLoc] = (acc[trimLoc] || 0) + 1;
+    // 5. Onde Usam IA
+    const whereUseAi = responses.reduce((acc, r) => {
+      const locations = (r.where_use_ai || '').split(',')
+        .map(l => l.trim())
+        .filter(l => l && l !== 'undefined' && l !== 'null');
+      locations.forEach(l => {
+        acc[l] = (acc[l] || 0) + 1;
       });
       return acc;
     }, {});
 
-    const whyUseAi = (questRes.data || []).reduce((acc, r) => {
-      (r.why_use_ai || '').split(',').forEach(reason => {
-        const trimReason = reason.trim();
-        if (trimReason) acc[trimReason] = (acc[trimReason] || 0) + 1;
-      });
-      return acc;
-    }, {});
-    
-    // 3. Votos Recentes
-    const { data: recentRes } = await supabase
-      .from('votes')
-      .select('ai_name, voted_at, users(name)')
-      .order('voted_at', { ascending: false })
-      .limit(6);
-    
-    const recentVotes = (recentRes || []).map(v => ({
-      userName: v.users?.name || 'Votante',
-      aiName: v.ai_name,
-      votedAt: v.voted_at
-    }));
-    
+    // 6. Atividade Recente (Enriquecida para a Navbar e Dashboard)
+      const responseCounts = responses?.reduce((acc, r) => {
+        acc.total++;
+        if (r.use_for_study) acc.study++;
+        if (r.use_for_work) acc.work++;
+        return acc;
+      }, { total: 0, study: 0, work: 0 }) || { total: 0, study: 0, work: 0 };
+
+      // Volume bruto de votos (cada registro conta)
+      const totalRawVotes = votes?.length || 0;
+
+      // Participantes únicos
+      const totalUniqueVoters = new Set(votes?.map(v => v.user_id)).size;
+
+    const recentVotes = votes.slice(0, 10).map(v => {
+      const userData = userMap[v.user_id] || { name: 'Participante', course: 'Visitante' };
+      return {
+        id: v.id, // Necessário para o lastSeenId da Navbar
+        userName: userData.name,
+        userCourse: userData.course,
+        aiName: v.ai_name || 'IA',
+        time: v.voted_at
+      };
+    });
+
+    // Normaliza dados para o frontend (camelCase)
     return {
       data: {
-        totalUsers, totalVotes, totalResponses,
-        useForStudy, useForWork, votesByAi,
-        workAreas, whereUseAi, whyUseAi, recentVotes
+        totalVotes: totalRawVotes, // Volume bruto (ex: 18)
+        totalUniqueVoters,       // Participantes únicos (ex: 9)
+        totalResponses: responseCounts.total,
+        useForStudy: responseCounts.study,
+        useForWork: responseCounts.work,
+        votesByAi,
+        whereUseAi,
+        workAreas,
+        recentVotes
       }
     };
-  },
-};
-
-// ─── PARTICIPATION ────────────────────────────────────────────────────
-
-export const participationAPI = {
-  submit: async (payload) => {
-    console.log("🚀 Iniciando submissão de participação...", payload);
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Fallback robusto para gerar UUID v4 válido se crypto.randomUUID não existir
-    const generateUUID = () => {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : ((r & 0x3) | 0x8);
-        return v.toString(16);
-      });
-    };
-
-    const userId = user ? user.id : generateUUID();
-
-    // 1. Registra ou Atualiza o perfil do usuário (Logado ou Anônimo)
-    // Garantimos o e-mail para satisfazer restrições NOT NULL do banco
-    const userEmail = user?.email || `${userId.substring(0, 8)}@anon.aivote.com`;
-    
-    const { error: userErr } = await supabase.from('users').upsert({
-      id: userId,
-      name: payload.fullName,
-      email: userEmail,
-      course: payload.course,
-      institution: payload.institution,
-      instagram: payload.instagram,
-      role: user ? (user.app_metadata?.role || 'voter') : 'voter'
-    }, { onConflict: 'id' });
-    
-    if (userErr) {
-      console.warn("⚠️ Perfil não pôde ser sincronizado:", userErr.message);
-      // Se for um erro crítico de RLS/Constraint que impeça o FK em 'votes', 
-      // o erro será capturado no passo seguinte (votos).
-    }
-
-    // 2. Registra os votos
-    const voteInserts = payload.aiNames.map(name => ({
-      user_id: userId,
-      ai_name: name
-    }));
-    const { error: voteErr } = await supabase.from('votes').insert(voteInserts);
-    if (voteErr) throw new Error("Erro ao registrar votos");
-
-    // 3. Salva questionário
-    const { error: questErr } = await supabase.from('question_responses').upsert({
-      user_id: userId,
-      work_area: payload.workArea,
-      where_use_ai: payload.whereUseAi,
-      why_use_ai: payload.whyUseAi,
-      how_use_ai: payload.howUseAi,
-      use_for_study: payload.useForStudy,
-      use_for_work: payload.useForWork,
-      work_area_other: payload.workAreaOther
-    });
-    if (questErr) throw new Error("Erro ao registrar questionário");
-
-    return { data: { success: true } };
-  },
+  }
 };
 
 // ─── ADMIN ────────────────────────────────────────────────────────────
-
 export const adminAPI = {
   getUsers: async () => {
-    // Otimizado: Busca usuários com contagens relacionadas via Supabase
-    const { data: users, error: userErr } = await supabase
-      .from('users')
-      .select('*, votes(count), question_responses(count)')
-      .order('name');
-    
-    if (userErr) throw new Error(userErr.message);
-    
-    const enrichedUsers = users.map(u => ({
-      ...u,
-      hasVoted: (u.votes?.[0]?.count || 0) > 0,
-      hasAnswered: (u.question_responses?.[0]?.count || 0) > 0
-    }));
-    
-    return { data: enrichedUsers };
-  },
-  
-  getReport: async () => {
-    // Otimizado: Busca apenas colunas necessárias e usa agregação
-    const [usersRes, votesRes, questsRes] = await Promise.all([
-      supabase.from('users').select('id, name, course, institution'),
-      supabase.from('votes').select('user_id, ai_name'),
-      supabase.from('question_responses').select('user_id, work_area, why_use_ai')
-    ]);
-    
-    const users = usersRes.data || [];
-    const votes = votesRes.data || [];
-    const quests = questsRes.data || [];
-    
-    const voterIds = new Set(votes.map(v => v.user_id));
-    const totalUsersVoted = voterIds.size;
-    
-    const aiNames = [...new Set(votes.map(v => v.ai_name))];
-    const aiReports = aiNames.map(name => {
-      const aiVotes = votes.filter(v => v.ai_name === name);
-      const aiVoterIds = new Set(aiVotes.map(v => v.user_id));
-      const aiUsers = users.filter(u => aiVoterIds.has(u.id));
-      const aiQuests = quests.filter(q => aiVoterIds.has(q.user_id));
-      
-      const areas = aiQuests.reduce((acc, q) => {
-        acc[q.work_area || 'Outros'] = (acc[q.work_area || 'Outros'] || 0) + 1;
-        return acc;
-      }, {});
-      const topWorkAreas = Object.entries(areas).sort((a,b)=>b[1]-a[1]).slice(0, 3).map(([k])=>k);
+    // Busca usuários e cruza com participação
+    const { data: users, error: uErr } = await supabase.from('users').select('*');
+    if (uErr) throw uErr;
 
-      const reasons = aiQuests.reduce((acc, q) => {
-        (q.why_use_ai || '').split(',').forEach(r => {
-          const trimR = r.trim();
-          if (trimR) acc[trimR] = (acc[trimR] || 0) + 1;
-        });
-        return acc;
-      }, {});
-      const topReasons = Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0, 3).map(([k])=>k);
-      
-      return {
-        aiName: name,
-        totalVotes: aiVotes.length,
-        topWorkAreas,
-        topReasons,
-        users: aiUsers.map(u => ({ name: u.name, institution: u.institution, course: u.course }))
-      };
-    });
-    
-    return { data: { totalUsersVoted, aiReports } };
+    const [votesRes, responsesRes] = await Promise.all([
+      supabase.from('votes').select('user_id'),
+      supabase.from('question_responses').select('user_id')
+    ]);
+
+    const votedIds = new Set((votesRes.data || []).map(v => v.user_id));
+    const answeredIds = new Set((responsesRes.data || []).map(r => r.user_id));
+
+    return {
+      data: users.map(u => ({
+        ...u,
+        hasVoted: votedIds.has(u.id),
+        hasAnswered: answeredIds.has(u.id),
+        role: (u.email === 'vitor@vfonseca.com' || u.email === 'admin@aivoting.com') ? 'ROLE_ADMIN' : 'ROLE_USER'
+      }))
+    };
   },
-  
+
+  deleteUser: async (userId) => {
+    // O backend Supabase via RLS ou exclusão em cascata deve cuidar disso
+    // Aqui fazemos manual para garantir
+    await Promise.all([
+      supabase.from('votes').delete().eq('user_id', userId),
+      supabase.from('question_responses').delete().eq('user_id', userId),
+      supabase.from('users').delete().eq('id', userId)
+    ]);
+    return { data: { success: true } };
+  },
+
   resetData: async () => {
-    // Perigoso: Deleta todos os votos e respostas (RLS deve permitir apenas para admin)
-    // No Supabase, isso geralmente é feito via SQL Editor ou chamadas individuais se permitido
-    await supabase.from('votes').delete().neq('id', 0);
-    await supabase.from('question_responses').delete().neq('id', 0);
+    await logAuditAction('RESET_SYSTEM_ATTEMPT', { isProduction });
+
+    // BLOQUEIO POR AMBIENTE
+    if (!isProduction) {
+      console.log("Simulando RESET no ambiente de desenvolvimento.");
+      return { data: { success: true, simulated: true, message: "Modo de teste: ação simulada" } };
+    }
+
+    // Apaga tudo exceto o admin
+    const { data: admin } = await supabase.from('users').select('id').or('email.eq.vitor@vfonseca.com,email.eq.admin@aivoting.com').single();
+    
+    const adminId = admin?.id;
+    
+    await Promise.all([
+      supabase.from('votes').delete().neq('user_id', adminId || '00000000-0000-0000-0000-000000000000'),
+      supabase.from('question_responses').delete().neq('user_id', adminId || '00000000-0000-0000-0000-000000000000'),
+      supabase.from('users').delete().neq('email', 'vitor@vfonseca.com').neq('email', 'admin@aivoting.com')
+    ]);
+
+    await logAuditAction('RESET_SYSTEM_SUCCESS', { isProduction });
     return { data: { success: true } };
   },
-  
-  deleteUser: async (id) => {
-    // Nota: Deletar em public.users não deleta no Auth. 
-    // Para deletar no Auth precisa da chave service_role ou Edge Function.
-    const { error } = await supabase.from('users').delete().eq('id', id);
-    if (error) throw new Error(error.message);
-    return { data: { success: true } };
-  },
-  
-  changePassword: async (newPassword) => {
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) throw new Error(error.message);
-    return { data: { success: true } };
-  },
-  
+
   resetMyAdminVotes: async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from('votes').delete().eq('user_id', user.id);
-    await supabase.from('question_responses').delete().eq('user_id', user.id);
+    if (user) {
+      await Promise.all([
+        supabase.from('votes').delete().eq('user_id', user.id),
+        supabase.from('question_responses').delete().eq('user_id', user.id)
+      ]);
+    }
     return { data: { success: true } };
   },
-  
-  exportData: async () => {
-    const { data } = await supabase.from('users').select('*, votes(*), question_responses(*)');
-    return { data };
+
+  changePassword: async (newPassword) => {
+    await logAuditAction('CHANGE_ADMIN_PASSWORD', { isProduction });
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      await logAuditAction('CHANGE_ADMIN_PASSWORD_ERROR', { error: error.message });
+      throw error;
+    }
+    return { data: { success: true } };
   },
-  
-  importData: async (data) => Promise.resolve({ data: {} }),
-  fixStats: async () => Promise.resolve({ data: {} }),
+
+  exportData: async () => {
+    await logAuditAction('EXPORT_BACKUP', { isProduction });
+    const [u, v, q] = await Promise.all([
+      supabase.from('users').select('*'),
+      supabase.from('votes').select('*'),
+      supabase.from('question_responses').select('*')
+    ]);
+    return { data: { users: u.data, votes: v.data, responses: q.data } };
+  },
+
+  importData: async (backup) => {
+    await logAuditAction('IMPORT_BACKUP_ATTEMPT', { isProduction });
+
+    // BLOQUEIO POR AMBIENTE
+    if (!isProduction) {
+      console.log("Simulando IMPORT no ambiente de desenvolvimento.");
+      return { data: { success: true, simulated: true, message: "Modo de teste: ação simulada" } };
+    }
+
+    const { users, votes, responses } = backup;
+    
+    // 1. Limpa tabelas (Preservando Admin se estiver no backup)
+    await Promise.all([
+      supabase.from('votes').delete().neq('ai_name', 'PROTECTED'),
+      supabase.from('question_responses').delete().neq('work_area', 'PROTECTED'),
+      supabase.from('users').delete().neq('role', 'ROLE_ADMIN')
+    ]);
+
+    // 2. Insere novos dados em blocos
+    if (users?.length) await supabase.from('users').upsert(users);
+    if (votes?.length) await supabase.from('votes').insert(votes);
+    if (responses?.length) await supabase.from('question_responses').insert(responses);
+
+    await logAuditAction('IMPORT_BACKUP_SUCCESS', { isProduction });
+    return { data: { success: true } };
+  },
+
+  getReport: async () => {
+    // Busca dados base
+    const [votesRes, responsesRes, usersRes] = await Promise.all([
+      supabase.from('votes').select('*'),
+      supabase.from('question_responses').select('*'),
+      supabase.from('users').select('*')
+    ]);
+
+    if (votesRes.error) throw votesRes.error;
+    if (responsesRes.error) throw responsesRes.error;
+    if (usersRes.error) throw usersRes.error;
+
+    const votes = votesRes.data || [];
+    const responses = responsesRes.data || [];
+    const users = usersRes.data || [];
+
+    const userMap = users.reduce((acc, u) => ({ ...acc, [u.id]: u }), {});
+    const respMap = responses.reduce((acc, r) => ({ ...acc, [r.user_id]: r }), {});
+
+    // Agrupamento por IA
+    const aiGroups = votes.reduce((acc, v) => {
+      const name = v.ai_name || 'Desconhecida';
+      if (!acc[name]) acc[name] = { aiName: name, votes: [] };
+      acc[name].votes.push(v);
+      return acc;
+    }, {});
+
+    const aiReports = Object.values(aiGroups).map(group => {
+      const groupUsers = group.votes.map(v => userMap[v.user_id]).filter(Boolean);
+      const groupResponses = group.votes.map(v => respMap[v.user_id]).filter(Boolean);
+
+      // Top Áreas (Frequência)
+      const areas = groupResponses.reduce((acc, r) => {
+        const a = r.work_area || 'Outros';
+        acc[a] = (acc[a] || 0) + 1;
+        return acc;
+      }, {});
+      const topWorkAreas = Object.entries(areas).sort((a,b)=>b[1]-a[1]).slice(0, 3).map(a=>a[0]);
+
+      // Top Motivos (Pode vir de whyUseAi ou useForStudy/Work)
+      const reasons = groupResponses.reduce((acc, r) => {
+        if (r.use_for_study) acc['Estudo'] = (acc['Estudo'] || 0) + 1;
+        if (r.use_for_work) acc['Trabalho'] = (acc['Trabalho'] || 0) + 1;
+        return acc;
+      }, {});
+      const topReasons = Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0, 2).map(a=>a[0]);
+
+      return {
+        aiName: group.aiName,
+        totalVotes: group.votes.length,
+        topWorkAreas,
+        topReasons,
+        users: groupUsers.slice(0, 50).map(u => ({
+          name: u.name || 'Anônimo',
+          institution: u.institution || 'N/A',
+          course: u.course || 'N/A'
+        }))
+      };
+    });
+
+    return {
+      data: {
+        totalUsersVoted: new Set(votes.map(v => v.user_id)).size,
+        aiReports: aiReports.sort((a,b) => b.totalVotes - a.totalVotes)
+      }
+    };
+  }
 };
 
-const api = {
+// ─── PARTICIPATION ───────────────────────────────────────────────────
+export const participationAPI = {
+  submit: async (payload) => {
+    const { aiNames, fullName, course, institution, instagram, ...questData } = payload;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const isAdmin = user?.email === 'admin@aivoting.com' || 
+                      user?.email === 'vitor@vfonseca.com' ||
+                      user?.user_metadata?.role === 'ROLE_ADMIN';
+      
+      let targetUserId = user?.id;
+
+      // SEPARAÇÃO CRÍTICA DO ADMIN
+      // Se for Admin, criamos um NOVO USUÁRIO GUEST (real no auth) para não quebrar FK e não sobrescrever admin.
+      if (isAdmin) {
+        console.log(`[ADMIN TEST] Criando participante separado para: ${fullName}`);
+        const tempId = Math.random().toString(36).substring(7);
+        const tempEmail = `test_${Date.now()}_${tempId}@aivoting.teste`;
+        
+        // Criamos um cliente secundário para não deslogar o admin atual
+        const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://nkutcrkiqfjuerzeazcc.supabase.co';
+        const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'sb_publishable_XZxqzDP_c3AprBYk6j4yRA_Wg9ixawv';
+        const tempClient = createClient(supabaseUrl, supabaseAnonKey);
+        
+        const { data: signUpData, error: signUpError } = await tempClient.auth.signUp({
+          email: tempEmail,
+          password: 'Test_Participation_Password_123!',
+          options: {
+            data: { name: fullName, course, institution, instagram, role: 'ROLE_USER' }
+          }
+        });
+        
+        if (signUpError) {
+          console.warn("Falha ao criar guest via Auth, tentando direto em users (pode falhar FK):", signUpError.message);
+          // Fallback para UUID se FK estiver desativada ou for opcional
+          targetUserId = '00000000-0000-4000-a000-' + Math.floor(Math.random() * 1000000000).toString(16).padStart(12, '0');
+        } else {
+          targetUserId = signUpData.user.id;
+        }
+      }
+
+      // Se for votação anônima (sem user e sem ser teste de admin)
+      if (!targetUserId && !isAdmin && fullName) {
+          const guestId = Math.random().toString(36).substring(7);
+          const guestEmail = `guest_${Date.now()}_${guestId}@aivote.com`;
+          const { data: guestData } = await supabase.auth.signUp({
+            email: guestEmail,
+            password: 'Guest_Participation_123!',
+            options: { data: { name: fullName, course, institution, instagram } }
+          });
+          targetUserId = guestData.user?.id;
+      }
+
+      // Moderação de Conteúdo
+      const allTexts = [...aiNames, fullName, course, institution, instagram, questData.workAreaOther];
+      for (const t of allTexts) {
+        if (t && typeof t === 'string' && hasInappropriateContent(t)) {
+          throw new Error("Conteúdo inadequado detectado.");
+        }
+      }
+
+      // Persistência na tabela pública (Participantes)
+      // Se for ADMIN, fazemos INSERT em vez de UPSERT se possível para garantir novo registro
+      // mas o targetUserId sendo novo já cuida disso.
+      const { error: userError } = await supabase.from('users').upsert({
+        id: targetUserId,
+        name: isAdmin ? fullName : (fullName || user?.user_metadata?.name),
+        course: course || user?.user_metadata?.course,
+        institution: institution || user?.user_metadata?.institution,
+        instagram: instagram || user?.user_metadata?.instagram,
+        email: isAdmin ? `test_vote_${targetUserId}@aivote.com` : (user?.email || `anon_${targetUserId}@aivote.com`),
+        role: 'ROLE_USER'
+      });
+
+      if (userError) throw new Error("Erro ao registrar participante: " + userError.message);
+
+      // Votos e Questionário vinculados ao targetUserId
+      await Promise.all([
+        votesAPI.submit(aiNames, null, targetUserId),
+        questionnaireAPI.submit(questData, null, targetUserId)
+      ]);
+      
+      return { data: { success: true } };
+    } catch (err) {
+      console.error("ERRO CRÍTICO NA SUBMISSÃO:", err);
+      throw new Error(err.message || "Falha técnica ao salvar participação.");
+    }
+  }
+};
+
+export { supabase };
+
+const mainApi = {
   authAPI,
   dashboardAPI,
   adminAPI,
   votesAPI,
   questionnaireAPI,
-  participationAPI
+  participationAPI,
+  supabase
 };
 
-export default api;
+export default mainApi;

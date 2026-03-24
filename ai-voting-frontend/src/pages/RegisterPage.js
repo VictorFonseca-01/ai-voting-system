@@ -3,55 +3,24 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { validateField } from '../utils/moderation';
 
 const fUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-// BackgroundOrbs removido para visual mais limpo
-
 export default function RegisterPage() {
-  useAuth();
   const navigate = useNavigate();
+  const { login: ctxLogin } = useAuth();
 
-  const [form, setForm] = useState({ name: '', email: '', password: '', course: '', institution: '' });
+  const [form, setForm] = useState({ 
+    name: '', email: '', password: '', 
+    course: '', institution: '', instagram: '' 
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // ─── FILTRO DE NOMES (CLIENT-SIDE) ─────────────────────────────
-  const BLOCKED_TERMS = [
-    'porra','caralho','merda','foder','fodase','foda-se','fodasse',
-    'puta','putaria','arrombado','arrombada','cuzao','cuzão',
-    'viado','viada','viadinho','bicha','bichona',
-    'buceta','boceta','piroca','rola',
-    'vsf','fdp','pqp','tnc',
-    'desgraçado','desgraçada','corno','cornuda',
-    'otario','otário','otaria','otária','babaca','imbecil',
-    'idiota','retardado','retardada','mongoloide',
-    'vagabundo','vagabunda','safado','safada',
-    'filhodaputa','piranha','bosta',
-    'punheta','punheteiro','broxa',
-    'macaco','macaca','crioulo','crioula',
-    'nazist','hitler','fascist',
-    'fuck','shit','bitch','asshole','bastard',
-    'dick','pussy','cunt','whore','slut',
-    'nigger','nigga','faggot','retard',
-    'cock','motherfucker','wtf','stfu',
-  ];
-
-  const containsProfanity = (text) => {
-    const normalized = text.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z\s]/g, '');
-    
-    return BLOCKED_TERMS.some(term => {
-      const normTerm = term.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z\s]/g, '');
-      const regex = new RegExp(`\\b${normTerm}\\b`, 'i');
-      return regex.test(normalized);
-    });
-  };
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -60,24 +29,27 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const trimmedName = form.name.trim();
-    if (trimmedName.length < 2) { setError('Nome muito curto.'); return; }
-    if (containsProfanity(trimmedName)) { setError('Nome inadequado detectado.'); return; }
     
-    const trimmedCourse = form.course.trim();
-    if (trimmedCourse.length < 2) { setError('Curso inválido.'); return; }
-    if (containsProfanity(trimmedCourse)) { setError('Curso inadequado.'); return; }
+    // Moderação Multi-campo (Safe Mode)
+    const nameErr = validateField('Nome', form.name);
+    if (nameErr) { setError(nameErr); return; }
+    
+    const courseErr = validateField('Curso', form.course);
+    if (courseErr) { setError(courseErr); return; }
 
-    const trimmedInst = form.institution.trim();
-    if (trimmedInst.length < 2) { setError('Instituição muito curta.'); return; }
-    if (containsProfanity(trimmedInst)) { setError('Instituição inadequada.'); return; }
+    const instErr = validateField('Instituição', form.institution);
+    if (instErr) { setError(instErr); return; }
 
-    if (form.password.length < 5) { setError('Senha deve ter 5+ caracteres.'); return; }
-
+    if (form.password.length < 5) {
+      setError('A senha deve ter pelo menos 5 caracteres.');
+      return;
+    }
+    
     setLoading(true);
     setError('');
     try {
-      await authAPI.register(form);
+      const res = await authAPI.register(form);
+      ctxLogin(res.data);
       navigate('/vote');
     } catch (err) {
       setError(err.message || 'Falha no cadastro. Verifique os dados.');
@@ -163,6 +135,17 @@ export default function RegisterPage() {
                 style={{ background: 'rgba(255,255,255,0.03)', padding: '14px' }}
               />
             </div>
+          </div>
+
+          <div className="form-group">
+            <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Instagram</label>
+            <input
+              name="instagram" type="text"
+              className="form-control"
+              placeholder="@seu_usuario"
+              value={form.instagram} onChange={handleChange} required
+              style={{ background: 'rgba(255,255,255,0.03)', padding: '14px' }}
+            />
           </div>
 
           <div className="form-group">

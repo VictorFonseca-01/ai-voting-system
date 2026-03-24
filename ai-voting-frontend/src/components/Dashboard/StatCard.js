@@ -11,19 +11,27 @@ export default function StatCard({ value, label, delay, trend, chartConfig, icon
   return (
     <motion.div 
       variants={fUp} initial="hidden" animate="visible" transition={{ delay }}
-      className="card" style={{ 
-        padding: '24px', position: 'relative', overflow: 'hidden', 
+      className="card hover-lift" style={{ 
+        position: 'relative', 
         background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         minHeight: '160px'
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 1 }}>
-        <div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 1, position: 'relative' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
             {label}
           </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 800, fontFamily: 'var(--font-body)', color: '#fff', lineHeight: 1, fontVariantNumeric: 'lining-nums tabular-nums' }}>
+          <div style={{ 
+            fontSize: 'clamp(2rem, 4vw, 2.5rem)', 
+            fontWeight: 800, 
+            fontFamily: 'var(--font-body)', 
+            color: '#fff', 
+            lineHeight: 1.2, 
+            fontVariantNumeric: 'lining-nums tabular-nums',
+            letterSpacing: '-0.5px'
+          }}>
             {value}
           </div>
         </div>
@@ -39,8 +47,8 @@ export default function StatCard({ value, label, delay, trend, chartConfig, icon
         )}
       </div>
 
-      {/* Mini Chart Overlay */}
-      <div style={{ position: 'absolute', bottom: '-10px', right: '-10px', width: '120px', height: '80px', opacity: 0.6 }}>
+      {/* Mini Chart Overlay - Contido nas bordas */}
+      <div style={{ position: 'absolute', bottom: '0', right: '0', width: '120px', height: '80px', opacity: 0.6 }}>
         {chartConfig && chartConfig.type === 'line' && (
           <Line 
             data={chartConfig.data} 

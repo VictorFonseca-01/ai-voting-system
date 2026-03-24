@@ -154,24 +154,26 @@ export default function ReportPage() {
 
           {/* Tabela de Usuários */}
           {ai.users.length > 0 ? (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', fontFamily: 'Arial, sans-serif' }}>
-              <thead>
-                <tr style={{ background: 'var(--bg-card)', borderBottom: '2px solid var(--border)' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', width: '35%' }}>Nome da Pessoa</th>
-                  <th style={{ padding: '8px', textAlign: 'left', width: '35%' }}>Empresa / Faculdade</th>
-                  <th style={{ padding: '8px', textAlign: 'left', width: '30%' }}>Curso</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ai.users.map((user, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '8px', fontWeight: 'bold', color: 'var(--text)' }}>{user.name}</td>
-                    <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{user.institution}</td>
-                    <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{user.course}</td>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', fontFamily: 'Arial, sans-serif', minWidth: '500px' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-card)', borderBottom: '2px solid var(--border)' }}>
+                    <th style={{ padding: '8px', textAlign: 'left', width: '35%' }}>Nome da Pessoa</th>
+                    <th style={{ padding: '8px', textAlign: 'left', width: '35%' }}>Empresa / Faculdade</th>
+                    <th style={{ padding: '8px', textAlign: 'left', width: '30%' }}>Curso</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {ai.users.map((user, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '8px', fontWeight: 'bold', color: 'var(--text)' }}>{user.name}</td>
+                      <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{user.institution}</td>
+                      <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{user.course}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p style={{ fontSize: '12px', color: 'var(--text-dim)', fontStyle: 'italic' }}>Nenhum usuário encontado com respostas visíveis.</p>
           )}

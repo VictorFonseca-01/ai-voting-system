@@ -422,9 +422,38 @@ export default function QuestionnairePage() {
             <OptionGrid
               options={WORK_AREAS}
               selected={form.workArea}
-              onSelect={(v) => set('workArea', v)}
+              onSelect={(v) => {
+                set('workArea', v);
+                if (v !== 'Outros') set('workAreaOther', '');
+              }}
               columns={3}
             />
+            
+            <AnimatePresence>
+              {form.workArea === 'Outros' && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} 
+                  animate={{ opacity: 1, height: 'auto' }} 
+                  exit={{ opacity: 0, height: 0 }}
+                  style={{ marginTop: '20px', overflow: 'hidden' }}
+                >
+                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>
+                    Descreva sua área de atuação...
+                  </label>
+                  <input
+                    type="text" className="form-control"
+                    placeholder="Ex: Medicina, Artes, Marketing..."
+                    value={form.workAreaOther}
+                    onChange={(e) => set('workAreaOther', e.target.value)}
+                    style={{ 
+                      padding: '16px', borderRadius: '14px', 
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.1)' 
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </QuestionCard>
         </div>
 
@@ -494,7 +523,7 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: `repeat(${columns}, 1fr)`,
+      gridTemplateColumns: columns === 1 ? '1fr' : 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))',
       gap: '12px',
     }}>
       {options.map(opt => {
@@ -540,7 +569,7 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
 
 function BooleanToggle({ value, onChange }) {
   return (
-    <div style={{ display: 'flex', gap: '16px' }}>
+    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
       {[{ label: 'Sim, utilizo', val: true, icon: '✨' }, { label: 'Não utilizo', val: false, icon: '✖' }].map(({ label, val, icon }) => (
         <motion.button
           key={label}

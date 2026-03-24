@@ -12,13 +12,20 @@ const fUp = {
 // BackgroundOrbs removido para visual mais limpo
 
 export default function LoginPage() {
-  useAuth();
   const navigate = useNavigate();
+  const { login: ctxLogin, isAuthenticated, isAdmin } = useAuth();
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Redireciona automaticamente se já estiver autenticado
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate(isAdmin ? '/dashboard' : '/vote');
+    }
+  }, [isAuthenticated, isAdmin, navigate]);
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -30,8 +37,15 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await authAPI.login(form);
-      navigate('/vote');
+      const userData = await authAPI.login(form);
+      ctxLogin(userData);
+
+      // Dinamicamente determina se é admin para o redirecionamento imediato
+      const isUserAdmin = (userData.email || form.email) === 'admin@aivoting.com' ||
+        userData.role === 'ROLE_ADMIN' ||
+        userData.user_metadata?.role === 'ROLE_ADMIN';
+
+      navigate(isUserAdmin ? '/dashboard' : '/vote');
     } catch (err) {
       setError(err.message || 'Erro ao realizar autenticação. Verifique os dados.');
     } finally {
@@ -41,12 +55,12 @@ export default function LoginPage() {
 
   return (
     <div className="page" style={{ position: 'relative', overflow: 'hidden' }}>
-      
-      <motion.div 
+
+      <motion.div
         initial="hidden" animate="visible" variants={fUp}
-        className="card" 
-        style={{ 
-          width: '100%', maxWidth: '460px', 
+        className="card"
+        style={{
+          width: '100%', maxWidth: '460px',
           padding: '48px', background: 'var(--grad-glass)',
           border: '1px solid rgba(255,255,255,0.05)',
           position: 'relative', zIndex: 1,
@@ -54,7 +68,7 @@ export default function LoginPage() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <motion.div 
+          <motion.div
             style={{ width: '40px', height: '4px', background: 'var(--grad-primary)', borderRadius: '2px', margin: '0 auto 20px' }}
             animate={{ width: [30, 60, 30] }} transition={{ duration: 3, repeat: Infinity }}
           />
@@ -107,8 +121,8 @@ export default function LoginPage() {
           <button
             type="submit" className="btn btn-primary btn-full"
             disabled={loading}
-            style={{ 
-              padding: '18px', fontSize: '1.1rem', fontWeight: 800, 
+            style={{
+              padding: '18px', fontSize: '1.1rem', fontWeight: 800,
               background: 'var(--grad-vibrant)', border: 'none',
               boxShadow: '0 10px 20px rgba(217, 70, 239, 0.2)'
             }}
@@ -119,7 +133,7 @@ export default function LoginPage() {
 
         <div style={{ textAlign: 'center', marginTop: '32px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-             Apenas administradores podem acessar o painel de controle.
+            Apenas administradores podem acessar o painel de controle.
           </p>
         </div>
       </motion.div>

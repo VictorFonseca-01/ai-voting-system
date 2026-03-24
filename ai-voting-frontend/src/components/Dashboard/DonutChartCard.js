@@ -9,14 +9,14 @@ const fUp = {
 
 export default function DonutChartCard({ title, data, options }) {
   return (
-    <motion.div variants={fUp} className="card" style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+    <motion.div variants={fUp} className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
         <div style={{ width: '4px', height: '16px', background: 'var(--accent-light)', borderRadius: '2px' }} />
         <h3 style={{ fontSize: '1rem', margin: 0, fontFamily: 'var(--font-display)', textTransform: 'uppercase', letterSpacing: '1px' }}>
           {title}
         </h3>
       </div>
-      <div style={{ height: '260px', position: 'relative' }}>
+      <div style={{ height: '260px', position: 'relative', width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
         <Doughnut data={data} options={options} />
       </div>
     </motion.div>

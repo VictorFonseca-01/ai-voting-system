@@ -8,6 +8,7 @@ import AdminRoute from './components/AdminRoute';
 // Pages
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
 import VotePage from './pages/VotePage';
 import QuestionnairePage from './pages/QuestionnairePage';
@@ -26,6 +27,7 @@ export default function App() {
 
           {/* Autenticação */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/admin/login" element={<Navigate to="/login" replace />} />
 
           {/* Rotas Públicas de Participação */}

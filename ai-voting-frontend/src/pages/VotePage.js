@@ -128,7 +128,7 @@ export default function VotePage() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              style={{ background: 'var(--grad-glass)', border: '1px solid rgba(255,255,255,0.1)', padding: '40px' }}
+              style={{ background: 'var(--grad-glass)', border: '1px solid rgba(255,255,255,0.1)', padding: 'clamp(20px, 5vw, 40px)' }}
             >
               <div style={{ fontSize: '4rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.3))' }}>🌟</div>
               <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontFamily: 'var(--font-display)' }}>Tudo Certo?</h2>
@@ -140,10 +140,10 @@ export default function VotePage() {
                   style={{ marginTop: '16px', fontWeight: 800, fontSize: '1.4rem' }}
                   className="gradient-text"
                 >
-                  {selected.map(id => AI_OPTIONS.find(o => o.id === id)?.name).join(' & ')}
+                  {(selected || []).map(id => AI_OPTIONS.find(o => o.id === id)?.name).filter(Boolean).join(' & ')}
                 </motion.div>
               </p>
-              <div className="confirm-actions" style={{ gap: '16px' }}>
+              <div className="confirm-actions" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button 
                   className="btn btn-ghost" 
                   onClick={() => setShowConfirm(false)}
@@ -202,7 +202,7 @@ export default function VotePage() {
             <div style={{ fontSize: '3rem', marginBottom: '24px', filter: 'drop-shadow(0 0 15px var(--success))' }}>🏆</div>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '12px' }}>Voto Registrado</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '40px', fontSize: '1rem' }}>
-              Suas escolhas atuais: <span className="gradient-text" style={{ fontWeight: 800 }}>{myVotes.join(' & ')}</span>
+              Suas escolhas atuais: <span className="gradient-text" style={{ fontWeight: 800 }}>{(myVotes || []).join(' & ')}</span>
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button 

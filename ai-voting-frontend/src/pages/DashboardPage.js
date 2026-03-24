@@ -49,15 +49,37 @@ export default function DashboardPage() {
   
 
   const [showModal, setShowModal] = useState(false);
-
   const [showInstaModal, setShowInstaModal] = useState(false);
-  const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [modalConfig, setModalConfig] = useState({ 
+    title: '', 
+    message: '', 
+    onConfirm: null, 
+    type: 'confirm',
+    challenge: '', // Texto que o usuário deve digitar (ex: RESETAR)
+    requiresPassword: false,
+    severity: 'normal' // normal, warning, danger
+  });
+  const [securityInput, setSecurityInput] = useState('');
+  const [securityPassword, setSecurityPassword] = useState('');
+  const [countdown, setCountdown] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [newPass, setNewPass] = useState('');
+
+  // Efeito para o countdown de segurança
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => setCountdown(prev => prev - 1), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [countdown]);
 
   const handleChangePassword = () => {
     setModalConfig({
-      title: 'Alterar Senha do Admin',
-      type: 'password'
+      title: 'Alterar Senha do Administrador',
+      type: 'password',
+      severity: 'warning'
     });
     setNewPass('');
     setShowModal(true);
@@ -92,6 +114,13 @@ export default function DashboardPage() {
     }
   };
 
+  // Monitora redimensionamento da janela para reatividade
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const fetchData = async () => {
     try {
       const { data: d } = await dashboardAPI.getData();
@@ -112,32 +141,38 @@ export default function DashboardPage() {
 
   const handleResetData = () => {
     setModalConfig({
-      title: 'Zerar Todos os Dados',
-      message: 'ATENÇÃO: Isso apagará TODOS os votos, respostas e usuários (exceto o admin). Esta ação não pode ser desfeita. Deseja continuar?',
+      title: '⚠️ ZERAR SISTEMA (PROTEÇÃO MÁXIMA)',
+      message: 'Todos os votos, questionários e perfis de usuários (exceto o seu) serão APAGADOS PERMANENTEMENTE. Esta ação é irreversível.',
       onConfirm: confirmReset,
-      type: 'confirm'
+      type: 'security',
+      challenge: 'RESETAR',
+      requiresPassword: true,
+      severity: 'danger'
     });
+    setSecurityInput('');
+    setSecurityPassword('');
+    setCountdown(5); // 5 segundos de delay obrigatório
     setShowModal(true);
   };
 
   const confirmReset = async () => {
-    setShowModal(false);
+    setIsProcessing(true);
     try {
-      await adminAPI.resetData();
+      // Opcional: Validar senha aqui também via API se necessário
+      const res = await adminAPI.resetData();
+      setShowModal(false);
       setModalConfig({
-        title: 'Sucesso',
-        message: 'O sistema foi reiniciado com sucesso.',
-        type: 'alert'
+        title: res.data.simulated ? 'Ação Simulada' : 'Sistema Zerado',
+        message: res.data.message || 'Todos os dados foram removidos com sucesso.',
+        type: 'alert',
+        severity: 'normal'
       });
       setShowModal(true);
-      fetchData(); // Recarrega os dados (que estarão zerados)
+      fetchData();
     } catch (err) {
-      setModalConfig({
-        title: 'Erro',
-        message: 'Não foi possível zerar os dados.',
-        type: 'alert'
-      });
-      setShowModal(true);
+      alert('Erro ao zerar dados: ' + err.message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -147,10 +182,11 @@ export default function DashboardPage() {
 
   const handleExportData = async () => {
     setModalConfig({
-      title: 'Exportar Backup',
-      message: 'Deseja gerar e baixar um backup completo do sistema agora?',
+      title: 'Exportar Backup do Sistema',
+      message: 'Deseja gerar um arquivo consolidado com todos os dados atuais (votos, respostas e usuários)?',
       onConfirm: confirmExportData,
-      type: 'confirm'
+      type: 'confirm',
+      severity: 'normal'
     });
     setShowModal(true);
   };
@@ -176,10 +212,11 @@ export default function DashboardPage() {
     if (!file) return;
 
     setModalConfig({
-      title: 'Restaurar Backup',
-      message: `ATENÇÃO: Isso apagará TODOS os dados atuais e substituirá pelos dados do arquivo "${file.name}". Deseja continuar?`,
+      title: '⚠️ Restaurar Backup (Sobrescrita)',
+      message: `ATENÇÃO: Os dados do arquivo "${file.name}" substituirão TODOS os dados atuais. Verifique a procedência do arquivo.`,
       onConfirm: () => confirmImport(file),
-      type: 'confirm'
+      type: 'confirm',
+      severity: 'warning'
     });
     setShowModal(true);
   };
@@ -215,7 +252,8 @@ export default function DashboardPage() {
   const aiRanking = useMemo(() => {
     return Object.entries(data?.votesByAi || {}).sort((a, b) => b[1] - a[1]);
   }, [data?.votesByAi]);
-  const totalVotes    = data?.totalVotes     || 0;
+  const totalVotes    = data?.totalVotes || 0;
+  const totalParticipants = data?.totalUniqueVoters || 0;
   const totalResponses= data?.totalResponses || 0;
   const useForStudy   = data?.useForStudy    || 0;
   const useForWork    = data?.useForWork     || 0;
@@ -311,7 +349,7 @@ export default function DashboardPage() {
     };
   }, [data?.whereUseAi]);
 
-  const isSmallScreen = window.innerWidth < 600;
+  const isSmallScreen = windowWidth < 600;
 
   const whereOptions = useMemo(() => ({
     responsive: true,
@@ -436,52 +474,133 @@ export default function DashboardPage() {
 
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px' }}>
+    <div style={{ 
+      maxWidth: '1400px', 
+      margin: '0 auto', 
+      padding: isSmallScreen ? '20px 16px' : '32px 40px' 
+    }}>
       
       {/* Modal Customizado */}
       <AnimatePresence>
         {showModal && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="modal-overlay" onClick={() => setShowModal(false)}
+            className="modal-overlay" onClick={() => !isProcessing && setShowModal(false)}
             style={{ zIndex: 9999 }}
           >
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="modal-content" onClick={e => e.stopPropagation()}
+              className="modal-content" 
+              style={{ 
+                border: modalConfig.severity === 'danger' ? '2px solid var(--danger)' : 
+                       modalConfig.severity === 'warning' ? '2px solid var(--warning)' : '1px solid var(--border)',
+                maxWidth: '500px'
+              }}
+              onClick={e => e.stopPropagation()}
             >
               <div className="modal-header">
-                <div className="accent-line" style={{ width: '40px', marginBottom: '8px' }} />
-                <h3>{modalConfig.title}</h3>
+                <div className="accent-line" style={{ 
+                  width: '48px', 
+                  marginBottom: '12px',
+                  background: modalConfig.severity === 'danger' ? 'var(--danger)' : 
+                             modalConfig.severity === 'warning' ? 'var(--warning)' : 'var(--accent)'
+                }} />
+                <h3 style={{ 
+                  color: modalConfig.severity === 'danger' ? 'var(--danger)' : '#fff',
+                  fontSize: '1.4rem'
+                }}>
+                  {modalConfig.title}
+                </h3>
               </div>
-              <div className="modal-body">
+              
+              <div className="modal-body" style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
                 {modalConfig.type === 'password' ? (
                   <div style={{ marginTop: '10px' }}>
-                    <p style={{ marginBottom: '12px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Digite sua nova senha abaixo:</p>
+                    <p style={{ marginBottom: '16px' }}>Defina uma nova senha de acesso administrativo:</p>
                     <input 
                       type="password" 
-                      className="input" 
+                      className="form-control" 
                       value={newPass}
                       onChange={(e) => setNewPass(e.target.value)}
                       placeholder="Mínimo 6 caracteres"
+                      style={{ background: 'var(--bg-input)', border: '1px solid var(--border)' }}
                       autoFocus
                     />
                   </div>
-                ) : modalConfig.message}
-              </div>
-              <div className="dashboard-container" style={{ padding: window.innerWidth < 768 ? '16px' : '40px' }}>
-                {modalConfig.type === 'confirm' ? (
-                  <>
-                    <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
-                    <button className="btn btn-primary" onClick={modalConfig.onConfirm} style={{ background: '#cc0000' }}>Confirmar Reset</button>
-                  </>
-                ) : modalConfig.type === 'password' ? (
-                  <>
-                    <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
-                    <button className="btn btn-primary" onClick={confirmChangePassword}>Salvar Nova Senha</button>
-                  </>
                 ) : (
-                  <button className="btn btn-primary" onClick={() => setShowModal(false)}>Entendido</button>
+                  <>
+                    <p style={{ marginBottom: modalConfig.type === 'security' ? '20px' : '0' }}>{modalConfig.message}</p>
+                    
+                    {modalConfig.type === 'security' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px', padding: '20px', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                        <div>
+                          <p style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', textTransform: 'uppercase' }}>
+                            1. Confirmação de Intenção
+                          </p>
+                          <p style={{ fontSize: '0.85rem', marginBottom: '8px' }}>Digite <strong>{modalConfig.challenge}</strong> para habilitar:</p>
+                          <input 
+                            type="text" 
+                            className="form-control"
+                            value={securityInput}
+                            onChange={(e) => setSecurityInput(e.target.value.toUpperCase())}
+                            placeholder={`Digite ${modalConfig.challenge}`}
+                            style={{ background: 'rgba(0,0,0,0.3)' }}
+                          />
+                        </div>
+
+                        {modalConfig.requiresPassword && (
+                          <div>
+                            <p style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: '8px', textTransform: 'uppercase' }}>
+                              2. Validação de Identidade
+                            </p>
+                            <input 
+                              type="password" 
+                              className="form-control"
+                              value={securityPassword}
+                              onChange={(e) => setSecurityPassword(e.target.value)}
+                              placeholder="Digite sua senha de admin"
+                              style={{ background: 'rgba(0,0,0,0.3)' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="modal-footer" style={{ marginTop: '32px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button className="btn btn-ghost" onClick={() => setShowModal(false)} disabled={isProcessing}>
+                  Cancelar
+                </button>
+                
+                {modalConfig.type === 'security' ? (
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={modalConfig.onConfirm} 
+                    style={{ 
+                      background: 'var(--danger)',
+                      opacity: (securityInput !== modalConfig.challenge || (modalConfig.requiresPassword && !securityPassword) || countdown > 0) ? 0.5 : 1
+                    }}
+                    disabled={securityInput !== modalConfig.challenge || (modalConfig.requiresPassword && !securityPassword) || countdown > 0 || isProcessing}
+                  >
+                    {isProcessing ? 'Processando...' : countdown > 0 ? `Aguarde (${countdown}s)` : 'EXECUTAR AGORA'}
+                  </button>
+                ) : modalConfig.type === 'password' ? (
+                  <button className="btn btn-primary" onClick={confirmChangePassword} disabled={isProcessing}>
+                    {isProcessing ? 'Salvando...' : 'Confirmar Alteração'}
+                  </button>
+                ) : modalConfig.type === 'confirm' ? (
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={modalConfig.onConfirm} 
+                    style={{ background: modalConfig.severity === 'warning' ? 'var(--warning)' : 'var(--accent)' }}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? 'Aguarde...' : 'Confirmar Ação'}
+                  </button>
+                ) : (
+                  <button className="btn btn-primary" onClick={() => setShowModal(false)}>OK</button>
                 )}
               </div>
             </motion.div>
@@ -536,12 +655,18 @@ export default function DashboardPage() {
       }}>
         <div style={{ minWidth: '240px', flex: 1 }}>
           <h1 style={{ 
-            fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: 800, 
-            fontFamily: 'var(--font-display)', margin: 0, lineHeight: 1.1
+            fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', 
+            fontWeight: 800, 
+            fontFamily: 'var(--font-display)', 
+            margin: 0, 
+            lineHeight: 1.2,
+            letterSpacing: '-0.5px'
           }}>
             DASHBOARD <span style={{ opacity: 0.5 }}>GERAL</span>
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px' }}>Painel / Visão Geral de Análise</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '6px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Painel / Visão Geral de Análise
+          </p>
         </div>
         
         <div className="hide-mobile" style={{ 
@@ -637,8 +762,11 @@ export default function DashboardPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '32px' }}>
         <AiRankingList title="Ranking de Preferência" ranking={aiRanking.slice(0, 5)} palette={PALETTE} />
         {/* Atividade Recente */}
-        <div className="card" style={{ background: 'rgba(255,255,255,0.02)', padding: '24px' }}>
-          <h3 style={{ fontSize: '1rem', marginBottom: '20px', textTransform: 'uppercase' }}>Atividade Recente</h3>
+        <div className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <h3 style={{ fontSize: '1rem', marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ width: '4px', height: '16px', background: 'var(--accent)', borderRadius: '2px' }} />
+            Atividade Recente
+          </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {recentVotes.slice(0, 5).map((v, i) => (
               <div key={i} style={{ display: 'flex', gap: '10px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -655,8 +783,8 @@ export default function DashboardPage() {
         <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>📄</div>
         <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px' }}>Resumo do Trabalho</h2>
         <p style={{ color: 'var(--text-muted)', lineHeight: 1.8, maxWidth: '900px', margin: '0 auto', fontSize: '1.05rem' }}>
-          O <span style={{ background: 'var(--grad-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900 }}>AI Vote 2026</span> é um ecossistema analítico desenvolvido para mapear a eficiência e a percepção humana sobre as principais Inteligências Artificiais do mercado. 
-          Através de uma interface de alta performance e processamento de dados em tempo real, capturamos insights valiosos sobre como a tecnologia está moldando o futuro do trabalho e da criatividade.
+          O <span style={{ background: 'var(--grad-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900 }}>AI Vote 2026</span> é um ecossistema analítico de elite desenvolvido para mapear a eficiência e a percepção humana sobre as IAs. 
+          Alimentado por um <span style={{ color: '#00f0ff', fontWeight: 700 }}>Backend robusto em Java Spring Boot</span> e uma camada de segurança assistida por Inteligência Artificial, capturamos insights valiosos sobre o futuro do trabalho.
         </p>
       </motion.div>
 
@@ -671,7 +799,7 @@ export default function DashboardPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
           {[
-            { icon: '☁️', title: 'Infraestrutura Serverless', desc: 'Migração completa de legado Java/Docker para Supabase, reduzindo latência e custos.' },
+            { icon: '☕', title: 'Infraestrutura Enterprise', desc: 'Backend Java Spring Boot com PostgreSQL, proporcionando segurança, escalabilidade e controle total da lógica.' },
             { icon: '📊', title: 'Data Intelligence', desc: 'Análise de dados demográficos cruzada com preferências tecnológicas em tempo real.' },
             { icon: '🎨', title: 'Design System Premium', desc: 'Uso de tokens modernos, Glassmorphism e Framer Motion para uma UX de classe mundial.' },
             { icon: '🚚', title: 'Continuous Delivery', desc: 'Esteira de CI/CD via Railway com deploys atômicos e seguros via GitHub.' },
@@ -736,13 +864,15 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <button onClick={fetchData} className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Atualizar</button>
             <Link to="/admin/users" className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Usuários</Link>
-            <button onClick={handleChangePassword} className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Alterar Senha</button>
+            <button onClick={handleChangePassword} className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Alterar Senha do Administrador</button>
             <button onClick={handleExportData} className="btn btn-ghost" style={{ border: '1px solid #10b981', color: '#10b981' }}>Exportar Backup</button>
             <label className="btn btn-ghost" style={{ cursor: 'pointer', border: '1px solid #fbbf24', color: '#fbbf24' }}>
               Importar Backup
               <input type="file" hidden accept=".json" onChange={handleImportData} />
             </label>
-            <button onClick={handleResetData} className="btn btn-ghost" style={{ border: '1px solid var(--rose)', color: 'var(--rose)' }}>Zerar Sistema</button>
+            <button onClick={handleResetData} className="btn" style={{ border: '1px solid var(--danger)', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.05)' }}>
+              ⚠️ Zerar Sistema
+            </button>
           </div>
         </div>
       )}

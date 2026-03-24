@@ -1,20 +1,21 @@
 @echo off
+title AI VOTE 2026 - PRODUCTION DEPLOY
 echo.
-echo 🚀 SUBINDO MELHORIAS AGORA! 🏁
-echo ------------------------------------------------
+echo 🚀 ATUALIZANDO ECOSSISTEMA EM PRODUÇÃO...
+echo ----------------------------------------------------
 echo.
 
-echo ⚙️ Adicionando arquivos...
+echo 🔍 Verificando alteracoes...
 git add .
 
-echo 📦 Criando commit automático...
-git commit -m "Auto-update: Melhorias solicitadas pelo usuário 💎"
+echo 📦 Empacotando melhorias...
+git commit -m "Auto-update: Elite Audit & Supabase Consolidation 💎"
 
-echo 🚀 Enviando para o Railway...
+echo 🚀 Sincronizando com a Nuvem (Railway)...
 git push origin main
 
 echo.
-echo ✅ TUDO PRONTO! Seu site está sendo atualizado. 🎯
-echo Fechando em 3 segundos...
-timeout /t 3
+echo ✅ SUCESSO! Seu sistema esta online e atualizado.
+echo.
+timeout /t 5
 exit

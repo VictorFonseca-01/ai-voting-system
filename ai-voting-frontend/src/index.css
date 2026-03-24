@@ -26,11 +26,12 @@
   --text-muted: #d0d0f0; /* Lavanda Brilhante (Escala Roxo) */
   --text-dim: #a5b4fc;   /* Índigo Suave (Escala Roxo) */
 
-  --font-display: 'Syne', sans-serif;
+  --font-display: 'DM Sans', sans-serif;
   --font-body: 'DM Sans', sans-serif;
 
   --radius: 24px;
   --radius-sm: 14px;
+  --card-padding: 24px 28px;
   --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.2);
   --glass: blur(16px) saturate(180%);
@@ -68,7 +69,12 @@ html {
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ─── TYPOGRAPHY ─────────────────────────────────────────────── */
-h1, h2, h3, h4, h5 { font-family: var(--font-display); }
+h1, h2, h3, h4, h5 { 
+  font-family: var(--font-display); 
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
 
 /* ─── LAYOUT ─────────────────────────────────────────────────── */
 .container {
@@ -93,12 +99,17 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
   -webkit-backdrop-filter: var(--glass);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 40px;
+  padding: var(--card-padding);
   box-shadow: var(--shadow);
+  overflow: hidden;
+  position: relative;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .card:hover { transform: translateY(-4px); }
+@media (hover: none) {
+  .card:hover { transform: none; }
+}
 
 /* ─── FORM ELEMENTS ──────────────────────────────────────────── */
 .form-group {
@@ -470,6 +481,16 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
   
   /* Reset overflow-x safely */
   .container { padding: 0 12px; overflow: hidden; }
+}
+
+@media (max-width: 500px) {
+  .confirm-actions, .modal-footer {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .confirm-actions button, .modal-footer button {
+    width: 100% !important;
+  }
 }
 
 /* Fix for vertical clipping on specific italic Syne fonts */

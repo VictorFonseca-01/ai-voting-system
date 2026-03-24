@@ -82,7 +82,7 @@ export default function AdminUsersPage() {
       {/* Modal Customizado */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ padding: 'clamp(20px, 5vw, 40px)' }}>
             <div className="modal-header">
               <div className="accent-line" style={{ width: '40px', marginBottom: '8px' }} />
               <h3>{modalConfig.title}</h3>
@@ -127,8 +127,8 @@ export default function AdminUsersPage() {
             <tbody>
               {[...users]
                 .sort((a, b) => {
-                  if (a.email === 'admin@aivoting.com') return -1;
-                  if (b.email === 'admin@aivoting.com') return 1;
+                  if (a.role === 'ROLE_ADMIN') return -1;
+                  if (b.role === 'ROLE_ADMIN') return 1;
                   return (a.name || '').localeCompare(b.name || '');
                 })
                 .map((u, index) => (
@@ -137,14 +137,14 @@ export default function AdminUsersPage() {
                     #{String(index + 1).padStart(2, '0')}
                   </td>
                   <td style={{ padding: '12px', fontWeight: 'bold' }}>
-                    {u.name}
+                    {u.name || 'Participante'}
                     {u.role === 'ROLE_ADMIN' && <span className="badge badge-accent" style={{ marginLeft: '8px', fontSize: '0.65rem' }}>ADMIN</span>}
                   </td>
-                  <td style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.85rem' }}>{u.course || 'N/A'}</td>
+                  <td style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.85rem' }}>{u.course || 'Visitante'}</td>
                   <td style={{ padding: '12px' }}>{u.hasVoted ? '✅ Sim' : '⏳ Não'}</td>
                   <td style={{ padding: '12px' }}>{u.hasAnswered ? '✅ Sim' : '⏳ Não'}</td>
                   <td style={{ padding: '12px' }}>
-                    {u.email === 'admin@aivoting.com' ? (
+                    {u.role === 'ROLE_ADMIN' ? (
                       <button 
                         onClick={() => handleResetAdminVotes()}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#ff8fa3', padding: '4px' }}

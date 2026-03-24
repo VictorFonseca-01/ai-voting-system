@@ -71,16 +71,24 @@ export default function MainSynthChart({ data, opts, totalVotes, totalResponses,
                 Relatório de Síntese Universal
               </span>
             </div>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 900, fontFamily: 'var(--font-display)', margin: 0, color: '#fff', letterSpacing: '-1.5px' }}>
-              {totalVotes + totalResponses + useForStudy + useForWork} <span style={{ fontSize: '1rem', opacity: 0.4, fontWeight: 500, letterSpacing: '0' }}>SCORE GLOBAL</span>
+            <h2 style={{ 
+              fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', 
+              fontWeight: 800, 
+              fontFamily: 'var(--font-display)', 
+              margin: 0, 
+              color: '#fff', 
+              letterSpacing: '0',
+              lineHeight: 1.3
+            }}>
+              {totalVotes + totalResponses + useForStudy + useForWork} <span style={{ fontSize: '0.8rem', opacity: 0.4, fontWeight: 500, letterSpacing: '1px' }}>SCORE GLOBAL</span>
             </h2>
-            <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            <p style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Σ Consolidada: Votos + Questionários + Perfis de Uso
             </p>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 800 }}>LIVE</div>
-            <div style={{ color: 'var(--success)', fontSize: '0.75rem', fontWeight: 700 }}>+2.4% Estabilidade</div>
+          <div style={{ textAlign: 'right', minWidth: '100px' }}>
+            <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 800 }}>LIVE</div>
+            <div style={{ color: 'var(--success)', fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' }}>+2.4% Estabilidade</div>
           </div>
         </div>
       </div>
