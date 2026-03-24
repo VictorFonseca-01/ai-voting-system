@@ -5,14 +5,14 @@ import { votesAPI } from '../api';
 import AIIcon from '../components/AIIcon.jsx';
 
 const AI_OPTIONS = [
-  { id: 'chatgpt', name: 'ChatGPT',   emoji: '🤖',   color: '#10a37f' },
-  { id: 'claude',  name: 'Claude',    emoji: '🧠',   color: '#d97557' },
-  { id: 'gemini',  name: 'Gemini',    emoji: '✨',   color: '#4285f4' },
-  { id: 'grok',    name: 'Grok',      emoji: '⚡',   color: '#1da1f2' },
-  { id: 'meta',    name: 'Meta AI',   emoji: '🔵',   color: '#0866ff' },
-  { id: 'copilot', name: 'Copilot',   emoji: '🚀',   color: '#00adef' },
-  { id: 'deepseek',name: 'DeepSeek',  emoji: '🔍',   color: '#4d6eff' },
-  { id: 'none',    name: 'Não utilizo IA', emoji: '🚫',   color: '#6b7280' },
+  { id: 'chatgpt', name: 'ChatGPT',   color: '#10a37f' },
+  { id: 'claude',  name: 'Claude',    color: '#d97557' },
+  { id: 'gemini',  name: 'Gemini',    color: '#4285f4' },
+  { id: 'grok',    name: 'Grok',      color: '#1da1f2' },
+  { id: 'meta',    name: 'Meta AI',   color: '#0866ff' },
+  { id: 'copilot', name: 'Copilot',   color: '#00adef' },
+  { id: 'deepseek',name: 'DeepSeek',  color: '#4d6eff' },
+  { id: 'none',    name: 'Não utilizo IA', color: '#6b7280' },
 ];
 
 const fUp = {

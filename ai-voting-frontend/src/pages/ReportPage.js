@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI } from '../api';
+import AIIcon from '../components/AIIcon.jsx';
 
 export default function ReportPage() {
   const [reportData, setReportData] = useState(null);
@@ -129,7 +130,10 @@ export default function ReportPage() {
         <div key={ai.aiName} className="report-section" style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '15px' }}>
-            <h2 style={{ fontSize: '20px', margin: 0, color: 'var(--text)' }}>{ai.aiName}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <AIIcon name={ai.aiName} size={28} />
+              <h2 style={{ fontSize: '20px', margin: 0, color: 'var(--text)' }}>{ai.aiName}</h2>
+            </div>
             <div style={{ fontWeight: 'bold', fontSize: '14px', color: 'var(--text-muted)' }}>
               {ai.totalVotes} registro{ai.totalVotes !== 1 ? 's' : ''}
             </div>
