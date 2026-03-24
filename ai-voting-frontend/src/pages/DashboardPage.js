@@ -477,7 +477,7 @@ export default function DashboardPage() {
     <div style={{ 
       maxWidth: '1400px', 
       margin: '0 auto', 
-      padding: isSmallScreen ? '20px 16px' : '32px 40px' 
+      padding: isSmallScreen ? '12px 12px' : '32px 40px' 
     }}>
       
       {/* Modal Customizado */}

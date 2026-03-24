@@ -53,9 +53,16 @@ export default function ReportPage() {
 
   const handleResetData = () => {
     setModalConfig({
-      title: 'CUIDADO: Zerar Sistema',
-      message: 'Isso apagará TODOS os votos, contas e questionários! O admin padrão será recriado. Deseja continuar?',
-      onConfirm: confirmReset,
+      title: '⚠️ ZERAR SISTEMA (AÇÃO CRÍTICA)',
+      message: 'Todos os votos, questionários e usuários serão apagados. O Administrador será preservado. Esta ação é irreversível.',
+      onConfirm: async () => {
+        setShowModal(false);
+        try {
+          await adminAPI.resetData();
+          alert('Sistema zerado com sucesso!');
+          fetchReport();
+        } catch (err) { alert('Erro ao zerar.'); }
+      },
       type: 'confirm'
     });
     setShowModal(true);
@@ -189,3 +196,16 @@ export default function ReportPage() {
     </div>
   );
 }
+
+// Estilos mobile extra
+const style = document.createElement('style');
+style.innerHTML = `
+  @media (max-width: 600px) {
+    .printable-report { padding: 10px !important; }
+    .report-header h1 { font-size: 20px !important; }
+    .no-print { flex-direction: column; gap: 10px !important; }
+    .no-print div { width: 100%; justify-content: center; }
+    .report-section h2 { font-size: 16px !important; }
+  }
+`;
+document.head.appendChild(style);

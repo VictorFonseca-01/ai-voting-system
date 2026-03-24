@@ -272,11 +272,11 @@ export default function AdminUsersPage() {
                 <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
                   Nome {sort.column === 'name' && (sort.ascending ? '↑' : '↓')}
                 </th>
-                <th onClick={() => handleSort('course')} style={{ cursor: 'pointer' }}>
+                <th onClick={() => handleSort('course')} style={{ cursor: 'pointer' }} className="hide-mobile">
                   Curso {sort.column === 'course' && (sort.ascending ? '↑' : '↓')}
                 </th>
                 <th style={{ textAlign: 'center' }}>Votou?</th>
-                <th style={{ textAlign: 'center' }}>Quest?</th>
+                <th style={{ textAlign: 'center' }} className="hide-tablet">Quest?</th>
                 <th style={{ textAlign: 'right' }}>Ações</th>
               </tr>
             </thead>
@@ -307,7 +307,7 @@ export default function AdminUsersPage() {
                     )}
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
                   </td>
-                  <td>
+                  <td className="hide-mobile">
                     {editingId === u.id ? (
                       <input 
                         className="form-control" 
@@ -322,7 +322,7 @@ export default function AdminUsersPage() {
                   <td style={{ textAlign: 'center' }}>
                     <span style={{ color: u.hasVoted ? 'var(--success)' : 'var(--text-muted)' }}>{u.hasVoted ? '● Sim' : '○ Não'}</span>
                   </td>
-                  <td style={{ textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }} className="hide-tablet">
                     <span style={{ color: u.hasAnswered ? 'var(--success)' : 'var(--text-muted)' }}>{u.hasAnswered ? '● Sim' : '○ Não'}</span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
@@ -390,6 +390,14 @@ export default function AdminUsersPage() {
         .badge-accent { background: rgba(217, 70, 239, 0.15); color: #d946ef; padding: 2px 8px; border-radius: 4px; font-weight: 800; }
         .btn-danger { background: #ff4d6d; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; }
         .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+        @media (max-width: 768px) {
+          .hide-mobile { display: none; }
+          .saas-toolbar { grid-template-columns: 1fr !important; }
+          .pagination button { padding: 4px 8px !important; font-size: 0.8rem; }
+        }
+        @media (max-width: 1024px) {
+          .hide-tablet { display: none; }
+        }
       `}</style>
     </div>
   );
