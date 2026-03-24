@@ -16,6 +16,9 @@ import AiRankingList from '../components/Dashboard/AiRankingList';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dashboardAPI, adminAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { toPng } from 'html-to-image';
+import { generateAIVotePresentation } from '../services/pptxService';
+import { useRef } from 'react';
 
 
 
@@ -65,6 +68,12 @@ export default function DashboardPage() {
   const [countdown, setCountdown] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newPass, setNewPass] = useState('');
+
+  // Refs para captura de gráficos
+  const rankingRef = useRef(null);
+  const whereRef = useRef(null);
+  const workAreaRef = useRef(null);
+  const mainSynthRef = useRef(null);
 
   // Efeito para o countdown de segurança
   useEffect(() => {
@@ -245,6 +254,29 @@ export default function DashboardPage() {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleGeneratePresentation = async () => {
+    setIsProcessing(true);
+    try {
+      // Capturar gráficos como PNG (Base64)
+      const rankingImg = rankingRef.current ? await toPng(rankingRef.current, { backgroundColor: '#030305' }) : null;
+      const whereImg = whereRef.current ? await toPng(whereRef.current, { backgroundColor: '#030305' }) : null;
+      const workAreaImg = workAreaRef.current ? await toPng(workAreaRef.current, { backgroundColor: '#030305' }) : null;
+
+      const chartImages = {
+        ranking: rankingImg,
+        where: whereImg,
+        workArea: workAreaImg
+      };
+
+      await generateAIVotePresentation(data, chartImages);
+    } catch (err) {
+      console.error("Erro ao gerar PPTX:", err);
+      setError("Falha ao gerar apresentação. Verifique a captura de gráficos.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
@@ -750,18 +782,19 @@ export default function DashboardPage() {
 
       {/* ─── CHARTS SECTION ─────────────────────────────────────── */}
       <MainSynthChart 
+        chartRef={mainSynthRef}
         data={totalChartData} opts={totalChartOpts} 
         totalVotes={totalVotes} totalResponses={totalResponses} 
         useForStudy={useForStudy} useForWork={useForWork}
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-        <DonutChartCard title="Onde usam IA?" data={whereDonut} options={whereOptions} />
-        <BarChartCard title="Área de Atuação principal" data={workAreaBar} options={workAreaOpts} />
+        <DonutChartCard chartRef={whereRef} title="Onde usam IA?" data={whereDonut} options={whereOptions} />
+        <BarChartCard chartRef={workAreaRef} title="Área de Atuação principal" data={workAreaBar} options={workAreaOpts} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-        <AiRankingList title="Ranking de Preferência" ranking={aiRanking.slice(0, 5)} palette={PALETTE} />
+        <AiRankingList chartRef={rankingRef} title="Ranking de Preferência" ranking={aiRanking.slice(0, 5)} palette={PALETTE} />
         {/* Atividade Recente */}
         <div className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <h3 style={{ fontSize: '1rem', marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -863,6 +896,14 @@ export default function DashboardPage() {
         <div className="card" style={{ padding: '32px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <h3 style={{ fontSize: '0.9rem', color: 'var(--accent)', marginBottom: '20px' }}>⚙️ ADMINISTRAÇÃO</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            <button 
+                onClick={handleGeneratePresentation} 
+                className="btn" 
+                style={{ background: 'var(--grad-primary)', border: 'none', color: '#fff', fontWeight: 800 }}
+                disabled={isProcessing}
+            >
+                {isProcessing ? 'Gerando slides...' : '🚀 Gerar Apresentação Automática'}
+            </button>
             <button onClick={fetchData} className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Atualizar</button>
             <Link to="/admin/users" className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Usuários</Link>
             <button onClick={handleChangePassword} className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Alterar Senha do Administrador</button>
@@ -874,6 +915,16 @@ export default function DashboardPage() {
             <button onClick={handleResetData} className="btn" style={{ border: '1px solid var(--danger)', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.05)' }}>
               ⚠️ Zerar Sistema
             </button>
+            {/* DEBUG: Botão de Apresentação */}
+            <button 
+                onClick={handleGeneratePresentation} 
+                className="btn" 
+                style={{ background: 'var(--grad-primary)', border: 'none', color: '#fff', fontWeight: 800, padding: '12px 24px' }}
+                disabled={isProcessing}
+            >
+                {isProcessing ? 'Gerando slides...' : '🚀 Gerar Apresentação Automática'}
+            </button>
+            {console.log("Admin Dashboard Rendered - Button should be visible if isAdmin:", isAdmin)}
           </div>
         </div>
       )}

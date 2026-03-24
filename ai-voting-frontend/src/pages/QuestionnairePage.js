@@ -250,7 +250,7 @@ export default function QuestionnairePage() {
                   }}
                   style={{ 
                     padding: '16px', borderRadius: '14px', 
-                    background: 'transparent !important', 
+                    background: 'var(--bg-input)', 
                     border: '1px solid rgba(255,255,255,0.08)', 
                     boxShadow: 'none !important' 
                   }}
@@ -323,7 +323,7 @@ export default function QuestionnairePage() {
                     placeholder="Faculdade/Empresa"
                     value={form.institution}
                     onChange={(e) => set('institution', e.target.value)}
-                    style={{ padding: '16px', borderRadius: '14px', background: 'transparent !important', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
+                    style={{ padding: '16px', borderRadius: '14px', background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
                   />
                 </div>
                 <div>
@@ -333,7 +333,7 @@ export default function QuestionnairePage() {
                     placeholder="@seu.perfil"
                     value={form.instagram}
                     onChange={(e) => set('instagram', e.target.value)}
-                    style={{ padding: '16px', borderRadius: '14px', background: 'transparent !important', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
+                    style={{ padding: '16px', borderRadius: '14px', background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
                   />
                 </div>
               </div>
@@ -448,7 +448,7 @@ export default function QuestionnairePage() {
                     onChange={(e) => set('workAreaOther', e.target.value)}
                     style={{ 
                       padding: '16px', borderRadius: '14px', 
-                      background: 'transparent !important',
+                      background: 'var(--bg-input)',
                       border: '1px solid rgba(255,255,255,0.08)',
                       boxShadow: 'none !important'
                     }}
@@ -497,7 +497,7 @@ function QuestionCard({ num, title, children, delay = '' }) {
       className="card" 
       style={{ 
         marginBottom: '0', 
-        background: 'transparent !important', 
+        background: 'rgba(255,255,255,0.02) !important', 
         padding: '32px',
         border: '1px solid rgba(255,255,255,0.05)',
         borderRadius: '24px',
@@ -539,7 +539,7 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
             onClick={() => onSelect(opt)}
             style={{
               padding: '14px 16px',
-              background: active ? 'rgba(99, 102, 241, 0.1) !important' : 'transparent !important',
+              background: active ? 'rgba(99, 102, 241, 0.2) !important' : 'rgba(255, 255, 255, 0.03) !important',
               border: `1px solid ${active ? 'var(--accent-light)' : 'rgba(255,255,255,0.08)'}`,
               borderRadius: '16px',
               color: active ? '#fff' : 'var(--text-muted)',
@@ -583,13 +583,13 @@ function BooleanToggle({ value, onChange }) {
           style={{
             flex: 1, padding: '20px',
             background: value === val
-              ? (val ? 'rgba(16, 185, 129, 0.1) !important' : 'rgba(239, 68, 68, 0.1) !important')
-              : 'transparent !important',
+              ? (val ? 'rgba(16, 185, 129, 0.2) !important' : 'rgba(239, 68, 68, 0.2) !important')
+              : 'rgba(255, 255, 255, 0.03) !important',
             border: `1px solid ${value === val
               ? (val ? '#10b981' : '#ef4444')
               : 'rgba(255,255,255,0.08)'}`,
             borderRadius: '18px',
-            color: value === val ? '#fff' : 'var(--text-muted)',
+            color: '#fff',
             cursor: 'pointer',
             fontSize: '1rem',
             fontWeight: 700,

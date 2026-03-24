@@ -383,12 +383,12 @@ export default function AdminUsersPage() {
       
       {/* Estilos Inline SaaS */}
       <style>{`
-        .saas-table-flat { width: 100%; border-collapse: collapse !important; border-spacing: 0 !important; margin-top: 10px; background: transparent !important; }
-        .saas-table-flat th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05); text-align: left; background: transparent !important; }
-        .saas-table-flat td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: transparent !important; box-shadow: none !important; }
-        .saas-table-flat tr { background: transparent !important; box-shadow: none !important; }
-        .saas-table-flat tr:hover td, .saas-table-flat tr:hover { background: transparent !important; }
-        .row-selected td { background: rgba(217, 70, 239, 0.05) !important; }
+        .saas-table-flat { width: 100%; border-collapse: collapse !important; border-spacing: 0 !important; margin-top: 10px; background: transparent !important; table-layout: auto; }
+        .saas-table-flat th { padding: 18px 16px; color: var(--accent-light); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; background: transparent !important; }
+        .saas-table-flat tr { border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; }
+        .saas-table-flat td { padding: 20px 16px; background: transparent !important; box-shadow: none !important; color: #fff; vertical-align: middle; }
+        .saas-table-flat tr:hover { background: rgba(255,255,255,0.02) !important; }
+        .row-selected { background: rgba(217, 70, 239, 0.05) !important; }
         .btn-icon { background: transparent !important; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 6px; transition: 0.2s; box-shadow: none !important; }
         .btn-icon:hover { background: rgba(255,255,255,0.1); }
         .btn-icon-danger:hover { background: rgba(255, 77, 109, 0.2); }
