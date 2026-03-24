@@ -534,13 +534,13 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
         return (
           <motion.button
             key={opt}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
             onClick={() => onSelect(opt)}
             style={{
               padding: '14px 16px',
-              background: active ? 'rgba(99, 102, 241, 0.2) !important' : 'rgba(255, 255, 255, 0.03) !important',
-              border: `1px solid ${active ? 'var(--accent-light)' : 'rgba(255,255,255,0.08)'}`,
+              background: active ? 'rgba(99, 102, 241, 0.2) !important' : 'rgba(0, 0, 0, 0.2) !important',
+              border: `1px solid ${active ? 'var(--accent-light)' : 'rgba(255,255,255,0.1)'}`,
               borderRadius: '16px',
               color: active ? '#fff' : 'var(--text-muted)',
               cursor: 'pointer',

@@ -1,16 +1,7 @@
 @echo off
-title AI VOTE 2026 - PUBLICAR NO RAILWAY
-echo 🚀 PREPARANDO PUBLICACAO...
-echo ----------------------------------------------------
-echo.
-
+echo 💎 Sincronizando dados e subindo Versao de Elite para o Railway...
 git add .
-git commit -m "feat: implementacao automatica de pptx e correcao visual de tabelas 🚀"
-git push origin main
-
-echo.
-echo ✅ SUCESSO! O codigo foi enviado ao GitHub/Railway.
-echo 🕒 Aguarde uns 2-3 minutos para o Railway terminar o build automático.
-echo.
+git commit -m "💎 Sync: Dashboard, PPTX Report, Admin Fixes & Dependencies [Elite v2.0]"
+git push origin HEAD --force
+echo 🚀 Sucesso! Verifique o Railway agora. Limpe o cache do navegador (Ctrl+Shift+R).
 pause
-exit

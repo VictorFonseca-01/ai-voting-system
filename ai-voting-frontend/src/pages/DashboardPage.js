@@ -862,8 +862,7 @@ export default function DashboardPage() {
           {[
             { emoji: '🥇', name: 'Victor Fonseca', role: 'PRODUCT VISION & LEAD ARCHITECTURE', desc: 'Líder técnico e Engenheiro Fullstack responsável pela visão estratégica do produto, arquitetura de sistemas escaláveis e integração de modelos de IA.' },
             { emoji: '💻', name: 'Erick Fernando & Gabriel Calixto', role: 'CORE DEV TEAM', desc: 'Engenheiros responsáveis pela lógica de votação resiliente, infraestrutura de alta disponibilidade e performance do ecossistema.' },
-            { emoji: '💡', name: 'João Lucas, Luiz, Mikael & Pablo', role: 'RESEARCH & UX', desc: 'Especialistas focados em pesquisa de tendências, experiência do usuário e interface visual centrada no ser humano.' },
-            { emoji: '🤖', name: 'Antigravity', role: 'AI TECHNICAL PARTNER', desc: 'Parceiro tecnológico de IA auxiliando no desenvolvimento acelerado, auditoria de código e codificação assistida.' }
+            { emoji: '💡', name: 'João Lucas, Luiz, Mikael & Pablo', role: 'RESEARCH & UX', desc: 'Especialistas focados em pesquisa de tendências, experiência do usuário e interface visual centrada no ser humano.' }
           ].map((p, i) => (
             <motion.div key={i} variants={fUp} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '3rem', marginBottom: '20px' }}>{p.emoji}</div>
@@ -880,14 +879,14 @@ export default function DashboardPage() {
             "Este trabalho é o resultado da colaboração entre inteligência humana e artificial, focado em mapear as tendências tecnológicas de 2026."
         </p>
         <button 
-            onClick={() => setShowInstaModal(true)}
-            className="btn btn-ghost" 
-            style={{ 
-                borderRadius: '12px', padding: '12px 24px', border: '1px solid rgba(112,0,255,0.5)',
-                display: 'inline-flex', alignItems: 'center', gap: '10px'
-            }}
+          onClick={() => setShowInstaModal(true)}
+          className="btn btn-ghost" 
+          style={{ 
+            borderRadius: '12px', padding: '12px 24px', border: '1px solid rgba(112,0,255,0.5)',
+            display: 'inline-flex', alignItems: 'center', gap: '10px'
+          }}
         >
-            📸 Instagram
+          📸 Instagram
         </button>
       </div>
 
@@ -899,10 +898,11 @@ export default function DashboardPage() {
             <button 
                 onClick={handleGeneratePresentation} 
                 className="btn" 
-                style={{ background: 'var(--grad-primary)', border: 'none', color: '#fff', fontWeight: 800 }}
+                data-deployed="true"
+                style={{ background: 'var(--grad-primary)', border: 'none', color: '#fff', fontWeight: 800, padding: '12px 24px', boxShadow: '0 10px 20px rgba(99, 102, 241, 0.4)' }}
                 disabled={isProcessing}
             >
-                {isProcessing ? 'Gerando slides...' : '🚀 Gerar Apresentação Automática'}
+                {isProcessing ? 'Gerando slides...' : '🚀 Gerar Apresentação de Elite'}
             </button>
             <button onClick={fetchData} className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Atualizar</button>
             <Link to="/admin/users" className="btn btn-ghost" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Usuários</Link>
@@ -915,23 +915,13 @@ export default function DashboardPage() {
             <button onClick={handleResetData} className="btn" style={{ border: '1px solid var(--danger)', color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.05)' }}>
               ⚠️ Zerar Sistema
             </button>
-            {/* DEBUG: Botão de Apresentação */}
-            <button 
-                onClick={handleGeneratePresentation} 
-                className="btn" 
-                style={{ background: 'var(--grad-primary)', border: 'none', color: '#fff', fontWeight: 800, padding: '12px 24px' }}
-                disabled={isProcessing}
-            >
-                {isProcessing ? 'Gerando slides...' : '🚀 Gerar Apresentação Automática'}
-            </button>
-            {console.log("Admin Dashboard Rendered - Button should be visible if isAdmin:", isAdmin)}
           </div>
         </div>
       )}
 
       {/* ─── FOOTER ─────────────────────────────────────────────── */}
       <footer style={{ marginTop: '60px', textAlign: 'center', opacity: 0.5, fontSize: '0.8rem' }}>
-        AIVote 2026 © Auditado por Antigravity Sênior
+        AIVote 2026 © Victor Fonseca & Equipe
       </footer>
     </div>
   );
