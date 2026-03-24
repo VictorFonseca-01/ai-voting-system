@@ -87,8 +87,8 @@ export default function VotePage() {
 
   const handleSubmit = () => {
     const isNone = selected.includes('none');
-    if (!isNone && selected.length !== 2) {
-      setError('Selecione 2 IAs para continuar (ou selecione "Não utilizo IA").');
+    if (!isNone && (selected.length < 1 || selected.length > 2)) {
+      setError('Selecione pelo menos 1 IA e no máximo 2 para continuar (ou selecione "Não utilizo IA").');
       return;
     }
     setShowConfirm(true);
@@ -189,7 +189,7 @@ export default function VotePage() {
                   margin: '0 auto 40px', 
                   fontWeight: 500 
                 }}>
-                  Selecione as <strong style={{color: '#fff'}}>duas</strong> interfaces que melhor atendem suas necessidades diárias.
+                  Selecione **uma ou duas** interfaces que melhor atendem suas necessidades diárias.
                 </p>
         </motion.div>
 
@@ -255,7 +255,7 @@ export default function VotePage() {
                   fontFamily: 'var(--font-display)', 
                   fontWeight: 800, 
                   fontSize: '1.5rem', 
-                  color: selected.length === 2 ? 'var(--success)' : '#fff',
+                  color: selected.length >= 1 ? 'var(--success)' : '#fff',
                 }}>
                   {selected.length} <span style={{ fontSize: '1rem', opacity: 0.3 }}>/ 2</span>
                 </span>
@@ -317,16 +317,16 @@ export default function VotePage() {
               <button
                 className="btn btn-primary btn-full"
                 onClick={handleSubmit}
-                disabled={(selected.length !== 2 && !selected.includes('none'))}
+                disabled={(selected.length < 1 && !selected.includes('none'))}
                 style={{ 
                   padding: '20px', fontSize: '1.1rem', borderRadius: '20px',
-                  background: (selected.length === 2 || selected.includes('none')) ? 'var(--grad-primary)' : 'rgba(255,255,255,0.05)',
-                  border: 'none', fontWeight: 800, boxShadow: (selected.length === 2 || selected.includes('none')) ? '0 10px 30px rgba(99, 102, 241, 0.3)' : 'none',
+                  background: (selected.length >= 1 || selected.includes('none')) ? 'var(--grad-primary)' : 'rgba(255,255,255,0.05)',
+                  border: 'none', fontWeight: 800, boxShadow: (selected.length >= 1 || selected.includes('none')) ? '0 10px 30px rgba(99, 102, 241, 0.3)' : 'none',
                   transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                  cursor: (selected.length === 2 || selected.includes('none')) ? 'pointer' : 'not-allowed'
+                  cursor: (selected.length >= 1 || selected.includes('none')) ? 'pointer' : 'not-allowed'
                 }}
               >
-                {(selected.length === 2 || selected.includes('none'))
+                {(selected.length >= 1 || selected.includes('none'))
                     ? 'Confirmar Votos →' 
                     : 'Selecione suas Opções'}
               </button>
