@@ -7,6 +7,24 @@ import { hasInappropriateContent } from '../utils/moderation';
  * Todas as operações são realizadas diretamente via SDK do Supabase.
  */
 
+// ─── UTILS DE NORMALIZAÇÃO ─────────────────────────────────────────────
+const AI_CANONICAL_MAP = {
+  'chatgpt': 'ChatGPT',
+  'gemini': 'Gemini',
+  'claude': 'Claude',
+  'grok': 'Grok',
+  'meta': 'Meta AI',
+  'copilot': 'Copilot',
+  'deepseek': 'DeepSeek',
+  'none': 'Não utilizo IA'
+};
+
+const normalizeAiName = (name) => {
+  if (!name) return 'Indefinido';
+  const slug = name.toLowerCase().trim();
+  return AI_CANONICAL_MAP[slug] || (name.charAt(0).toUpperCase() + name.slice(1));
+};
+
 // ─── SEGURANÇA E AMBIENTE ─────────────────────────────────────────────
 const ENV = process.env.NODE_ENV || 'development';
 const isProduction = ENV === 'production';
@@ -188,9 +206,9 @@ export const dashboardAPI = {
     // Para simplificar, contamos todos e filtramos na exibição se necessário
     const uniqueVoters = new Set(votes.map(v => v.user_id));
     
-    // 2. Ranking de IAs
+    // 2. Ranking de IAs (Normalizado para evitar duplicidade Case-Sensitive)
     const votesByAi = votes.reduce((acc, v) => {
-      const name = v.ai_name || 'Indefinido';
+      const name = normalizeAiName(v.ai_name);
       acc[name] = (acc[name] || 0) + 1;
       return acc;
     }, {});
@@ -238,7 +256,7 @@ export const dashboardAPI = {
         id: v.id, // Necessário para o lastSeenId da Navbar
         userName: userData.name,
         userCourse: userData.course,
-        aiName: v.ai_name || 'IA',
+        aiName: normalizeAiName(v.ai_name),
         time: v.voted_at
       };
     });
@@ -473,9 +491,9 @@ export const adminAPI = {
     const userMap = users.reduce((acc, u) => ({ ...acc, [u.id]: u }), {});
     const respMap = responses.reduce((acc, r) => ({ ...acc, [r.user_id]: r }), {});
 
-    // Agrupamento por IA
+    // Agrupamento por IA (Normalizado)
     const aiGroups = votes.reduce((acc, v) => {
-      const name = v.ai_name || 'Desconhecida';
+      const name = normalizeAiName(v.ai_name);
       if (!acc[name]) acc[name] = { aiName: name, votes: [] };
       acc[name].votes.push(v);
       return acc;

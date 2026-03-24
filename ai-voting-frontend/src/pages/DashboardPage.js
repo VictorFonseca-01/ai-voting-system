@@ -49,6 +49,8 @@ export default function DashboardPage() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
 
   const [showModal, setShowModal] = useState(false);
@@ -130,14 +132,17 @@ export default function DashboardPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (isManual = false) => {
+    if (isManual) setIsRefreshing(true);
     try {
       const { data: d } = await dashboardAPI.getData();
       setData(d);
+      setLastUpdated(new Date());
     } catch (err) {
       setError('Erro ao carregar dados do dashboard. Verifique se o backend está rodando.');
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -687,19 +692,31 @@ export default function DashboardPage() {
         marginBottom: '40px', flexWrap: 'wrap', gap: '20px'
       }}>
         <div style={{ minWidth: '240px', flex: 1 }}>
-          <h1 style={{ 
-            fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', 
-            fontWeight: 800, 
-            fontFamily: 'var(--font-display)', 
-            margin: 0, 
-            lineHeight: 1.2,
-            letterSpacing: '-0.5px'
-          }}>
-            DASHBOARD <span style={{ opacity: 0.5 }}>GERAL</span>
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '6px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Painel / Visão Geral de Análise
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <motion.div 
+              style={{ width: '4px', height: '16px', background: isRefreshing ? '#fbbf24' : 'var(--grad-primary)', borderRadius: '2px' }}
+              animate={isRefreshing ? { height: [16, 32, 16], opacity: [1, 0.5, 1] } : {}}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+            <h1 style={{ 
+              fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', 
+              fontWeight: 800, 
+              fontFamily: 'var(--font-display)', 
+              margin: 0, 
+              lineHeight: 1.2,
+              letterSpacing: '-0.5px'
+            }}>
+              DASHBOARD <span style={{ opacity: 0.5 }}>{(isRefreshing && !loading) ? 'ATUALIZANDO...' : 'GERAL'}</span>
+            </h1>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '1px' }}>
+               Visão Geral de Análise
+             </p>
+             <span style={{ fontSize: '0.65rem', color: isRefreshing ? '#fbbf24' : '#10b981', fontWeight: 800 }}>
+               • {isRefreshing ? 'SINCRONIZANDO' : `ÚLTIMA ATUALIZAÇÃO: ${lastUpdated.toLocaleTimeString()}`}
+             </span>
+          </div>
         </div>
         
         <div className="hide-mobile" style={{ 
