@@ -675,7 +675,18 @@ export default function DashboardPage() {
                       textDecoration: 'none', color: '#fff'
                     }}
                   >
-                    <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📸</div>
+                    <div style={{ 
+                      width: '44px', height: '44px', borderRadius: '12px', 
+                      background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2397 75%, #ad38e7 100%)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px',
+                      boxShadow: '0 8px 20px rgba(220, 39, 67, 0.2)'
+                    }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                      </svg>
+                    </div>
                     <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{p.name}</div>
                     <div style={{ fontSize: '0.8rem', color: '#00f0ff' }}>{p.handle}</div>
                   </motion.a>
