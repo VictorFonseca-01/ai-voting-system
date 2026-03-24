@@ -626,7 +626,8 @@ export default function DashboardPage() {
                 {[
                   { name: 'Victor', handle: '@ovittinn_062', link: 'https://instagram.com/ovittinn_062' },
                   { name: 'Erick', handle: '@erick_fernando_lx', link: 'https://instagram.com/erick_fernando_lx' },
-                  { name: 'Calixto', handle: '@calixto.sxz', link: 'https://instagram.com/calixto.sxz' }
+                  { name: 'Calixto', handle: '@calixto.sxz', link: 'https://instagram.com/calixto.sxz' },
+                  { name: 'Pablo', handle: '@pabl0.hrg', link: 'https://www.instagram.com/pabl0.hrg/' }
                 ].map((p, idx) => (
                   <motion.a 
                     key={idx} href={p.link} target="_blank" rel="noopener noreferrer"
