@@ -1,6 +1,6 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import AIIcon from '../components/AIIcon';
 
 const SYSTEM_URL = window.location.origin;
 
@@ -72,13 +72,13 @@ export default function HomePage() {
             {/* Cards de ias */}
             <div className="ai-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '48px' }}>
               {[
-                { name: 'ChatGPT', icon: '🤖' },
-                { name: 'Claude', icon: '🧠' },
-                { name: 'Gemini', icon: '✨' },
-                { name: 'Grok', icon: '⚡' },
-                { name: 'Meta AI', icon: '🔵' },
-                { name: 'Copilot', icon: '🚀' },
-                { name: 'DeepSeek', icon: '🔍' },
+                { name: 'ChatGPT' },
+                { name: 'Claude' },
+                { name: 'Gemini' },
+                { name: 'Grok' },
+                { name: 'Meta AI' },
+                { name: 'Copilot' },
+                { name: 'DeepSeek' },
               ].map((ai, i) => (
                 <span 
                   key={ai.name} 
@@ -96,7 +96,7 @@ export default function HomePage() {
                     gap: '8px',
                   }}
                 >
-                  <span style={{ fontSize: '1.1rem' }}>{ai.icon}</span>
+                  <AIIcon name={ai.name} size={22} />
                   {ai.name}
                 </span>
               ))}

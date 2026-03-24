@@ -19,6 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { toPng } from 'html-to-image';
 import { generateAIVotePresentation } from '../services/pptxService';
 import { useRef } from 'react';
+import AIIcon from '../components/AIIcon';
 
 
 
@@ -833,7 +834,10 @@ export default function DashboardPage() {
             {recentVotes.slice(0, 5).map((v, i) => (
               <div key={i} style={{ display: 'flex', gap: '10px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 <span style={{ color: 'var(--accent)' }}>●</span>
-                <span><strong>{v.userName}</strong> votou em <strong>{v.aiName}</strong></span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AIIcon name={v.aiName} size={16} />
+                  <span><strong>{v.userName}</strong> votou em <strong>{v.aiName}</strong></span>
+                </div>
               </div>
             ))}
           </div>

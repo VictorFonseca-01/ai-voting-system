@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { votesAPI } from '../api';
+import AIIcon from '../components/AIIcon';
 
 const AI_OPTIONS = [
   { id: 'chatgpt', name: 'ChatGPT',   emoji: '🤖',   color: '#10a37f' },
@@ -299,10 +300,9 @@ export default function VotePage() {
                     }}
                   >
                     <span style={{ 
-                      fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', 
                       display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                      {emoji}
+                      <AIIcon name={name} size={32} />
                     </span>
                     <span style={{ fontWeight: 700, fontSize: 'clamp(0.75rem, 3vw, 0.9rem)', color: '#fff' }}>
                       {name}

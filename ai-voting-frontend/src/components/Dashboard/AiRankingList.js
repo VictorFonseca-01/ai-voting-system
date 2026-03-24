@@ -1,5 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
+import AIIcon from '../AIIcon';
 
 const fUp = {
   hidden: { opacity: 0, y: 20 },
@@ -28,7 +28,10 @@ export default function AiRankingList({ title, ranking, palette, chartRef }) {
             }}>
               {index + 1}
             </div>
-            <div style={{ flex: 1, fontWeight: 700, fontSize: '0.9rem', color: '#f0f0f8' }}>{name}</div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 700, fontSize: '0.9rem', color: '#f0f0f8' }}>
+              <AIIcon name={name} size={18} />
+              {name}
+            </div>
             <div style={{ 
               padding: '4px 10px', background: 'transparent !important', color: '#d946ef', 
               borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid rgba(217, 70, 239, 0.2)'
