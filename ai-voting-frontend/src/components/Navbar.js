@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { dashboardAPI } from '../api';
+import AIIcon from './AIIcon.jsx';
 
 export default function Navbar() {
   const { isAuthenticated, isAdmin, logout } = useAuth();
@@ -49,6 +50,21 @@ export default function Navbar() {
     const interval = setInterval(checkVotes, 20000); // Checa a cada 20s
     return () => clearInterval(interval);
   }, [isAdmin]);
+
+  const groupedNotifications = useMemo(() => {
+    const groups = {};
+    notifications.forEach(n => {
+      const key = `${n.userName}-${n.userCourse}`;
+      if (!groups[key]) {
+        groups[key] = { ...n, aiNames: [n.aiName] };
+      } else {
+        if (!groups[key].aiNames.includes(n.aiName)) {
+          groups[key].aiNames.push(n.aiName);
+        }
+      }
+    });
+    return Object.values(groups).slice(0, 5);
+  }, [notifications]);
 
   const handleOpenNotifications = () => {
     setShowPanel(!showPanel);
@@ -197,7 +213,7 @@ export default function Navbar() {
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 10px' }}>Nenhuma atividade nova.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {notifications.map((n, i) => (
+                {groupedNotifications.map((n, i) => (
                   <div key={i} style={{ 
                     padding: '12px', 
                     background: 'rgba(255,255,255,0.03)', 
@@ -206,18 +222,22 @@ export default function Navbar() {
                     borderLeft: '3px solid var(--accent)'
                   }}>
                     <Link 
-                      to="/admin/users" 
+                      to={`/admin/users?search=${encodeURIComponent(n.userName)}`} 
                       onClick={() => setShowPanel(false)} 
                       style={{ textDecoration: 'none', fontWeight: 700, marginBottom: '3px', display: 'block', color: 'var(--accent)' }}
                     >
                       {n.userName}
                     </Link>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '4px' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '8px' }}>
                       {n.userCourse}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ opacity: 0.6 }}>Votou em:</span>
-                      <span style={{ fontWeight: 600 }}>{n.aiName}</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {n.aiNames.map(name => <AIIcon key={name} name={name} size={16} />)}
+                      </div>
+                      <span style={{ opacity: 0.9, fontWeight: 500 }}>
+                        votou em: <strong>{n.aiNames.join(' e ')}</strong>
+                      </span>
                     </div>
                   </div>
                 ))}
