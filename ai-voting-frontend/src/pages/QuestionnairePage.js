@@ -539,7 +539,7 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
             onClick={() => onSelect(opt)}
             style={{
               padding: '14px 16px',
-              background: active ? 'rgba(99, 102, 241, 0.2) !important' : 'rgba(0, 0, 0, 0.2) !important',
+              background: active ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0, 0, 0, 0.2)',
               border: `1px solid ${active ? 'var(--accent-light)' : 'rgba(255,255,255,0.1)'}`,
               borderRadius: '16px',
               color: active ? '#fff' : 'var(--text-muted)',
@@ -551,7 +551,7 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              boxShadow: 'none !important'
+              boxShadow: 'none'
             }}
           >
             <div style={{
