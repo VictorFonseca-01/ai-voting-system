@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import AIIcon from '../components/AIIcon.jsx';
 
