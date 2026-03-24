@@ -8,7 +8,7 @@ const fUp = {
 
 export default function AiRankingList({ title, ranking, palette }) {
   return (
-    <motion.div variants={fUp} className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+    <motion.div variants={fUp} className="card" style={{ background: 'transparent !important', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'none !important' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
         <div style={{ width: '4px', height: '16px', background: '#d946ef', borderRadius: '2px' }} />
         <h3 style={{ fontSize: '1rem', margin: 0, fontFamily: 'var(--font-display)', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -19,7 +19,8 @@ export default function AiRankingList({ title, ranking, palette }) {
         {ranking.map(([name, count], index) => (
           <div key={name} style={{ 
             display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', 
-            background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.03)'
+            background: 'transparent !important', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.03)',
+            boxShadow: 'none !important'
           }}>
             <div style={{ 
               width: '28px', height: '28px', borderRadius: '8px', background: palette[index % palette.length], 
@@ -29,8 +30,8 @@ export default function AiRankingList({ title, ranking, palette }) {
             </div>
             <div style={{ flex: 1, fontWeight: 700, fontSize: '0.9rem', color: '#f0f0f8' }}>{name}</div>
             <div style={{ 
-              padding: '4px 10px', background: 'rgba(217, 70, 239, 0.1)', color: '#d946ef', 
-              borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800 
+              padding: '4px 10px', background: 'transparent !important', color: '#d946ef', 
+              borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid rgba(217, 70, 239, 0.2)'
             }}>
               {count} VOTOS
             </div>

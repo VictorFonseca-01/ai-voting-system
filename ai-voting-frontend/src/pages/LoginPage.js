@@ -94,7 +94,7 @@ export default function LoginPage() {
               className="form-control"
               placeholder="exemplo@voto.ai"
               value={form.email} onChange={handleChange} required
-              style={{ background: 'rgba(255,255,255,0.03)', padding: '16px' }}
+              style={{ background: 'transparent !important', padding: '16px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
             />
           </div>
 
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 className="form-control"
                 placeholder="••••••••"
                 value={form.password} onChange={handleChange} required
-                style={{ background: 'rgba(255,255,255,0.03)', padding: '16px' }}
+                style={{ background: 'transparent !important', padding: '16px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
               />
               <button
                 type="button" className="password-toggle"

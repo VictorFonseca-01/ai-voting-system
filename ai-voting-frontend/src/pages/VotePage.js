@@ -189,7 +189,7 @@ export default function VotePage() {
                   margin: '0 auto 40px', 
                   fontWeight: 500 
                 }}>
-                  Selecione **uma ou duas** interfaces que melhor atendem suas necessidades diárias.
+                  Escolha **até 2 IAs** que você mais utiliza no seu dia a dia.
                 </p>
         </motion.div>
 

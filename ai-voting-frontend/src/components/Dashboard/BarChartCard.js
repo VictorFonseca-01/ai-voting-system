@@ -9,7 +9,7 @@ const fUp = {
 
 export default function BarChartCard({ title, data, options }) {
   return (
-    <motion.div variants={fUp} className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+    <motion.div variants={fUp} className="card" style={{ background: 'transparent !important', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'none !important' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
         <div style={{ width: '4px', height: '16px', background: 'var(--accent)', borderRadius: '2px' }} />
         <h3 style={{ fontSize: '1rem', margin: 0, fontFamily: 'var(--font-display)', textTransform: 'uppercase', letterSpacing: '1px' }}>

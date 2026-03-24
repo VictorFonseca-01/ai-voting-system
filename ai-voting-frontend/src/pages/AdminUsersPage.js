@@ -193,8 +193,9 @@ export default function AdminUsersPage() {
         {/* --- TOOLBAR --- */}
         <div className="saas-toolbar" style={{ 
           display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-          gap: '16px', marginBottom: '24px', background: 'rgba(255,255,255,0.02)', 
-          padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)'
+          gap: '16px', marginBottom: '24px', background: 'transparent', 
+          padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)',
+          boxShadow: 'none'
         }}>
           <div>
             <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Buscar Usuário</label>
@@ -204,7 +205,7 @@ export default function AdminUsersPage() {
               value={search} 
               onChange={(e) => setSearch(e.target.value)}
               className="form-control"
-              style={{ width: '100%', background: '#0a0a1a' }}
+              style={{ width: '100%', background: 'transparent' }}
             />
           </div>
           <div>
@@ -217,7 +218,7 @@ export default function AdminUsersPage() {
           </div>
           <div>
             <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Status de Atividade</label>
-            <select className="form-control" value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} style={{ width: '100%', background: '#0a0a1a', paddingRight: '30px' }}>
+            <select className="form-control" value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} style={{ width: '100%', background: 'transparent', paddingRight: '30px' }}>
               <option value="">Todos os Status</option>
               <option value="voted">Já Votaram</option>
               <option value="not_voted">Não Votaram</option>
@@ -382,13 +383,13 @@ export default function AdminUsersPage() {
       
       {/* Estilos Inline SaaS */}
       <style>{`
-        .saas-table-flat { width: 100%; border-collapse: collapse !important; border-spacing: 0 !important; margin-top: 10px; background: transparent; }
-        .saas-table-flat th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05); text-align: left; background: transparent; }
-        .saas-table-flat td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01) !important; }
-        .saas-table-flat tr { background: transparent !important; }
-        .saas-table-flat tr:hover td { background: rgba(255,255,255,0.03) !important; }
+        .saas-table-flat { width: 100%; border-collapse: collapse !important; border-spacing: 0 !important; margin-top: 10px; background: transparent !important; }
+        .saas-table-flat th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05); text-align: left; background: transparent !important; }
+        .saas-table-flat td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: transparent !important; box-shadow: none !important; }
+        .saas-table-flat tr { background: transparent !important; box-shadow: none !important; }
+        .saas-table-flat tr:hover td, .saas-table-flat tr:hover { background: transparent !important; }
         .row-selected td { background: rgba(217, 70, 239, 0.05) !important; }
-        .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 6px; transition: 0.2s; }
+        .btn-icon { background: transparent !important; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 6px; transition: 0.2s; box-shadow: none !important; }
         .btn-icon:hover { background: rgba(255,255,255,0.1); }
         .btn-icon-danger:hover { background: rgba(255, 77, 109, 0.2); }
         .pagination { display: flex; gap: 8px; align-items: center; }

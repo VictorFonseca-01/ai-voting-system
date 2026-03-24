@@ -249,9 +249,10 @@ export default function QuestionnairePage() {
                       if (fieldErrors.fullName) setFieldErrors(p => ({...p, fullName: false}));
                   }}
                   style={{ 
-                      padding: '16px', borderRadius: '14px',
-                      background: 'rgba(255,255,255,0.03)',
-                      borderColor: fieldErrors.fullName ? '#f43f5e' : 'rgba(255,255,255,0.05)',
+                    padding: '16px', borderRadius: '14px', 
+                    background: 'transparent !important', 
+                    border: '1px solid rgba(255,255,255,0.08)', 
+                    boxShadow: 'none !important' 
                   }}
                 />
               </div>
@@ -322,7 +323,7 @@ export default function QuestionnairePage() {
                     placeholder="Faculdade/Empresa"
                     value={form.institution}
                     onChange={(e) => set('institution', e.target.value)}
-                    style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)' }}
+                    style={{ padding: '16px', borderRadius: '14px', background: 'transparent !important', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
                   />
                 </div>
                 <div>
@@ -332,7 +333,7 @@ export default function QuestionnairePage() {
                     placeholder="@seu.perfil"
                     value={form.instagram}
                     onChange={(e) => set('instagram', e.target.value)}
-                    style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)' }}
+                    style={{ padding: '16px', borderRadius: '14px', background: 'transparent !important', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
                   />
                 </div>
               </div>
@@ -447,8 +448,9 @@ export default function QuestionnairePage() {
                     onChange={(e) => set('workAreaOther', e.target.value)}
                     style={{ 
                       padding: '16px', borderRadius: '14px', 
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.1)' 
+                      background: 'transparent !important',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      boxShadow: 'none !important'
                     }}
                   />
                 </motion.div>
@@ -495,10 +497,11 @@ function QuestionCard({ num, title, children, delay = '' }) {
       className="card" 
       style={{ 
         marginBottom: '0', 
-        background: 'var(--grad-glass)', 
+        background: 'transparent !important', 
         padding: '32px',
         border: '1px solid rgba(255,255,255,0.05)',
-        borderRadius: '24px'
+        borderRadius: '24px',
+        boxShadow: 'none !important'
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
@@ -536,8 +539,8 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
             onClick={() => onSelect(opt)}
             style={{
               padding: '14px 16px',
-              background: active ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${active ? 'var(--accent-light)' : 'rgba(255,255,255,0.05)'}`,
+              background: active ? 'rgba(99, 102, 241, 0.1) !important' : 'transparent !important',
+              border: `1px solid ${active ? 'var(--accent-light)' : 'rgba(255,255,255,0.08)'}`,
               borderRadius: '16px',
               color: active ? '#fff' : 'var(--text-muted)',
               cursor: 'pointer',
@@ -547,7 +550,8 @@ function OptionGrid({ options, selected, onSelect, columns = 2 }) {
               textAlign: 'left',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px'
+              gap: '10px',
+              boxShadow: 'none !important'
             }}
           >
             <div style={{
@@ -579,18 +583,19 @@ function BooleanToggle({ value, onChange }) {
           style={{
             flex: 1, padding: '20px',
             background: value === val
-              ? (val ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)')
-              : 'rgba(255,255,255,0.02)',
+              ? (val ? 'rgba(16, 185, 129, 0.1) !important' : 'rgba(239, 68, 68, 0.1) !important')
+              : 'transparent !important',
             border: `1px solid ${value === val
               ? (val ? '#10b981' : '#ef4444')
-              : 'rgba(255,255,255,0.05)'}`,
+              : 'rgba(255,255,255,0.08)'}`,
             borderRadius: '18px',
             color: value === val ? '#fff' : 'var(--text-muted)',
             cursor: 'pointer',
             fontSize: '1rem',
             fontWeight: 700,
             transition: 'all 0.2s',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+            boxShadow: 'none !important'
           }}
         >
           <span style={{ fontSize: '1.5rem', marginBottom: '4px' }}>{icon}</span>

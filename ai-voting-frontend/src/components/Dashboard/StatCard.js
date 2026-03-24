@@ -13,9 +13,10 @@ export default function StatCard({ value, label, delay, trend, chartConfig, icon
       variants={fUp} initial="hidden" animate="visible" transition={{ delay }}
       className="card hover-lift" style={{ 
         position: 'relative', 
-        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
+        background: 'transparent !important', border: '1px solid rgba(255,255,255,0.05)',
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        minHeight: '160px'
+        minHeight: '160px',
+        boxShadow: 'none !important'
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 1, position: 'relative' }}>
