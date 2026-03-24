@@ -1,4 +1,8 @@
 import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+
 // Supressão do erro de HMR no Windows (CRA 5 bug)
 if (process.env.NODE_ENV === 'development') {
   window.addEventListener('error', e => {
@@ -9,9 +13,6 @@ if (process.env.NODE_ENV === 'development') {
     }
   });
 }
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
