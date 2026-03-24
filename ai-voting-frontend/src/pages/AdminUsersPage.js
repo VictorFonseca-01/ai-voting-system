@@ -25,7 +25,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({ role: '', status: '' });
   const [sort, setSort] = useState({ column: 'name', ascending: true });
-  const debouncedSearch = useDebounce(search, 500);
+  const debouncedSearch = useDebounce(search, 300);
 
   // --- STATE: SELECTION & EDITING ---
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -214,12 +214,12 @@ export default function AdminUsersPage() {
               value={search} 
               onChange={(e) => setSearch(e.target.value)}
               className="form-control"
-              style={{ width: '100%', background: 'transparent' }}
+              style={{ width: '100%' }}
             />
           </div>
           <div>
             <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Nível de Acesso</label>
-            <select className="form-control" value={filters.role} onChange={(e) => handleFilterChange('role', e.target.value)} style={{ width: '100%', background: '#0a0a1a' }}>
+            <select className="form-control" value={filters.role} onChange={(e) => handleFilterChange('role', e.target.value)} style={{ width: '100%' }}>
               <option value="">Todos os Níveis</option>
               <option value="ROLE_ADMIN">Administradores</option>
               <option value="ROLE_USER">Usuários Comuns</option>
@@ -227,7 +227,7 @@ export default function AdminUsersPage() {
           </div>
           <div>
             <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Status de Atividade</label>
-            <select className="form-control" value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} style={{ width: '100%', background: 'transparent', paddingRight: '30px' }}>
+            <select className="form-control" value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} style={{ width: '100%', paddingRight: '30px' }}>
               <option value="">Todos os Status</option>
               <option value="voted">Já Votaram</option>
               <option value="not_voted">Não Votaram</option>
@@ -237,7 +237,7 @@ export default function AdminUsersPage() {
           </div>
           <div>
             <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Itens por Página</label>
-            <select className="form-control" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ width: '100%', background: '#0a0a1a' }}>
+            <select className="form-control" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ width: '100%' }}>
               <option value={10}>10 Usuários</option>
               <option value={20}>20 Usuários</option>
               <option value={50}>50 Usuários</option>

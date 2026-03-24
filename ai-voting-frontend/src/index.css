@@ -54,6 +54,7 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   width: 100%;
+  color-scheme: dark; /* Força scrollbars e widgets nativos em dark mode */
 }
 
 html { 
@@ -138,6 +139,12 @@ h1, h2, h3, h4, h5 {
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
+  color-scheme: dark; /* Estiliza dropdowns nativos no Chrome/Edge */
+}
+
+.form-control option {
+  background-color: #0d0d12;
+  color: #fff;
 }
 
 .form-control:focus {
