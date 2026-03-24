@@ -6,7 +6,7 @@ WORKDIR /app
 # Copia arquivos de dependências
 COPY package*.json ./
 
-# Instala as dependências (usa ci para builds reprodutíveis se houver lockfile estável)
+# Instala as dependências
 RUN npm install --legacy-peer-deps
 
 # Copia o restante do código fonte
@@ -18,14 +18,18 @@ RUN npm run build
 # Etapa 2: Produção (Nginx)
 FROM nginx:stable-alpine
 
-# Copia o build da etapa anterior para o diretório padrão do Nginx
+# Copia o build da etapa anterior
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Copia a configuração customizada do Nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copia o template de configuração do Nginx
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
-# Expõe a porta 80
-EXPOSE 80
+# Define variáveis de ambiente padrão para o Nginx (Railway sobrescreve $PORT)
+ENV PORT=80
+
+# O Nginx oficial no Docker suporta variáveis de ambiente em templates automaticamente
+# se os arquivos estiverem em /etc/nginx/templates/ com extensão .template.
+# Ele roda envsubst internamente e gera o /etc/nginx/conf.d/default.conf
 
 # Comando para rodar o Nginx no foreground
 CMD ["nginx", "-g", "daemon off;"]
