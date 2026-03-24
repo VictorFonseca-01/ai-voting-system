@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { participationAPI } from '../api';
+import { checkLocalVoteStatus, getFingerprint, getPersistentSessionId } from '../utils/security';
 
 // Opções das perguntas
 const WHERE_OPTIONS = ['No trabalho', 'Em casa', 'Na escola/faculdade', 'No celular', 'Todas as alternativas'];
@@ -31,8 +32,6 @@ const fUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-// BackgroundOrbs removido para visual mais limpo
-
 export default function QuestionnairePage() {
   const [form, setForm] = useState({
     fullName: '',
@@ -51,6 +50,7 @@ export default function QuestionnairePage() {
   const [loading, setLoading]       = useState(false);
   const [success, setSuccess]        = useState(false);
   const [error, setError]           = useState('');
+  const [alreadyParticipated, setAlreadyParticipated] = useState(false);
   const [selectedIAs, setSelectedIAs] = useState([]);
   const [showCourseSuggestions, setShowCourseSuggestions] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -58,6 +58,11 @@ export default function QuestionnairePage() {
   const identSectionRef = useRef(null);
 
   useEffect(() => {
+    // 1. Bloqueio Antifraude Preventivo (ELITE 4.5)
+    if (checkLocalVoteStatus()) {
+      setAlreadyParticipated(true);
+    }
+
     const saved = sessionStorage.getItem('selectedIAs');
     if (saved) {
       setSelectedIAs(JSON.parse(saved));
@@ -106,18 +111,15 @@ export default function QuestionnairePage() {
     const trimmed = name.trim();
     const words = trimmed.split(/\s+/);
     
-    // 1. Validação de Conteúdo (Pelo menos duas palavras)
     if (words.length < 2 || trimmed.length < 5) {
       return { valid: false, msg: "Por favor, digite seu Nome e Sobrenome completo." };
     }
     
-    // 2. Apenas letras e espaços (inclui acentos PT-BR)
     const onlyLetters = /^[a-zA-ZÀ-ÿ\s]+$/;
     if (!onlyLetters.test(trimmed)) {
       return { valid: false, msg: "O nome deve conter apenas letras." };
     }
 
-    // 3. Filtro de profanidade
     const lowerName = trimmed.toLowerCase();
     const hasProfanity = PROHIBITED_WORDS.some(bad => 
       lowerName.split(/[\s._-]+/).some(word => word === bad || (word.length > 3 && word.includes(bad)))
@@ -134,7 +136,6 @@ export default function QuestionnairePage() {
     setError('');
     setFieldErrors({});
 
-    // Validação de campos obrigatórios
     if (!form.fullName || !form.course) {
       setError('Campos obrigatórios ausentes.');
       setFieldErrors({ fullName: !form.fullName, course: !form.course });
@@ -142,7 +143,6 @@ export default function QuestionnairePage() {
       return;
     }
 
-    // Validação estrita de Nome
     const nameEval = validateFullName(form.fullName);
     if (!nameEval.valid) {
       setError(nameEval.msg);
@@ -175,16 +175,42 @@ export default function QuestionnairePage() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error("Erro ao enviar questionário:", err);
-      setError("Houve um erro ao registrar sua participação. Tente novamente.");
+      setError(err.message || "Houve um erro ao registrar sua participação. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
+  const isSmallScreen = window.innerWidth < 600;
+
+  if (alreadyParticipated) {
+    return (
+      <div className="page" style={{ 
+        textAlign: 'center', 
+        padding: isSmallScreen ? '60px 20px' : '100px 20px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ maxWidth: '600px' }}>
+          <div style={{ fontSize: '5rem', marginBottom: '24px', filter: 'drop-shadow(0 0 15px var(--accent))' }}>🛡️</div>
+          <h1 style={{ fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: '16px', letterSpacing: '-1px' }}>ACESSO RESTRITO</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: '1.6', marginBottom: '40px', margin: '0 auto 40px' }}>
+            Este dispositivo já concluiu a participação oficial. 
+            Não é permitido votar ou responder ao questionário mais de uma vez para preservar a integridade dos dados.
+          </p>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/dashboard" className="btn btn-primary" style={{ padding: '14px 30px' }}>Acessar Dashboard</Link>
+            <Link to="/" className="btn btn-ghost" style={{ padding: '14px 30px' }}>Voltar ao Início</Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', paddingBottom: '100px' }}>
       
-      {/* Overlay de Sucesso Premium */}
       <AnimatePresence>
         {success && (
           <motion.div 
@@ -212,7 +238,6 @@ export default function QuestionnairePage() {
 
       <div style={{ maxWidth: '850px', margin: '0 auto', padding: '60px 24px', position: 'relative', zIndex: 1 }}>
         
-        {/* Header */}
         <motion.div initial="hidden" animate="visible" variants={fUp} style={{ textAlign: 'center', marginBottom: '60px' }}>
           <motion.div 
             style={{ width: '60px', height: '4px', background: 'var(--grad-primary)', borderRadius: '2px', margin: '0 auto 20px' }}
@@ -232,7 +257,6 @@ export default function QuestionnairePage() {
           </motion.div>
         )}
 
-        {/* ─── IDENTIFICAÇÃO ─────────────────────────────────── */}
         <div ref={identSectionRef}>
           <QuestionCard num={0} title="Identidade Profissional" delay="delay-1">
             <div style={{ display: 'grid', gap: '24px' }}>
@@ -286,10 +310,10 @@ export default function QuestionnairePage() {
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                       style={{
                         position: 'absolute', top: '100%', left: 0, right: 0,
-                        zIndex: 100, background: '#0d0d12', // Cor 100% sólida
-                        border: '2px solid var(--accent)', // Borda reforçada para destaque
+                        zIndex: 100, background: '#0d0d12',
+                        border: '2px solid var(--accent)',
                         borderRadius: '16px', marginTop: '8px', maxHeight: '250px', overflowY: 'auto',
-                        boxShadow: '0 20px 60px rgba(0,0,0,1)' // Sombra máxima
+                        boxShadow: '0 20px 60px rgba(0,0,0,1)'
                       }}
                     >
                       {COURSES.filter(c => c !== 'Outro (Digitar)')
@@ -341,12 +365,10 @@ export default function QuestionnairePage() {
           </QuestionCard>
         </div>
 
-        {/* ─── PERGUNTAS CONDICIONAIS ────────────────────────────────────── */}
         <div style={{ display: 'grid', gap: '24px' }}>
           {selectedIAs.includes('none') ? (
             <>
               <QuestionCard num={1} title="Motivo do Não Uso" delay="delay-2">
-                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 opções que melhor descrevem sua escolha.</p>
                 <OptionGrid
                   options={['Privacidade', 'Falta de Necessidade', 'Incerteza/Erros', 'Complexidade', 'Tradição', 'Custo']}
                   selected={form.whyNot || []}
@@ -357,7 +379,6 @@ export default function QuestionnairePage() {
                 />
               </QuestionCard>
               <QuestionCard num={2} title="Fontes Alternativas" delay="delay-2">
-                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 opções de busca de informação.</p>
                 <OptionGrid
                   options={['Google', 'Livros', 'Cursos', 'Mentores', 'Colegas', 'Própria Base']}
                   selected={form.alts || []}
@@ -379,7 +400,6 @@ export default function QuestionnairePage() {
           ) : (
             <>
               <QuestionCard num={1} title="Contexto de Utilização" delay="delay-2">
-                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 ambientes ou escolha 'Todas as alternativas'.</p>
                 <OptionGrid
                   options={WHERE_OPTIONS}
                   selected={form.whereUseAi}
@@ -388,7 +408,6 @@ export default function QuestionnairePage() {
               </QuestionCard>
 
               <QuestionCard num={2} title="Motivação Principal" delay="delay-2">
-                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 opções ou escolha 'Todas as alternativas'.</p>
                 <OptionGrid
                   options={WHY_OPTIONS}
                   selected={form.whyUseAi}
@@ -397,7 +416,6 @@ export default function QuestionnairePage() {
               </QuestionCard>
 
               <QuestionCard num={3} title="Método de Interação" delay="delay-3">
-                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 opções ou escolha 'Todas as alternativas'.</p>
                 <OptionGrid
                   options={HOW_OPTIONS}
                   selected={form.howUseAi}
@@ -463,7 +481,6 @@ export default function QuestionnairePage() {
           </QuestionCard>
         </div>
 
-        {/* Finalize CTA */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }} style={{ marginTop: '40px' }}>
           <button
             className="btn btn-primary btn-full"
@@ -491,8 +508,6 @@ export default function QuestionnairePage() {
     </div>
   );
 }
-
-/* ─── SUB-COMPONENTES ─────────────────────────────────────────────── */
 
 function QuestionCard({ num, title, children, delay = '' }) {
   return (

@@ -428,13 +428,15 @@ export default function DashboardPage() {
   }), []);
 
   const whereDonut = useMemo(() => {
-    const colors = ['#d946ef', '#9333ea', '#6b21a8', '#3b0764', '#0f172a', '#020617'];
     return {
       labels: Object.keys(data?.whereUseAi || {}),
       datasets: [{
         data: Object.values(data?.whereUseAi || {}),
-        backgroundColor: colors, 
-        borderWidth: 0,
+        backgroundColor: PALETTE, 
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 2,
+        hoverBorderColor: '#fff',
+        hoverBorderWidth: 4,
         hoverOffset: 12
       }]
     };

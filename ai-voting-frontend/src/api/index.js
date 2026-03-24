@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { hasInappropriateContent } from '../utils/moderation';
+import { getFingerprint, getPersistentSessionId, markAsVotedLocally } from '../utils/security';
 
 /**
  * Camada de API - Versão Supabase (Safe Mode)
@@ -590,6 +591,22 @@ export const participationAPI = {
                       user?.email === 'vitor@vfonseca.com' ||
                       user?.user_metadata?.role === 'ROLE_ADMIN';
       
+      const fingerprint = getFingerprint();
+      const sessionId = getPersistentSessionId();
+
+      // BLOQUEIO ANTIFRAUDE (ELITE 4.5)
+      if (!isAdmin) {
+          const { data: existing } = await supabase
+            .from('users')
+            .select('id')
+            .or(`fingerprint.eq.${fingerprint},session_id.eq.${sessionId}`)
+            .limit(1);
+
+          if (existing && existing.length > 0) {
+              throw new Error("Este dispositivo já participou da votação. Obrigado por sua contribuição!");
+          }
+      }
+      
       let targetUserId = user?.id;
 
       // SEPARAÇÃO CRÍTICA DO ADMIN
@@ -651,7 +668,9 @@ export const participationAPI = {
         institution: institution || user?.user_metadata?.institution,
         instagram: instagram || user?.user_metadata?.instagram,
         email: isAdmin ? `test_vote_${targetUserId}@aivote.com` : (user?.email || `anon_${targetUserId}@aivote.com`),
-        role: 'ROLE_USER'
+        role: 'ROLE_USER',
+        fingerprint,
+        session_id: sessionId
       });
 
       if (userError) throw new Error("Erro ao registrar participante: " + userError.message);
@@ -662,6 +681,9 @@ export const participationAPI = {
         questionnaireAPI.submit(questData, null, targetUserId)
       ]);
       
+      // Marca localmente como votado
+      if (!isAdmin) markAsVotedLocally();
+
       return { data: { success: true } };
     } catch (err) {
       console.error("ERRO CRÍTICO NA SUBMISSÃO:", err);

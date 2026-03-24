@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { votesAPI } from '../api';
 import AIIcon from '../components/AIIcon.jsx';
+import { checkLocalVoteStatus, getFingerprint, getPersistentSessionId } from '../utils/security';
 
 const AI_OPTIONS = [
   { id: 'chatgpt', name: 'ChatGPT',   color: '#10a37f' },
@@ -31,13 +32,31 @@ export default function VotePage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [checkLoading, setCheckLoading] = useState(true);
   const [hasVoted, setHasVoted] = useState(false);
+  const [alreadyParticipated, setAlreadyParticipated] = useState(false);
   const [myVotes, setMyVotes] = useState([]);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  // Verifica se o usuário já votou no banco de dados
+  // Monitora redimensionamento
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isSmallScreen = windowWidth < 600;
+
+  // Verifica se o usuário já votou no banco de dados (COM BLOQUEIO ANTIFRAUDE ELITE 4.5)
   useEffect(() => {
     const checkStatus = async () => {
+      // 1. Verificação Local (Rápida)
+      if (checkLocalVoteStatus()) {
+        setAlreadyParticipated(true);
+        setCheckLoading(false);
+        return;
+      }
+
       try {
         const { data } = await votesAPI.checkStatus();
         if (data.hasVoted) {
@@ -110,6 +129,35 @@ export default function VotePage() {
       </div>
     );
   }
+
+  // TELA DE BLOQUEIO ANTIFRAUDE
+  if (alreadyParticipated) {
+    return (
+      <div className="page" style={{ 
+        textAlign: 'center', 
+        padding: isSmallScreen ? '60px 20px' : '100px 20px',
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} style={{ maxWidth: '600px' }}>
+          <div style={{ fontSize: '5rem', marginBottom: '24px', filter: 'drop-shadow(0 0 15px var(--accent))' }}>🛡️</div>
+          <h1 style={{ fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: '16px', letterSpacing: '-1px' }}>MISSÃO CUMPRIDA!</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: '1.6', marginBottom: '40px' }}>
+            Este dispositivo já participou da votação de elite. 
+            Agradecemos por ajudar a moldar o ecossistema de Inteligência Artificial!
+          </p>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/dashboard" className="btn btn-primary" style={{ padding: '14px 30px' }}>Ver Resultados Ao Vivo</Link>
+            <Link to="/" className="btn btn-ghost">Voltar ao Início</Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+
+  // Renderização final (sem o bloqueio ou após passar por ele)
 
   return (
     <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', paddingBottom: '80px' }}>
