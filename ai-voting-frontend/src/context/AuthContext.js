@@ -43,6 +43,7 @@ export function AuthProvider({ children }) {
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'ROLE_ADMIN' || 
                    user?.email === 'admin@aivoting.com' || 
+                   user?.email === 'vitor@vfonseca.com' || 
                    user?.email === 'v.fonseca062@gmail.com' ||
                    user?.user_metadata?.role === 'ROLE_ADMIN';
 

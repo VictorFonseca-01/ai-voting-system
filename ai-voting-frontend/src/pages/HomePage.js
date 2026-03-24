@@ -102,9 +102,9 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div className="btn-group desktop-only" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div className="btn-group hero-cta-group" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '32px' }}>
               <Link to="/vote" className="btn btn-primary" style={{ padding: '16px 32px', fontSize: '1.1rem' }}>🗳️ Votar agora</Link>
-              <Link to="/dashboard" className="btn btn-ghost">📊 Ver Dashboard</Link>
+              <Link to="/dashboard" className="btn btn-ghost" style={{ padding: '16px 32px' }}>📊 Ver Dashboard</Link>
             </div>
           </div>
 
@@ -252,13 +252,7 @@ export default function HomePage() {
         </div>
       </section>
       
-      {/* ─── MOBILE CALL-TO-ACTION (Bottom) ─────────────────────────── */}
-      <section className="mobile-only" style={{ padding: '0 24px 80px', marginTop: '-20px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px', margin: '0 auto' }}>
-          <Link to="/vote" className="btn btn-primary btn-full" style={{ padding: '18px' }}>🗳️ Votar agora</Link>
-          <Link to="/dashboard" className="btn btn-ghost btn-full" style={{ padding: '16px' }}>📊 Ver Dashboard</Link>
-        </div>
-      </section>
+      {/* MOBILE CALL-TO-ACTION removido para evitar redundância (CTAs agora no Hero) */}
 
     </div>
   );

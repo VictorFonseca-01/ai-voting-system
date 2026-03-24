@@ -87,7 +87,8 @@ export const authAPI = {
   login: async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    return { data: { ...data.user, ...data.user.user_metadata } };
+    // Retorna o usuário diretamente com metadados mesclados (sem o wrapper {data: ...})
+    return { ...data.user, ...data.user.user_metadata };
   },
 
   logout: async () => {
