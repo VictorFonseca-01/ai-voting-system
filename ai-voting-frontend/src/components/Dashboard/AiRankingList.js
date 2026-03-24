@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import AIIcon from '../AIIcon';
+import AIIcon from '../AIIcon.jsx';
 
 const fUp = {
   hidden: { opacity: 0, y: 20 },

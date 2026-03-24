@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { votesAPI } from '../api';
-import AIIcon from '../components/AIIcon';
+import AIIcon from '../components/AIIcon.jsx';
 
 const AI_OPTIONS = [
   { id: 'chatgpt', name: 'ChatGPT',   emoji: '🤖',   color: '#10a37f' },

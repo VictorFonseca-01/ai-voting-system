@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import AIIcon from '../components/AIIcon';
+import AIIcon from '../components/AIIcon.jsx';
 
 const SYSTEM_URL = window.location.origin;
 

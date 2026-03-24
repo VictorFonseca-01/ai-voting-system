@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { toPng } from 'html-to-image';
 import { generateAIVotePresentation } from '../services/pptxService';
 import { useRef } from 'react';
-import AIIcon from '../components/AIIcon';
+import AIIcon from '../components/AIIcon.jsx';
 
 
 
@@ -296,6 +296,20 @@ export default function DashboardPage() {
   const useForStudy   = data?.useForStudy    || 0;
   const useForWork    = data?.useForWork     || 0;
   const recentVotes   = data?.recentVotes    || [];
+  
+  const groupedRecentVotes = useMemo(() => {
+    const groups = {};
+    recentVotes.forEach(v => {
+      if (!groups[v.userName]) {
+        groups[v.userName] = { ...v, aiNames: [v.aiName] };
+      } else {
+        if (!groups[v.userName].aiNames.includes(v.aiName)) {
+          groups[v.userName].aiNames.push(v.aiName);
+        }
+      }
+    });
+    return Object.values(groups).slice(0, 5);
+  }, [recentVotes]);
 
   const lineB = useMemo(() => {
     const metricValues = [totalVotes, totalResponses, useForStudy, useForWork, ...aiRanking.map(a=>a[1])].filter(v => v > 0);
@@ -830,13 +844,24 @@ export default function DashboardPage() {
             <span style={{ width: '4px', height: '16px', background: 'var(--accent)', borderRadius: '2px' }} />
             Atividade Recente
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {recentVotes.slice(0, 5).map((v, i) => (
-              <div key={i} style={{ display: 'flex', gap: '10px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                <span style={{ color: 'var(--accent)' }}>●</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <AIIcon name={v.aiName} size={16} />
-                  <span><strong>{v.userName}</strong> votou em <strong>{v.aiName}</strong></span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {groupedRecentVotes.map((v, i) => (
+              <div key={i} style={{ display: 'flex', gap: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <span style={{ color: 'var(--accent)', marginTop: '4px' }}>●</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {v.aiNames.map(name => <AIIcon key={name} name={name} size={16} />)}
+                  </div>
+                  <span>
+                    <Link 
+                      to={`/admin/users?search=${encodeURIComponent(v.userName)}`}
+                      style={{ color: '#fff', textDecoration: 'none', fontWeight: 800, borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+                      onMouseEnter={(e) => e.target.style.color = 'var(--accent)'}
+                      onMouseLeave={(e) => e.target.style.color = '#fff'}
+                    >
+                      {v.userName}
+                    </Link> votou em: <strong>{v.aiNames.join(' e ')}</strong>
+                  </span>
                 </div>
               </div>
             ))}

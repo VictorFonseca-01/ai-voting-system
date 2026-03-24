@@ -60,6 +60,15 @@ export default function AdminUsersPage() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+  
+  // --- SYNC WITH URL SEARCH ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get('search');
+    if (searchParam) {
+      setSearch(searchParam);
+    }
+  }, []);
 
   // --- HANDLERS: QUERY ---
   const handleSort = (column) => {
