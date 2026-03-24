@@ -266,6 +266,7 @@ export default function AdminUsersPage() {
           <table className="saas-table">
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>#</th>
                 <th style={{ width: '40px' }}>
                   <input type="checkbox" checked={selectedIds.size === users.length && users.length > 0} onChange={toggleSelectAll} />
                 </th>
@@ -282,11 +283,14 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px 0' }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
+                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '100px 0' }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>Nenhum usuário encontrado com estes critérios.</td></tr>
-              ) : users.map(u => (
+                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>Nenhum usuário encontrado com estes critérios.</td></tr>
+              ) : users.map((u, index) => (
                 <tr key={u.id} className={selectedIds.has(u.id) ? 'row-selected' : ''}>
+                  <td style={{ color: 'var(--text-dim)', fontSize: '0.8rem', fontWeight: 700 }}>
+                    {(page - 1) * pageSize + index + 1}
+                  </td>
                   <td>
                     <input type="checkbox" checked={selectedIds.has(u.id)} onChange={() => toggleSelectUser(u.id)} />
                   </td>
