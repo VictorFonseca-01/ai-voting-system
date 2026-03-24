@@ -305,7 +305,9 @@ export default function AdminUsersPage() {
                         {u.role === 'ROLE_ADMIN' && <span className="badge badge-accent" style={{ fontSize: '0.6rem' }}>ADMIN</span>}
                       </div>
                     )}
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {u.email && !u.email.includes('guest_') && !u.email.includes('test_') && !u.email.includes('anon_') ? u.email : ''}
+                    </div>
                   </td>
                   <td className="hide-mobile">
                     {editingId === u.id ? (
