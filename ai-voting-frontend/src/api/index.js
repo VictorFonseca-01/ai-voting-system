@@ -21,8 +21,15 @@ const AI_CANONICAL_MAP = {
 
 const normalizeAiName = (name) => {
   if (!name) return 'Indefinido';
-  const slug = name.toLowerCase().trim();
-  return AI_CANONICAL_MAP[slug] || (name.charAt(0).toUpperCase() + name.slice(1));
+  const clean = name.replace(/[\[\]"]/g, '').trim();
+  const slug = clean.toLowerCase();
+  return AI_CANONICAL_MAP[slug] || (clean.charAt(0).toUpperCase() + clean.slice(1));
+};
+
+const cleanLabel = (str) => {
+  if (!str) return '';
+  // Remove colchetes e aspas JSON
+  return str.replace(/[\[\]"]/g, '').trim();
 };
 
 // ─── SEGURANÇA E AMBIENTE ─────────────────────────────────────────────
@@ -149,12 +156,12 @@ export const questionnaireAPI = {
     
     const payload = {
       user_id: targetId,
-      where_use_ai: formData.whereUseAi,
-      why_use_ai: formData.whyUseAi,
-      how_use_ai: formData.howUseAi,
+      where_use_ai: Array.isArray(formData.whereUseAi) ? formData.whereUseAi.join(', ') : (formData.whereUseAi || ''),
+      why_use_ai: Array.isArray(formData.whyUseAi) ? formData.whyUseAi.join(', ') : (formData.whyUseAi || ''),
+      how_use_ai: Array.isArray(formData.howUseAi) ? formData.howUseAi.join(', ') : (formData.howUseAi || ''),
       use_for_study: formData.useAiStudy || formData.useForStudy,
       use_for_work: formData.useAiWork || formData.useForWork,
-      work_area: formData.workArea,
+      work_area: cleanLabel(formData.workArea),
       work_area_other: formData.workAreaOther,
       answered_at: new Date().toISOString()
     };
@@ -217,19 +224,21 @@ export const dashboardAPI = {
     const useForStudy = responses.filter(r => r.use_for_study === true).length;
     const useForWork = responses.filter(r => r.use_for_work === true).length;
 
-    // 4. Área de Atuação
+    // 4. Área de Atuação (Sanitizada)
     const workAreas = responses.reduce((acc, r) => {
-      let area = r.work_area || 'Outros';
-      if (area === 'undefined' || area === 'null') area = 'Outros';
+      let area = cleanLabel(r.work_area) || 'Outros';
+      if (area === 'undefined' || area === 'null' || !area) area = 'Outros';
       acc[area] = (acc[area] || 0) + 1;
       return acc;
     }, {});
 
-    // 5. Onde Usam IA
+    // 5. Onde Usam IA (Sanitizada)
     const whereUseAi = responses.reduce((acc, r) => {
-      const locations = (r.where_use_ai || '').split(',')
-        .map(l => l.trim())
+      const raw = r.where_use_ai || '';
+      const locations = raw.split(',')
+        .map(l => cleanLabel(l))
         .filter(l => l && l !== 'undefined' && l !== 'null');
+      
       locations.forEach(l => {
         acc[l] = (acc[l] || 0) + 1;
       });
@@ -491,7 +500,7 @@ export const adminAPI = {
     const userMap = users.reduce((acc, u) => ({ ...acc, [u.id]: u }), {});
     const respMap = responses.reduce((acc, r) => ({ ...acc, [r.user_id]: r }), {});
 
-    // Agrupamento por IA (Normalizado)
+    // Agrupamento por IA (Normalizado e Limpo)
     const aiGroups = votes.reduce((acc, v) => {
       const name = normalizeAiName(v.ai_name);
       if (!acc[name]) acc[name] = { aiName: name, votes: [] };
@@ -503,9 +512,9 @@ export const adminAPI = {
       const groupUsers = group.votes.map(v => userMap[v.user_id]).filter(Boolean);
       const groupResponses = group.votes.map(v => respMap[v.user_id]).filter(Boolean);
 
-      // Top Áreas (Frequência)
+      // Top Áreas (Frequência Sanitizada)
       const areas = groupResponses.reduce((acc, r) => {
-        const a = r.work_area || 'Outros';
+        const a = cleanLabel(r.work_area) || 'Outros';
         acc[a] = (acc[a] || 0) + 1;
         return acc;
       }, {});
