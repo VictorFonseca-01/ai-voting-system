@@ -583,8 +583,8 @@ function BooleanToggle({ value, onChange }) {
           style={{
             flex: 1, padding: '20px',
             background: value === val
-              ? (val ? 'rgba(16, 185, 129, 0.2) !important' : 'rgba(239, 68, 68, 0.2) !important')
-              : 'rgba(255, 255, 255, 0.03) !important',
+              ? (val ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)')
+              : 'rgba(255, 255, 255, 0.03)',
             border: `1px solid ${value === val
               ? (val ? '#10b981' : '#ef4444')
               : 'rgba(255,255,255,0.08)'}`,
@@ -595,7 +595,7 @@ function BooleanToggle({ value, onChange }) {
             fontWeight: 700,
             transition: 'all 0.2s',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-            boxShadow: 'none !important'
+            boxShadow: 'none'
           }}
         >
           <span style={{ fontSize: '1.5rem', marginBottom: '4px' }}>{icon}</span>
