@@ -263,7 +263,7 @@ export default function AdminUsersPage() {
 
         {/* --- TABLE --- */}
         <div className="saas-table-container" style={{ overflowX: 'auto', minHeight: '300px' }}>
-          <table className="saas-table">
+          <table className="saas-table-flat">
             <thead>
               <tr>
                 <th style={{ width: '40px' }}>#</th>
@@ -382,11 +382,11 @@ export default function AdminUsersPage() {
       
       {/* Estilos Inline SaaS */}
       <style>{`
-        .saas-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: transparent; }
-        .saas-table th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05); text-align: left; background: transparent; }
-        .saas-table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: transparent; }
-        .saas-table tr { background: transparent; }
-        .saas-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .saas-table-flat { width: 100%; border-collapse: collapse !important; border-spacing: 0 !important; margin-top: 10px; background: transparent; }
+        .saas-table-flat th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05); text-align: left; background: transparent; }
+        .saas-table-flat td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01) !important; }
+        .saas-table-flat tr { background: transparent !important; }
+        .saas-table-flat tr:hover td { background: rgba(255,255,255,0.03) !important; }
         .row-selected td { background: rgba(217, 70, 239, 0.05) !important; }
         .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 6px; transition: 0.2s; }
         .btn-icon:hover { background: rgba(255,255,255,0.1); }
