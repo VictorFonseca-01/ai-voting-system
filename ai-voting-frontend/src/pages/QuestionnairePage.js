@@ -346,6 +346,7 @@ export default function QuestionnairePage() {
           {selectedIAs.includes('none') ? (
             <>
               <QuestionCard num={1} title="Motivo do Não Uso" delay="delay-2">
+                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 opções que melhor descrevem sua escolha.</p>
                 <OptionGrid
                   options={['Privacidade', 'Falta de Necessidade', 'Incerteza/Erros', 'Complexidade', 'Tradição', 'Custo']}
                   selected={form.whyNot || []}
@@ -356,6 +357,7 @@ export default function QuestionnairePage() {
                 />
               </QuestionCard>
               <QuestionCard num={2} title="Fontes Alternativas" delay="delay-2">
+                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 opções de busca de informação.</p>
                 <OptionGrid
                   options={['Google', 'Livros', 'Cursos', 'Mentores', 'Colegas', 'Própria Base']}
                   selected={form.alts || []}
@@ -377,7 +379,7 @@ export default function QuestionnairePage() {
           ) : (
             <>
               <QuestionCard num={1} title="Contexto de Utilização" delay="delay-2">
-                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 ambientes onde a IA é indispensável para você.</p>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 ambientes ou escolha 'Todas as alternativas'.</p>
                 <OptionGrid
                   options={WHERE_OPTIONS}
                   selected={form.whereUseAi}
@@ -386,6 +388,7 @@ export default function QuestionnairePage() {
               </QuestionCard>
 
               <QuestionCard num={2} title="Motivação Principal" delay="delay-2">
+                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 opções ou escolha 'Todas as alternativas'.</p>
                 <OptionGrid
                   options={WHY_OPTIONS}
                   selected={form.whyUseAi}
@@ -394,6 +397,7 @@ export default function QuestionnairePage() {
               </QuestionCard>
 
               <QuestionCard num={3} title="Método de Interação" delay="delay-3">
+                <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.9rem' }}>Selecione até 2 opções ou escolha 'Todas as alternativas'.</p>
                 <OptionGrid
                   options={HOW_OPTIONS}
                   selected={form.howUseAi}
