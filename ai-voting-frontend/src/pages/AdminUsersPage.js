@@ -309,9 +309,9 @@ export default function AdminUsersPage() {
                         {u.role === 'ROLE_ADMIN' && <span className="badge badge-accent" style={{ fontSize: '0.6rem' }}>ADMIN</span>}
                       </div>
                     )}
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {u.email && !u.email.includes('guest_') && !u.email.includes('test_') && !u.email.includes('anon_') ? u.email : ''}
-                    </div>
+                    {u.email && !u.email.includes('guest_') && !u.email.includes('test_') && !u.email.includes('anon_') && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{u.email}</div>
+                    )}
                   </td>
                   <td className="hide-mobile">
                     {editingId === u.id ? (
@@ -382,9 +382,10 @@ export default function AdminUsersPage() {
       
       {/* Estilos Inline SaaS */}
       <style>{`
-        .saas-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .saas-table th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05); text-align: left; }
+        .saas-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: transparent; }
+        .saas-table th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05); text-align: left; background: transparent; }
         .saas-table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: transparent; }
+        .saas-table tr { background: transparent; }
         .saas-table tr:hover td { background: rgba(255,255,255,0.02); }
         .row-selected td { background: rgba(217, 70, 239, 0.05) !important; }
         .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 6px; transition: 0.2s; }
