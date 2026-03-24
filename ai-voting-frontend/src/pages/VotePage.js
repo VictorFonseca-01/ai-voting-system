@@ -189,7 +189,7 @@ export default function VotePage() {
                   margin: '0 auto 40px', 
                   fontWeight: 500 
                 }}>
-                  Escolha **até 2 IAs** que você mais utiliza no seu dia a dia.
+                  Escolha <strong style={{ color: 'var(--accent-light)' }}>até 2 IAs</strong> que você mais utiliza no seu dia a dia.
                 </p>
         </motion.div>
 
