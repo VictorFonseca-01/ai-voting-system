@@ -34,7 +34,8 @@ ChartJS.register(ArcElement, BarElement, PointElement, LineElement, CategoryScal
 
 // Paleta de cores para os gráficos
 // Paleta de cores vibrantes e modernas
-const PALETTE = ['#6366f1', '#10b981', '#f43f5e', '#fbbf24', '#06b6d4', '#8b5cf6', '#d946ef'];
+// Paleta de cores vibrantes centrada no DNA do site (Roxo -> Azul)
+const PALETTE = ['#a855f7', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#06b6d4', '#00f0ff'];
 
 // Variantes de animação para Framer Motion
 const fUp = {
