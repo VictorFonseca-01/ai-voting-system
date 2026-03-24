@@ -382,13 +382,11 @@ export default function AdminUsersPage() {
       
       {/* Estilos Inline SaaS */}
       <style>{`
-        .saas-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        .saas-table th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
-        .saas-table td { padding: 16px; background: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .saas-table td:first-child { border-left: 1px solid rgba(255,255,255,0.05); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-        .saas-table td:last-child { border-right: 1px solid rgba(255,255,255,0.05); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-        .saas-table tr:hover td { background: rgba(255,255,255,0.04); }
-        .row-selected td { background: rgba(217, 70, 239, 0.05) !important; border-color: rgba(217, 70, 239, 0.2) !important; }
+        .saas-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .saas-table th { padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid rgba(255,255,255,0.05); text-align: left; }
+        .saas-table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: transparent; }
+        .saas-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .row-selected td { background: rgba(217, 70, 239, 0.05) !important; }
         .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 6px; transition: 0.2s; }
         .btn-icon:hover { background: rgba(255,255,255,0.1); }
         .btn-icon-danger:hover { background: rgba(255, 77, 109, 0.2); }
