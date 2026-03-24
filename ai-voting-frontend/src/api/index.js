@@ -263,7 +263,7 @@ export const dashboardAPI = {
     const recentVotes = votes.slice(0, 10).map(v => {
       const userData = userMap[v.user_id] || { name: 'Participante', course: 'Visitante' };
       return {
-        id: v.id, // Necessário para o lastSeenId da Navbar
+        id: v.id, 
         userName: userData.name,
         userCourse: userData.course,
         aiName: normalizeAiName(v.ai_name),
@@ -271,14 +271,43 @@ export const dashboardAPI = {
       };
     });
 
+    // 7. Métricas Temporais (ELITE 4.4)
+    const now = new Date();
+    const ms24h = 24 * 60 * 60 * 1000;
+    const votesLast24h = votes.filter(v => (now - new Date(v.voted_at)) < ms24h).length;
+    const votesPrevious24h = votes.filter(v => {
+      const diff = now - new Date(v.voted_at);
+      return diff >= ms24h && diff < (ms24h * 2);
+    }).length;
+
+    // Cálculo Sparkline (Últimos 7 dias)
+    const dailyCounts = Array.from({ length: 7 }).map((_, i) => {
+      const targetDate = new Date(now - (i * ms24h));
+      return votes.filter(v => {
+        const d = new Date(v.voted_at);
+        return d.toDateString() === targetDate.toDateString();
+      }).length;
+    }).reverse();
+
+    // Lógica Trend
+    let vTrend = '+0.0%';
+    if (votesPrevious24h > 0) {
+      vTrend = (((votesLast24h - votesPrevious24h) / votesPrevious24h) * 100).toFixed(1) + "%";
+      if (!vTrend.startsWith('-')) vTrend = '+' + vTrend;
+    } else if (votesLast24h > 0) {
+      vTrend = '+100%';
+    }
+
     // Normaliza dados para o frontend (camelCase)
     return {
       data: {
-        totalVotes: totalRawVotes, // Volume bruto (ex: 18)
-        totalUniqueVoters,       // Participantes únicos (ex: 9)
+        totalVotes: totalRawVotes, 
+        totalUniqueVoters,       
         totalResponses: responseCounts.total,
         useForStudy: responseCounts.study,
         useForWork: responseCounts.work,
+        votesTrend: vTrend,
+        dailyVotes: dailyCounts,
         votesByAi,
         whereUseAi,
         workAreas,

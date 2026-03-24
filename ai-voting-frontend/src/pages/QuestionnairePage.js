@@ -317,7 +317,7 @@ export default function QuestionnairePage() {
 
               <div className="grid-2" style={{ gap: '20px' }}>
                 <div>
-                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instituição</label>
+                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instituição (Opcional)</label>
                   <input
                     type="text" className="form-control"
                     placeholder="Faculdade/Empresa"
@@ -327,7 +327,7 @@ export default function QuestionnairePage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instagram</label>
+                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instagram (Opcional)</label>
                   <input
                     type="text" className="form-control"
                     placeholder="@seu.perfil"

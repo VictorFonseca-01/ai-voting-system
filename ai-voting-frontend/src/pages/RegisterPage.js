@@ -126,24 +126,24 @@ export default function RegisterPage() {
               />
             </div>
             <div className="form-group">
-              <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Instituição</label>
+              <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Instituição (Opcional)</label>
               <input
                 name="institution" type="text"
                 className="form-control"
                 placeholder="Facul/Empresa"
-                value={form.institution} onChange={handleChange} required
+                value={form.institution} onChange={handleChange}
                 style={{ background: 'transparent !important', padding: '14px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Instagram</label>
+            <label style={{ fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '8px', display: 'block' }}>Instagram (Opcional)</label>
             <input
               name="instagram" type="text"
               className="form-control"
               placeholder="@seu_usuario"
-              value={form.instagram} onChange={handleChange} required
+              value={form.instagram} onChange={handleChange}
               style={{ background: 'transparent !important', padding: '14px', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
             />
           </div>

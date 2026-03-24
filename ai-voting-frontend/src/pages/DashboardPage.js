@@ -149,9 +149,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchData();
-    // Atualiza a cada 30 segundos
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+    // Real-time Poll: Atualiza a cada 30s (ELITE 4.4)
+    const timer = setInterval(() => {
+      fetchData(true); // Ativa o isRefreshing para feedback visual
+    }, 30000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleResetData = () => {
@@ -296,7 +298,27 @@ export default function DashboardPage() {
   const useForStudy   = data?.useForStudy    || 0;
   const useForWork    = data?.useForWork     || 0;
   const recentVotes   = data?.recentVotes    || [];
-  
+
+  // --- LÓGICA DE DADOS REAIS (ELITE 4.4) ---
+  const completionRate = useMemo(() => {
+    if (totalParticipants === 0) return "0%";
+    return ((totalResponses / totalParticipants) * 100).toFixed(1) + "%";
+  }, [totalResponses, totalParticipants]);
+
+  const studyRatio = useMemo(() => {
+    if (totalResponses === 0) return "0%";
+    return ((useForStudy / totalResponses) * 100).toFixed(1) + "%";
+  }, [useForStudy, totalResponses]);
+
+  const workRatio = useMemo(() => {
+    if (totalResponses === 0) return "0%";
+    return ((useForWork / totalResponses) * 100).toFixed(1) + "%";
+  }, [useForWork, totalResponses]);
+
+  // Cálculo de Crescimento Reais (Puxado da API Elite 4.4)
+  const votesTrend = data?.votesTrend || "+0.0%";
+  const dailyVotes = data?.dailyVotes || [0, 0, 0, 0, 0, 0, 0];
+
   const groupedRecentVotes = useMemo(() => {
     const groups = {};
     recentVotes.forEach(v => {
@@ -312,15 +334,32 @@ export default function DashboardPage() {
   }, [recentVotes]);
 
   const lineB = useMemo(() => {
-    const metricValues = [totalVotes, totalResponses, useForStudy, useForWork, ...aiRanking.map(a=>a[1])].filter(v => v > 0);
-    const avgMetric = metricValues.length > 0 ? metricValues.reduce((a,b)=>a+b, 0) / metricValues.length : 5;
-    let currentB = avgMetric;
-    return Array.from({length: 30}).map((_, i) => {
-      const noise = metricValues[(i+2) % metricValues.length] || avgMetric;
-      currentB += (Math.random() * (noise/2)) - (noise/4); 
-      return Math.max(0, currentB + (i * 0.8));
-    });
-  }, [totalVotes, totalResponses, useForStudy, useForWork, aiRanking]);
+    if (!data?.recentVotes || totalVotes === 0) return Array(30).fill(0);
+    
+    // ELITE 4.4: Gráfico Real de Crescimento Acumulado (Temporal)
+    // Para simplificar e ser 100% preciso com o que temos na API:
+    // Se não temos a lista completa bruta na API ainda, usamos a tendência histórica.
+    // Como a API retorna 10 recentes, mas queremos a curva de TODO o histórico (totalVotes):
+    // Vamos usar os dailyVotes (7 dias) expandidos para 30 pontos se necessário, 
+    // ou manter a lógica de crescimento orgânico.
+    
+    const points = 30;
+    const history = data?.dailyVotes || [0, 0, 0, 0, 0, 0, totalVotes];
+    const totalDays = history.length;
+    
+    // Interpolação simples para 30 pontos baseada nos 7 dias reais
+    let cumulative = 0;
+    const result = [];
+    for (let i = 0; i < points; i++) {
+        const historyIdx = Math.floor((i / points) * totalDays);
+        const dayValue = history[historyIdx] || 0;
+        cumulative += (dayValue / (points / totalDays));
+        result.push(Math.min(totalVotes, cumulative));
+    }
+    // Garante que o último ponto é o total exato
+    result[points - 1] = totalVotes;
+    return result;
+  }, [totalVotes, data?.dailyVotes]);
 
   const totalChartData = useMemo(() => ({
     labels: Array.from({length: 30}).map((_, i) => i.toString()),
@@ -739,9 +778,21 @@ export default function DashboardPage() {
              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '1px' }}>
                Visão Geral de Análise
              </p>
-             <span style={{ fontSize: '0.65rem', color: isRefreshing ? '#fbbf24' : '#10b981', fontWeight: 800 }}>
-               • {isRefreshing ? 'SINCRONIZANDO' : `ÚLTIMA ATUALIZAÇÃO: ${lastUpdated.toLocaleTimeString()}`}
-             </span>
+             <div style={{ 
+               display: 'flex', alignItems: 'center', gap: '6px', 
+               background: isRefreshing ? 'rgba(251, 191, 36, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+               padding: '2px 8px', borderRadius: '99px',
+               border: `1px solid ${isRefreshing ? '#fbbf2444' : '#10b98144'}`
+             }}>
+               <motion.div 
+                 animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                 transition={{ duration: 2, repeat: Infinity }}
+                 style={{ width: '6px', height: '6px', borderRadius: '50%', background: isRefreshing ? '#fbbf24' : '#10b981' }}
+               />
+               <span style={{ fontSize: '0.65rem', color: isRefreshing ? '#fbbf24' : '#10b981', fontWeight: 800 }}>
+                 {isRefreshing ? 'SINCRONIZANDO' : `LIVE • ${lastUpdated.toLocaleTimeString()}`}
+               </span>
+             </div>
           </div>
         </div>
         
@@ -766,13 +817,14 @@ export default function DashboardPage() {
         gap: '16px', marginBottom: '32px' 
       }}>
         <StatCard 
-          value={totalVotes} label="Total de votos" delay={0.1} trend="+14.2%" 
+          value={totalVotes} label="Total de votos" delay={0.1} trend={votesTrend} 
           chartConfig={{
             type: 'line',
             data: {
-              labels: ['1', '2', '3', '4', '5'],
+              labels: ['7', '6', '5', '4', '3', '2', '1'],
               datasets: [{
-                data: [Math.max(0, totalVotes * 0.5), Math.max(0, totalVotes * 0.7), Math.max(0, totalVotes * 0.6), Math.max(0, totalVotes * 0.9), totalVotes],
+                // Real data points from last 7 days
+                data: dailyVotes,
                 borderColor: '#6366f1', borderWidth: 2, tension: 0.4, fill: true,
                 backgroundColor: 'rgba(99, 102, 241, 0.1)'
               }]
@@ -780,13 +832,13 @@ export default function DashboardPage() {
           }}
         />
         <StatCard 
-          value={totalResponses} label="Questionários" delay={0.2} trend="94.7%" 
+          value={totalResponses} label="Questionários" delay={0.2} trend={completionRate} 
           chartConfig={{
             type: 'donut',
             data: {
               labels: ['Respondidos', 'Pendentes'],
               datasets: [{
-                data: [totalResponses, Math.max(1, Math.floor(totalResponses * 0.053))],
+                data: [totalResponses, Math.max(0, totalParticipants - totalResponses)],
                 backgroundColor: ['#06b6d4', 'rgba(255,255,255,0.05)'],
                 borderWidth: 0,
               }]
@@ -794,13 +846,13 @@ export default function DashboardPage() {
           }}
         />
         <StatCard 
-          value={useForStudy} label="Usam para estudar" delay={0.3} trend="Educacional" 
+          value={useForStudy} label="Usam para estudar" delay={0.3} trend={studyRatio} 
           chartConfig={{
             type: 'donut',
             data: {
               labels: ['Estudo', 'Outros'],
               datasets: [{
-                data: [useForStudy, totalVotes > 0 ? Math.max(0, totalVotes - useForStudy) : 1],
+                data: [useForStudy, Math.max(0, totalResponses - useForStudy)],
                 backgroundColor: ['#10b981', 'rgba(255,255,255,0.05)'],
                 borderWidth: 0,
               }]
@@ -808,13 +860,13 @@ export default function DashboardPage() {
           }}
         />
         <StatCard 
-          value={useForWork} label="Usam para trabalho" delay={0.4} trend="Profissional" 
+          value={useForWork} label="Usam para trabalho" delay={0.4} trend={workRatio} 
           chartConfig={{
             type: 'donut',
             data: {
               labels: ['Trabalho', 'Outros'],
               datasets: [{
-                data: [useForWork, totalVotes > 0 ? Math.max(0, totalVotes - useForWork) : 1],
+                data: [useForWork, Math.max(0, totalResponses - useForWork)],
                 backgroundColor: ['#f43f5e', 'rgba(255,255,255,0.05)'],
                 borderWidth: 0,
               }]
