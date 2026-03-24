@@ -262,38 +262,114 @@ export const dashboardAPI = {
 
 // ─── ADMIN ────────────────────────────────────────────────────────────
 export const adminAPI = {
-  getUsers: async () => {
-    // Busca usuários e cruza com participação
-    const { data: users, error: uErr } = await supabase.from('users').select('*');
+  getUsers: async ({ page = 1, pageSize = 10, search = '', filters = {}, sort = { column: 'name', ascending: true } } = {}) => {
+    let query = supabase.from('users').select('*', { count: 'exact' });
+
+    // 1. Busca (Nome, Curso, Email)
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,course.ilike.%${search}%`);
+    }
+
+    // 2. Filtros
+    if (filters.role) {
+      query = query.eq('role', filters.role);
+    }
+    
+    // Filtros de Voto/Questionário exigem cruzamento ou flags na tabela users
+    // Para performance SaaS, o ideal é que essas flags existam na tabela 'users'
+    // Como o sistema atual as calcula dinamicamente, vamos manter a lógica de cruzamento 
+    // mas limitada aos usuários da página atual.
+
+    // 3. Ordenação
+    query = query.order(sort.column, { ascending: sort.ascending });
+
+    // 4. Paginação
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    query = query.range(from, to);
+
+    const { data: users, count, error: uErr } = await query;
     if (uErr) throw uErr;
 
+    // Busca status de participação apenas para os usuários retornados na página
+    const userIds = users.map(u => u.id);
     const [votesRes, responsesRes] = await Promise.all([
-      supabase.from('votes').select('user_id'),
-      supabase.from('question_responses').select('user_id')
+      supabase.from('votes').select('user_id').in('user_id', userIds),
+      supabase.from('question_responses').select('user_id').in('user_id', userIds)
     ]);
 
     const votedIds = new Set((votesRes.data || []).map(v => v.user_id));
     const answeredIds = new Set((responsesRes.data || []).map(r => r.user_id));
 
+    let finalData = users.map(u => ({
+      ...u,
+      hasVoted: votedIds.has(u.id),
+      hasAnswered: answeredIds.has(u.id),
+      role: (u.email === 'vitor@vfonseca.com' || u.email === 'admin@aivoting.com') ? 'ROLE_ADMIN' : u.role || 'ROLE_USER'
+    }));
+
+    // Filtro de participação (se aplicado)
+    if (filters.status) {
+      if (filters.status === 'voted') finalData = finalData.filter(u => u.hasVoted);
+      if (filters.status === 'not_voted') finalData = finalData.filter(u => !u.hasVoted);
+      if (filters.status === 'answered') finalData = finalData.filter(u => u.hasAnswered);
+      if (filters.status === 'not_answered') finalData = finalData.filter(u => !u.hasAnswered);
+    }
+
     return {
-      data: users.map(u => ({
-        ...u,
-        hasVoted: votedIds.has(u.id),
-        hasAnswered: answeredIds.has(u.id),
-        role: (u.email === 'vitor@vfonseca.com' || u.email === 'admin@aivoting.com') ? 'ROLE_ADMIN' : 'ROLE_USER'
-      }))
+      data: finalData,
+      totalCount: count
     };
   },
 
+  updateUser: async (userId, updateData) => {
+    // Proteção: Admin não pode ter nome/email alterado por aqui para preservar identidade
+    const { data: user } = await supabase.from('users').select('email, role').eq('id', userId).single();
+    
+    if (user?.email === 'vitor@vfonseca.com' || user?.email === 'admin@aivoting.com' || user?.role === 'ROLE_ADMIN') {
+      // Impede renomear admin, permite apenas outros campos se necessário (futuro)
+      delete updateData.name;
+      delete updateData.role;
+    }
+
+    const { data, error } = await supabase.from('users').update(updateData).eq('id', userId);
+    if (error) throw error;
+    return { data, success: true };
+  },
+
   deleteUser: async (userId) => {
-    // O backend Supabase via RLS ou exclusão em cascata deve cuidar disso
-    // Aqui fazemos manual para garantir
+    // Proteção: Não deletar admin
+    const { data: user } = await supabase.from('users').select('email, role').eq('id', userId).single();
+    if (user?.email === 'vitor@vfonseca.com' || user?.email === 'admin@aivoting.com' || user?.role === 'ROLE_ADMIN') {
+      throw new Error("O Administrador não pode ser excluído.");
+    }
+
     await Promise.all([
       supabase.from('votes').delete().eq('user_id', userId),
       supabase.from('question_responses').delete().eq('user_id', userId),
       supabase.from('users').delete().eq('id', userId)
     ]);
     return { data: { success: true } };
+  },
+
+  deleteUsers: async (userIds) => {
+    // Busca e filtra admins para segurança redundante
+    const { data: admins } = await supabase.from('users')
+      .select('id')
+      .or('email.eq.vitor@vfonseca.com,email.eq.admin@aivoting.com,role.eq.ROLE_ADMIN');
+    
+    const adminIds = new Set(admins?.map(a => a.id) || []);
+    const safeIds = userIds.filter(id => !adminIds.has(id));
+
+    if (safeIds.length === 0) return { success: true, count: 0 };
+
+    await Promise.all([
+      supabase.from('votes').delete().in('user_id', safeIds),
+      supabase.from('question_responses').delete().in('user_id', safeIds),
+      supabase.from('users').delete().in('id', safeIds)
+    ]);
+
+    return { data: { success: true }, count: safeIds.length };
   },
 
   resetData: async () => {
