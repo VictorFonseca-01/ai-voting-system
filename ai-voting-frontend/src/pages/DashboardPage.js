@@ -910,11 +910,16 @@ export default function DashboardPage() {
           onClick={() => setShowInstaModal(true)}
           className="btn btn-ghost" 
           style={{ 
-            borderRadius: '12px', padding: '12px 24px', border: '1px solid rgba(112,0,255,0.5)',
-            display: 'inline-flex', alignItems: 'center', gap: '10px'
+            borderRadius: '12px', padding: '10px 20px', border: '1px solid rgba(112,0,255,0.5)',
+            display: 'inline-flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem'
           }}
         >
-          📸 Instagram
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+          Instagram
         </button>
       </div>
 
