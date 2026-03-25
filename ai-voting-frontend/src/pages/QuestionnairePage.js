@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { participationAPI } from '../api';
+import { participationAPI, votesAPI } from '../api';
 import { checkLocalVoteStatus, getFingerprint, getPersistentSessionId } from '../utils/security';
 import { extractInstagramUsername, isValidInstagramFormat } from '../utils/socialUtils';
 
