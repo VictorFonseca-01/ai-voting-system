@@ -895,7 +895,7 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-        <AiRankingList chartRef={rankingRef} title="Ranking de Preferência" ranking={aiRanking.slice(0, 5)} palette={PALETTE} />
+        <AiRankingList chartRef={rankingRef} title="Ranking de Preferência" ranking={aiRanking} palette={PALETTE} />
         {/* Atividade Recente */}
         <div className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <h3 style={{ fontSize: '1rem', marginBottom: '24px', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '10px' }}>
