@@ -141,10 +141,12 @@ export default function AnalyticsPage() {
         {report
           .filter(q => {
             if (filterAi === 'Não utilizo IA') {
-              // Perguntas específicas para quem NÃO usa IA + Área de atuação
               return ['why_not', 'alts', 'interest', 'work_area'].includes(q.id);
+            } else if (filterAi === 'Todas') {
+              // Na visão global, mostra TUDO (Elite 6.0+)
+              return true;
             } else {
-              // Perguntas padrão para quem USA IA + Área de atuação
+              // Se for uma IA específica, mostra apenas perguntas de usuários + Área de atuação
               return ['where_use_ai', 'why_use_ai', 'how_use_ai', 'use_for_study', 'use_for_work', 'work_area'].includes(q.id);
             }
           })
@@ -152,7 +154,9 @@ export default function AnalyticsPage() {
           const isFiltered = filterAi !== 'Todas';
           let relevantData = isFiltered 
             ? q.options.find(o => o.ai === filterAi) 
-            : { answers: q.globalAnswers, total: q.totalResponses };
+            : { answers: q.globalAnswers.filter(a => a.count > 0), total: q.totalResponses };
+
+          if (!relevantData) relevantData = { answers: [], total: 0 };
 
           // Lógica de Busca específica para Área de Atuação
           const isWorkArea = q.id === 'work_area';
@@ -195,10 +199,17 @@ export default function AnalyticsPage() {
               }
             },
             scales: {
-              x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
+              x: { 
+                grid: { color: 'rgba(255,255,255,0.05)' }, 
+                ticks: { color: 'rgba(255,255,255,0.5)' },
+                beginAtZero: true,
+                suggestedMax: 10 // Estabiliza o visual se houverem poucos dados
+              },
               y: { grid: { display: false }, ticks: { color: '#fff', font: { weight: 600 } } }
             }
           };
+
+          const hasData = relevantData.answers.length > 0;
 
           return (
             <motion.div 
@@ -282,8 +293,15 @@ export default function AnalyticsPage() {
                 {isFiltered && !isWorkArea && <AIIcon name={filterAi} size={32} />}
               </div>
 
-              <div style={{ height: '300px' }}>
-                <Bar data={chartData} options={chartOptions} />
+              <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {hasData ? (
+                  <Bar data={chartData} options={chartOptions} />
+                ) : (
+                  <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '10px', opacity: 0.3 }}>📊</div>
+                    <p>Sem dados registrados para "{filterAi}" nesta pergunta.</p>
+                  </div>
+                )}
               </div>
 
               {/* Tabela de Respostas para melhor legibilidade */}

@@ -521,7 +521,8 @@ export default function DashboardPage() {
           padding: 8,
           callback: (value) => Number.isInteger(value) ? value : null
         },
-        beginAtZero: true
+        beginAtZero: true,
+        suggestedMax: 5 // Evita achatamento visual
       },
       x: {
         display: true,

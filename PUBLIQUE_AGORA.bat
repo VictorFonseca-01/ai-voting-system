@@ -1,7 +1,7 @@
 @echo off
-echo 🚀 Sync ELITE 6.0: Integridade Total (isComplete), Filtros Dashboard e Trava Anti-Edição...
+echo 🚀 Sync ELITE 6.0+: Elite Review, Smart Grouping (Other) & Data Perfection...
 git add .
-git commit -m "💎 Sync: Elite 6.0 FINAL (Data Integrity, isComplete Logic & Frontend Guards)"
+git commit -m "💎 Sync: Elite 6.0+ (Full Audit, Smart Grouping, Analytics Fixes & UI Cleanup)"
 git push origin HEAD --force
-echo 🚀 Sucesso! Verifique o Railway agora. Limpe o cache do navegador (Ctrl+Shift+R).
+echo 🚀 Sucesso! Elite 6.0+ implantado. Limpe o cache do navegador (Ctrl+Shift+R) se necessário.
 pause

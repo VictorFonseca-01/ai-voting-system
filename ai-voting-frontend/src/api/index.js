@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { hasInappropriateContent } from '../utils/moderation';
 import { getFingerprint, getPersistentSessionId, markAsVotedLocally } from '../utils/security';
 import { extractInstagramUsername, isValidInstagramFormat } from '../utils/socialUtils';
+import { getCanonicalName } from '../utils/workAreaUtils';
 
 /**
  * Camada de API - Versão Supabase (Safe Mode)
@@ -282,13 +283,13 @@ export const dashboardAPI = {
     // 4. Área de Atuação (Sanitizada + Coleta de 'Outros' para análise profunda)
     const otherWorkAreas = [];
     const workAreas = responses.reduce((acc, r) => {
-      let area = cleanLabel(r.work_area) || 'Outros';
-      if (area === 'undefined' || area === 'null' || !area) area = 'Outros';
-      
-      if (area === 'Outros' && r.work_area_other) {
+      let val = r.work_area;
+      if (val === 'Outros' && r.work_area_other) {
+        val = r.work_area_other;
         otherWorkAreas.push(r.work_area_other);
       }
       
+      const area = getCanonicalName(val) || 'Outros';
       acc[area] = (acc[area] || 0) + 1;
       return acc;
     }, {});
@@ -419,19 +420,26 @@ export const dashboardAPI = {
     const activeParticipants = Object.values(userMap);
 
     const questions = [
-      { id: 'where_use_ai', label: 'Onde você usa?', type: 'multi' },
-      { id: 'why_use_ai', label: 'Por que você usa?', type: 'multi' },
-      { id: 'how_use_ai', label: 'Como você usa?', type: 'multi' },
-      { id: 'use_for_study', label: 'Usa para estudar?', type: 'boolean' },
-      { id: 'use_for_work', label: 'Usa para trabalho?', type: 'boolean' },
-      { id: 'work_area', label: 'Área de atuação', type: 'single' },
-      { id: 'why_not', label: 'Motivo do Não Uso', type: 'multi', hideForIAs: true },
-      { id: 'alts', label: 'Fontes Alternativas', type: 'multi', hideForIAs: true },
-      { id: 'interest', label: 'Interesse Futuro', type: 'single', hideForIAs: true }
+      { id: 'work_area', label: 'Área de atuação Principal', type: 'single' },
+      { id: 'where_use_ai', label: 'Onde você usa?', type: 'multi', intendedFor: 'user' },
+      { id: 'why_use_ai', label: 'Por que você usa?', type: 'multi', intendedFor: 'user' },
+      { id: 'how_use_ai', label: 'Como você usa?', type: 'multi', intendedFor: 'user' },
+      { id: 'use_for_study', label: 'Usa para estudar?', type: 'boolean', intendedFor: 'user' },
+      { id: 'use_for_work', label: 'Usa para trabalho?', type: 'boolean', intendedFor: 'user' },
+      { id: 'why_not', label: 'Motivo do Não Uso', type: 'multi', intendedFor: 'none' },
+      { id: 'alts', label: 'Fontes Alternativas', type: 'multi', intendedFor: 'none' },
+      { id: 'interest', label: 'Interesse Futuro', type: 'single', intendedFor: 'none' }
     ];
 
     const report = questions.map(q => {
       const aiDistribution = ALL_AI_OPTIONS.map(ai => {
+        // Filtragem Inteligente: Só computa dados se a pergunta for relevante para essa IA
+        // Se a IA for 'Não utilizo IA', filtramos perguntas de usuários
+        // Se a IA for qualquer outra, filtramos perguntas de não-usuários
+        const isNone = ai === 'Não utilizo IA';
+        if (q.intendedFor === 'user' && isNone) return { ai, total: 0, answers: [] };
+        if (q.intendedFor === 'none' && !isNone) return { ai, total: 0, answers: [] };
+
         const aiParticipants = activeParticipants.filter(p => p.ias.includes(ai));
         const answers = {};
 
@@ -439,6 +447,13 @@ export const dashboardAPI = {
           let val = p[q.id];
           if (q.id === 'work_area' && val === 'Outros' && p.work_area_other) {
             val = p.work_area_other;
+          }
+          
+          // Agregamos usando utilitários se for Área de Atuação
+          if (q.id === 'work_area' && val) {
+              const canonical = getCanonicalName(val);
+              if (canonical) answers[canonical] = (answers[canonical] || 0) + 1;
+              return;
           }
 
           if (q.type === 'multi' && val) {
@@ -471,6 +486,13 @@ export const dashboardAPI = {
         let val = p[q.id];
         if (q.id === 'work_area' && val === 'Outros' && p.work_area_other) val = p.work_area_other;
         
+        // Agregamos usando utilitários se for Área de Atuação
+        if (q.id === 'work_area' && val) {
+            const canonical = getCanonicalName(val);
+            if (canonical) globalAnswers[canonical] = (globalAnswers[canonical] || 0) + 1;
+            return;
+        }
+
         if (q.type === 'multi' && val) {
           String(val).split(',').map(s => s.trim()).filter(Boolean).forEach(part => {
              const cleanPart = part.replace(/[\[\]"]/g, '').trim();
@@ -708,6 +730,13 @@ export const adminAPI = {
 
     await logAuditAction('IMPORT_BACKUP_SUCCESS', { isProduction });
     return { data: { success: true } };
+  },
+
+  getQuestionnaireReport: async () => {
+     // Para o admin, usamos a mesma lógica do público por enquanto, 
+     // mas garantindo que todos os dados (mesmo incompletos se necessário) sejam vistos?
+     // O pedido original diz "Elite", então vamos usar a lógica de dados completos para manter consistência.
+     return dashboardAPI.getPublicQuestionnaireReport();
   },
 
   getReport: async () => {

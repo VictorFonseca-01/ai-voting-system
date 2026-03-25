@@ -75,15 +75,25 @@ export default function BarChartCard({ title, data, options, chartRef, otherData
                     }}
                     onFocus={() => setShowSuggestions(true)}
                     style={{
-                        width: '100%', padding: '8px 32px 8px 12px', borderRadius: '8px',
+                        width: '100%', padding: '10px 35px 10px 15px', borderRadius: '10px',
                         background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                        color: '#fff', fontSize: '0.8rem', outline: 'none'
+                        color: '#fff', fontSize: '0.85rem', outline: 'none',
+                        transition: 'all 0.3s ease'
                     }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 />
                 {searchTerm && (
                     <button 
                         onClick={() => setSearchTerm('')}
-                        style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.9rem' }}
+                        style={{ 
+                            position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', 
+                            background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', 
+                            cursor: 'pointer', fontSize: '0.7rem', width: '20px', height: '20px',
+                            borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'var(--danger)'}
+                        onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
                     >
                         ✕
                     </button>
@@ -105,13 +115,13 @@ export default function BarChartCard({ title, data, options, chartRef, otherData
                             <div 
                                 key={i}
                                 onClick={() => handleSelectSuggestion(s.label)}
-                                style={{ padding: '8px 12px', fontSize: '0.8rem', cursor: 'pointer', borderBottom: i < suggestions.length -1 ? '1px solid rgba(255,255,255,0.05)' : 'none', display: 'flex', justifyContent: 'space-between' }}
+                                style={{ padding: '12px 15px', fontSize: '0.85rem', cursor: 'pointer', borderBottom: i < suggestions.length -1 ? '1px solid rgba(255,255,255,0.05)' : 'none', display: 'flex', justifyContent: 'space-between' }}
                                 className="suggestion-item"
-                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
-                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                             >
-                                <span>{s.label}</span>
-                                <span style={{ opacity: 0.4 }}>{s.count}</span>
+                                <span style={{ fontWeight: 600 }}>{s.label}</span>
+                                <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{s.count}</span>
                             </div>
                         ))}
                     </motion.div>

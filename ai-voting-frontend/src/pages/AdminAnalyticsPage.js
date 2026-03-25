@@ -115,11 +115,24 @@ export default function AdminAnalyticsPage() {
 
       {/* Grid de Perguntas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '30px' }}>
-        {report.map((q, idx) => {
+        {report
+          .filter(q => {
+            if (filterAi === 'Não utilizo IA') {
+              return ['why_not', 'alts', 'interest', 'work_area'].includes(q.id);
+            } else if (filterAi === 'Todas') {
+              return true;
+            } else {
+              return ['where_use_ai', 'why_use_ai', 'how_use_ai', 'use_for_study', 'use_for_work', 'work_area'].includes(q.id);
+            }
+          })
+          .map((q, idx) => {
           const isFiltered = filterAi !== 'Todas';
-          const relevantData = isFiltered 
+          let relevantData = isFiltered 
             ? q.options.find(o => o.ai === filterAi) 
-            : { answers: q.globalAnswers, total: q.totalResponses };
+            : { answers: q.globalAnswers.filter(a => a.count > 0), total: q.totalResponses };
+
+          if (!relevantData) relevantData = { answers: [], total: 0 };
+          const hasData = relevantData.answers.length > 0;
 
           const chartData = {
             labels: relevantData.answers.sort((a,b) => b.count - a.count).map(a => a.label),
@@ -147,7 +160,12 @@ export default function AdminAnalyticsPage() {
               }
             },
             scales: {
-              x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
+              x: { 
+                grid: { color: 'rgba(255,255,255,0.05)' }, 
+                ticks: { color: 'rgba(255,255,255,0.5)' },
+                beginAtZero: true,
+                suggestedMax: 10
+              },
               y: { grid: { display: false }, ticks: { color: '#fff', font: { weight: 600 } } }
             }
           };
@@ -173,8 +191,15 @@ export default function AdminAnalyticsPage() {
                 {isFiltered && <AIIcon name={filterAi} size={32} />}
               </div>
 
-              <div style={{ height: '300px' }}>
-                <Bar data={chartData} options={chartOptions} />
+              <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {hasData ? (
+                  <Bar data={chartData} options={chartOptions} />
+                ) : (
+                  <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '10px', opacity: 0.3 }}>📊</div>
+                    <p>Sem dados registrados para "{filterAi}".</p>
+                  </div>
+                )}
               </div>
 
               {/* Tabela de Respostas para melhor legibilidade */}

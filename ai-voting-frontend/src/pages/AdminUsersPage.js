@@ -223,45 +223,11 @@ export default function AdminUsersPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={() => setShowAddModal(true)} className="btn btn-primary" style={{ background: 'var(--grad-primary)', border: 'none' }}>
-              + Adicionar Usuário
-            </button>
             <button onClick={() => window.history.back()} className="btn btn-ghost">← Voltar</button>
           </div>
         </div>
 
-        {/* Modal: Adicionar Usuário */}
-        {showAddModal && (
-          <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-              <div className="modal-header">
-                <div className="accent-line" style={{ width: '40px', marginBottom: '8px' }} />
-                <h3>Novo Participante</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>O usuário será criado sem votos e sem respostas iniciais.</p>
-              </div>
-              <form onSubmit={handleCreateUser} style={{ display: 'grid', gap: '16px', marginTop: '20px' }}>
-                <div>
-                  <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.6, marginBottom: '6px', display: 'block' }}>Nome Completo *</label>
-                  <input className="form-control" value={newData.name} onChange={e => setNewData({...newData, name: e.target.value})} required placeholder="Nome do participante" />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.6, marginBottom: '6px', display: 'block' }}>Curso</label>
-                  <input className="form-control" value={newData.course} onChange={e => setNewData({...newData, course: e.target.value})} placeholder="Engenharia, Direito, etc." />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.6, marginBottom: '6px', display: 'block' }}>Instituição</label>
-                  <input className="form-control" value={newData.institution} onChange={e => setNewData({...newData, institution: e.target.value})} placeholder="Faculdade ou Empresa" />
-                </div>
-                <div className="modal-footer" style={{ marginTop: '10px', padding: '0' }}>
-                  <button type="button" className="btn btn-ghost" onClick={() => setShowAddModal(false)}>Cancelar</button>
-                  <button type="submit" className="btn btn-primary" disabled={addLoading} style={{ background: 'var(--grad-primary)', border: 'none' }}>
-                    {addLoading ? 'Criando...' : 'Registrar Usuário'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+
 
         {/* --- TOOLBAR --- */}
         <div className="saas-toolbar" style={{ 
