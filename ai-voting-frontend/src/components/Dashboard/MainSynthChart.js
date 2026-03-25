@@ -7,128 +7,104 @@ const fUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-export default function MainSynthChart({ data, opts, totalVotes, totalResponses, useForStudy, useForWork, chartRef, trend }) {
+export default function MainSynthChart({ data, opts, totalVotes, chartRef, trend, activePeriod }) {
   const isPositive = trend?.includes('+');
   const isNegative = trend?.includes('-');
 
   const drawCustomFeaturesPlugin = useMemo(() => ({
     id: 'drawCustomFeaturesPlugin',
-    beforeDraw(chart) {
+    afterDraw(chart) {
       const { ctx, chartArea } = chart;
       if (!chartArea) return;
-      const metaPink = chart.getDatasetMeta(0); 
       
-      ctx.save();
-      // Grid Horizontal Sci-Fi (trilhos)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-      ctx.lineWidth = 1;
-      for (let i = 1; i < 6; i++) {
-         const y = chartArea.top + ((chartArea.bottom - chartArea.top) * (i / 6));
-         ctx.beginPath();
-         ctx.moveTo(chartArea.left, y);
-         ctx.lineTo(chartArea.right, y);
-         ctx.stroke();
+      const meta = chart.getDatasetMeta(0);
+      const lastPoint = meta.data[meta.data.length - 1];
+      
+      if (lastPoint) {
+        ctx.save();
+        // Glow effect for the last point
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ff00cc';
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(lastPoint.x, lastPoint.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#ff00cc';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
       }
-
-      // Colunas equalizadoras verticais cibernéticas
-      metaPink.data.forEach((element, index) => {
-         const distCenter = Math.abs(15 - index); 
-         const yOffset = Math.sin(index * 0.5) * 20 + distCenter; 
-         ctx.fillStyle = index % 3 === 0 ? 'rgba(255, 0, 204, 0.08)' : 'rgba(255, 255, 255, 0.015)';
-         ctx.fillRect(element.x - 6, chartArea.top + Math.abs(yOffset), 12, chartArea.bottom - chartArea.top);
-         
-         ctx.fillStyle = index % 2 === 0 ? 'rgba(255, 0, 204, 0.6)' : 'rgba(0, 240, 255, 0.5)';
-         ctx.fillRect(element.x - 2, chartArea.bottom - 4, 4, 4);
-      });
-      ctx.restore();
     }
   }), []);
 
+  const periodLabel = activePeriod === '24h' ? 'Últimas 24h' : activePeriod === '7d' ? 'Últimos 7 dias' : 'Últimos 30 dias';
+
   return (
     <motion.div ref={chartRef} variants={fUp} style={{ 
-      background: '#120524', 
+      background: 'rgba(18, 5, 36, 0.4)', 
       marginBottom: '32px', 
       position: 'relative', 
       overflow: 'hidden',
-      borderRadius: '16px',
+      borderRadius: '24px',
       padding: '0',
-      border: '1px solid rgba(255, 0, 204, 0.1)'
+      border: '1px solid rgba(255, 0, 204, 0.08)',
+      backdropFilter: 'blur(10px)'
     }}>
-      {/* Wave Animation Overlay */}
-      <motion.div
-        animate={{ x: ['-100%', '100%'], opacity: [0, 0.6, 0] }}
-        transition={{ duration: 3.5, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
-        style={{
-          position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
-          background: 'linear-gradient(90deg, transparent, rgba(255, 0, 204, 0.12), transparent)',
-          zIndex: 1, pointerEvents: 'none', transform: 'skewX(-25deg)'
-        }}
-      />
-
       <div style={{ padding: '32px 32px 10px 32px', position: 'relative', zIndex: 2 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <div style={{ width: '8px', height: '8px', background: '#ff00cc', borderRadius: '50%', boxShadow: '0 0 10px #ff00cc' }} />
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '2px', color: '#ff00cc', textTransform: 'uppercase' }}>
-                Relatório de Síntese Universal
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '2px', color: '#ff00cc', textTransform: 'uppercase' }}>
+                Tendência Tecnológica Global
               </span>
             </div>
             <h2 style={{ 
-              fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', 
+              fontSize: '2.8rem', 
               fontWeight: 800, 
               fontFamily: 'var(--font-display)', 
               margin: 0, 
               color: '#fff', 
-              letterSpacing: '0',
-              lineHeight: 1.3
+              letterSpacing: '-2px',
+              lineHeight: 1
             }}>
-              {totalVotes} <span style={{ fontSize: '0.8rem', opacity: 0.4, fontWeight: 500, letterSpacing: '1px' }}>VOTOS NO PERÍODO</span>
+              {totalVotes} <span style={{ fontSize: '0.9rem', opacity: 0.3, fontWeight: 600, letterSpacing: '1px', marginLeft: '10px' }}>VOTOS TOTALIZADOS</span>
             </h2>
-            <p style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Análise estatística baseada em frequência real
+            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', margin: '12px 0 0 0', fontWeight: 500 }}>
+              Análise de fluxo em tempo real: <span style={{ color: '#fff' }}>{periodLabel}</span>
             </p>
           </div>
-          <div style={{ textAlign: 'right', minWidth: '100px' }}>
-            <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 800 }}>LIVE</div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '2px' }}>LIVE</div>
             <div style={{ 
-                color: isPositive ? 'var(--success)' : isNegative ? 'var(--danger)' : 'var(--text-muted)', 
-                fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' 
+                color: isPositive ? '#10b981' : isNegative ? '#ef4444' : 'rgba(255,255,255,0.4)', 
+                fontSize: '0.75rem', fontWeight: 800, marginTop: '4px'
             }}>
-                {trend || '+0%'} Volatilidade
+                {isPositive ? '↑' : isNegative ? '↓' : '•'} {trend || 'Estável'}
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ height: '300px', width: '100%', position: 'relative', marginTop: '10px', padding: '0 10px' }}>
+      <div style={{ height: '350px', width: '100%', position: 'relative', padding: '0 20px 20px 20px' }}>
         <Line data={data} options={{
           ...opts,
-          plugins: { ...opts.plugins, legend: { display: false } },
           scales: {
             ...opts.scales,
             y: { 
               ...opts.scales?.y, 
-              beginAtZero: true,
-              suggestedMax: Math.max(...data.datasets.map(d => Math.max(...d.data))) * 1.1 || 10,
-              padding: 20 
+              display: true,
+              grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+              ticks: { color: 'rgba(255,255,255,0.2)', padding: 10, font: { size: 10 } },
+              suggestedMax: Math.max(...data.datasets[0].data) * 1.2 || 10
+            },
+            x: {
+              grid: { display: false }
             }
           }
         }} plugins={[drawCustomFeaturesPlugin]} />
-      </div>
-
-      <div style={{ 
-        display: 'flex', gap: '32px', padding: '16px 32px', 
-        background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.03)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '3px', height: '14px', background: '#ff00cc' }} />
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>VOLUMETRIA CRÍTICA</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '3px', height: '14px', background: '#00f0ff' }} />
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>INDEXAÇÃO DE FLUXO</span>
-        </div>
       </div>
     </motion.div>
   );
