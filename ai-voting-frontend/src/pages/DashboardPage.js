@@ -20,9 +20,7 @@ import { generateAIVotePresentation } from '../services/pptxService';
 import { getInstagramUrl } from '../utils/socialUtils';
 import AIIcon from '../components/AIIcon.jsx';
 import { getFilteredOtherResponses } from '../utils/workAreaUtils';
-import { calculateVariation, generateInsight, getProfessionalAnimation, getPeriodSlice } from '../utils/trendUtils';
-
-// Registra os componentes do Chart.js
+import { calculateVariation, generateInsight, getProfessionalAnimation } from '../utils/trendUtils';
 ChartJS.register(ArcElement, BarElement, PointElement, LineElement, CategoryScale, LinearScale, Tooltip, Legend, Title, Filler);
 
 // Paleta de cores vibrantes centrada no DNA do site (Roxo -> Azul)
@@ -291,16 +289,16 @@ export default function DashboardPage() {
 
   const periodMetrics = useMemo(() => {
     const h = data?.history60d || [];
-    const current = h.length >= 7 ? h.slice(-7).reduce((a, b) => a + b.count, 0) : 0;
-    const previous = h.length >= 14 ? h.slice(-14, -7).reduce((a, b) => a + b.count, 0) : 0;
+    const current = h.length >= 7 ? h.slice(-7).reduce((a, b) => a + (b?.count || 0), 0) : 0;
+    const previous = h.length >= 14 ? h.slice(-14, -7).reduce((a, b) => a + (b?.count || 0), 0) : 0;
     const { percent, trend } = calculateVariation(current, previous);
     const label = "últimos 7 dias";
     return {
       total: current,
-      trend: `${trend === 'up' ? '+' : '-'}${percent}%`,
+      trend: `${trend === 'up' ? '+' : trend === 'down' ? '-' : ''}${percent}%`,
       label,
       insight: generateInsight(current, previous, label),
-      chart: h.slice(-7).map(d => d.count)
+      chart: h.slice(-7).map(d => d?.count || 0)
     }
   }, [data]);
 
@@ -326,7 +324,7 @@ export default function DashboardPage() {
   const totalChartData = useMemo(() => {
     const h = data?.history60d || [];
     return {
-      labels: h.map(d => d.date.split('-').reverse().slice(0, 2).join('/')),
+      labels: h.map(d => d?.date ? d.date.split('-').reverse().slice(0, 2).join('/') : ''),
       datasets: [
         {
           label: 'Volume de Votos',
@@ -517,6 +515,18 @@ export default function DashboardPage() {
     );
   }
 
+  // Fallback de Segurança: Se os dados não estiverem disponíveis e não estiver carregando/erro
+  if (!data && !loading && !error) {
+    return (
+      <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '20px' }}>📊</div>
+          <h2 style={{ color: '#fff', marginBottom: '10px' }}>Carregando Dashboard...</h2>
+          <p style={{ color: 'var(--text-muted)' }}>Sincronizando métricas em tempo real.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
