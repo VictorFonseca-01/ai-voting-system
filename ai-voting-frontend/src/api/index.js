@@ -194,13 +194,13 @@ export const questionnaireAPI = {
       
     if (responseError) throw responseError;
 
-    // MARCA COMO COMPLETO: Finaliza o ciclo de participação
+    /* 
     const { error: userError } = await supabase
       .from('users')
       .update({ is_complete: true })
       .eq('id', targetId);
-
     if (userError) console.warn("Aviso: Falha ao marcar is_complete (coluna pode não existir ainda).");
+    */
 
     return { data: { success: true } };
   },
@@ -221,20 +221,27 @@ export const questionnaireAPI = {
 // ─── DASHBOARD ────────────────────────────────────────────────────────
 export const dashboardAPI = {
   getData: async () => {
-    // 1. Busca usuários completos
-    const { data: completeUsers, error: uError } = await supabase
-      .from('users')
-      .select('id, name, course, institution, instagram')
-      .eq('is_complete', true);
+    // 1. Busca usuários que têm respostas no questionário (ELITE 6.0 Safe Mode)
+    const { data: respIds, error: rError } = await supabase
+      .from('question_responses')
+      .select('user_id');
     
-    if (uError) throw uError;
-    const completeIds = (completeUsers || []).map(u => u.id);
+    if (rError) throw rError;
+    const completeIds = [...new Set((respIds || []).map(r => r.user_id))];
 
     if (completeIds.length === 0) {
       return { 
         data: { totalVotes: 0, totalUniqueVoters: 0, totalResponses: 0, votesByAi: {}, whereUseAi: {}, workAreas: {}, recentVotes: [] } 
       };
     }
+
+    // Busca metadados dos usuários completos
+    const { data: completeUsers, error: uError } = await supabase
+      .from('users')
+      .select('id, name, course, institution, instagram')
+      .in('id', completeIds);
+    
+    if (uError) throw uError;
 
     // 2. Busca votos e respostas apenas dos usuários completos
     const [votesRes, responsesRes] = await Promise.all([
@@ -381,14 +388,13 @@ export const dashboardAPI = {
   },
 
   getPublicQuestionnaireReport: async () => {
-    // 1. Busca usuários completos
-    const { data: completeUsers, error: uError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('is_complete', true);
+    // 1. Busca IDs únicos de quem respondeu o questionário
+    const { data: respData, error: rError } = await supabase
+      .from('question_responses')
+      .select('user_id');
     
-    if (uError) throw uError;
-    const completeIds = (completeUsers || []).map(u => u.id);
+    if (rError) throw rError;
+    const completeIds = [...new Set((respData || []).map(r => r.user_id))];
 
     if (completeIds.length === 0) {
       return { data: [], otherWorkAreas: [] };
@@ -538,9 +544,11 @@ export const adminAPI = {
       query = query.eq('role', filters.role);
     }
     
+    /* 
     if (filters.is_complete !== undefined && filters.is_complete !== '') {
       query = query.eq('is_complete', filters.is_complete === 'true' || filters.is_complete === true);
     }
+    */
 
     // Filtros de Voto/Questionário exigem cruzamento ou flags na tabela users
     // Para performance SaaS, o ideal é que essas flags existam na tabela 'users'

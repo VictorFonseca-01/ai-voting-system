@@ -27,7 +27,7 @@ export default function AdminUsersPage() {
   const [filters, setFilters] = useState({ 
     role: '', 
     status: '', 
-    is_complete: 'true' // Default: apenas participações válidas
+    is_complete: '' // Removido filtro direto por coluna inexistente
   });
   const [sort, setSort] = useState({ column: 'name', ascending: true });
   const debouncedSearch = useDebounce(search, 300);
@@ -247,19 +247,7 @@ export default function AdminUsersPage() {
               style={{ width: '100%' }}
             />
           </div>
-          <div>
-            <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Status de Registro</label>
-            <select 
-              className="form-control" 
-              value={filters.is_complete} 
-              onChange={e => setFilters({...filters, is_complete: e.target.value})}
-              style={{ width: '100%' }}
-            >
-              <option value="true">✅ Completos</option>
-              <option value="false">⏳ Incompletos</option>
-              <option value="">👥 Todos os Registros</option>
-            </select>
-          </div>
+
           <div>
             <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Nível de Acesso</label>
             <select className="form-control" value={filters.role} onChange={(e) => handleFilterChange('role', e.target.value)} style={{ width: '100%' }}>
