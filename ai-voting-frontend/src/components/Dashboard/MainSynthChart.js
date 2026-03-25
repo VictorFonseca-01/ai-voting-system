@@ -93,8 +93,15 @@ export default function MainSynthChart({ data, opts, totalVotes, totalResponses,
         </div>
       </div>
 
-      <div style={{ height: '240px', width: '100%', position: 'relative', marginTop: '-20px' }}>
-        <Line data={data} options={opts} plugins={[drawCustomFeaturesPlugin]} />
+      <div style={{ height: '300px', width: '100%', position: 'relative', marginTop: '10px', padding: '0 10px' }}>
+        <Line data={data} options={{
+          ...opts,
+          plugins: { ...opts.plugins, legend: { display: false } },
+          scales: {
+            ...opts.scales,
+            y: { ...opts.scales?.y, suggestedMax: totalVotes > 10 ? totalVotes * 1.2 : 20, padding: 20 }
+          }
+        }} plugins={[drawCustomFeaturesPlugin]} />
       </div>
 
       <div style={{ 

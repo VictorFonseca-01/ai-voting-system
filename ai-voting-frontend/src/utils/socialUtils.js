@@ -17,10 +17,12 @@ export const extractInstagramUsername = (input) => {
   clean = clean.replace(/instagram\.com\//g, '');
   clean = clean.replace(/instagr\.am\//g, '');
   
-  // Remove o @ inicial
-  if (clean.startsWith('@')) {
-    clean = clean.substring(1);
-  }
+  // Remove o @ se existir em qualquer posição
+  clean = clean.replace(/@/g, '');
+  
+  // Remove qualquer caractere que não seja letra, número, ponto ou underscore
+  // Isso atende ao pedido de "filtrar símbolos inválidos"
+  clean = clean.replace(/[^a-z0-9._]/g, '');
 
   // Remove barras finais ou parâmetros de query
   clean = clean.split('/')[0].split('?')[0];

@@ -211,7 +211,6 @@ export default function QuestionnairePage() {
 
   return (
     <div style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh', paddingBottom: '100px' }}>
-      
       <AnimatePresence>
         {success && (
           <motion.div 
@@ -238,7 +237,6 @@ export default function QuestionnairePage() {
       </AnimatePresence>
 
       <div style={{ maxWidth: '850px', margin: '0 auto', padding: '60px 24px', position: 'relative', zIndex: 1 }}>
-        
         <motion.div initial="hidden" animate="visible" variants={fUp} style={{ textAlign: 'center', marginBottom: '60px' }}>
           <motion.div 
             style={{ width: '60px', height: '4px', background: 'var(--grad-primary)', borderRadius: '2px', margin: '0 auto 20px' }}
@@ -258,33 +256,34 @@ export default function QuestionnairePage() {
           </motion.div>
         )}
 
-        <div ref={identSectionRef}>
-          <QuestionCard num={0} title="Identidade Profissional" delay="delay-1">
-            <div style={{ display: 'grid', gap: '24px' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>
-                  Nome Completo <span style={{ color: 'var(--accent-light)' }}>*</span>
-                </label>
-                <input
-                  type="text" className="form-control"
-                  placeholder="Seu nome completo"
-                  value={form.fullName}
-                  onChange={(e) => {
-                      set('fullName', e.target.value);
-                      if (fieldErrors.fullName) setFieldErrors(p => ({...p, fullName: false}));
-                  }}
-                  style={{ 
-                    padding: '16px', borderRadius: '14px', 
-                    background: 'var(--bg-input)', 
-                    border: '1px solid rgba(255,255,255,0.08)', 
-                    boxShadow: 'none !important' 
-                  }}
-                />
-              </div>
+        <div ref={identSectionRef} style={{ display: 'grid', gap: '24px', marginBottom: '24px' }}>
+          <QuestionCard num={0} title="Sua Identidade" delay="delay-1">
+            <div>
+              <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>
+                Nome Completo <span style={{ color: 'var(--accent-light)' }}>*</span>
+              </label>
+              <input
+                type="text" className="form-control"
+                placeholder="Seu nome completo"
+                value={form.fullName}
+                onChange={(e) => {
+                    set('fullName', e.target.value);
+                    if (fieldErrors.fullName) setFieldErrors(p => ({...p, fullName: false}));
+                }}
+                style={{ 
+                  padding: '16px', borderRadius: '14px', 
+                  background: 'var(--bg-input)', 
+                  border: '1px solid rgba(255,255,255,0.08)', 
+                  boxShadow: 'none !important' 
+                }}
+              />
+            </div>
+          </QuestionCard>
 
+          <QuestionCard num={1} title="Curso / Especialização" delay="delay-1">
               <div ref={courseDropdownRef} style={{ position: 'relative' }}>
                 <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>
-                  Curso / Especialização <span style={{ color: 'var(--accent-light)' }}>*</span>
+                  Área de Estudo <span style={{ color: 'var(--accent-light)' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
                     <input
@@ -339,10 +338,12 @@ export default function QuestionnairePage() {
                   )}
                 </AnimatePresence>
               </div>
+          </QuestionCard>
 
+          <QuestionCard num={2} title="Instituição & Redes" delay="delay-2">
               <div className="grid-2" style={{ gap: '20px' }}>
                 <div>
-                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instituição (Opcional)</label>
+                  <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instituição / Empresa (Opcional)</label>
                   <input
                     type="text" className="form-control"
                     placeholder="Faculdade/Empresa"
@@ -377,14 +378,13 @@ export default function QuestionnairePage() {
                   )}
                 </div>
               </div>
-            </div>
           </QuestionCard>
         </div>
 
         <div style={{ display: 'grid', gap: '24px' }}>
           {selectedIAs.includes('none') ? (
             <>
-              <QuestionCard num={1} title="Motivo do Não Uso" delay="delay-2">
+              <QuestionCard num={3} title="Motivo do Não Uso" delay="delay-2">
                 <OptionGrid
                   options={['Privacidade', 'Falta de Necessidade', 'Incerteza/Erros', 'Complexidade', 'Tradição', 'Custo']}
                   selected={form.whyNot || []}
@@ -394,7 +394,7 @@ export default function QuestionnairePage() {
                   }}
                 />
               </QuestionCard>
-              <QuestionCard num={2} title="Fontes Alternativas" delay="delay-2">
+              <QuestionCard num={4} title="Fontes Alternativas" delay="delay-2">
                 <OptionGrid
                   options={['Google', 'Livros', 'Cursos', 'Mentores', 'Colegas', 'Própria Base']}
                   selected={form.alts || []}
@@ -404,7 +404,7 @@ export default function QuestionnairePage() {
                   }}
                 />
               </QuestionCard>
-              <QuestionCard num={3} title="Interesse Futuro" delay="delay-3">
+              <QuestionCard num={5} title="Interesse Futuro" delay="delay-3">
                 <OptionGrid
                   options={['Muito Alto', 'Moderado', 'Baixo', 'Nenhum']}
                   selected={form.interest || ''}
@@ -415,7 +415,7 @@ export default function QuestionnairePage() {
             </>
           ) : (
             <>
-              <QuestionCard num={1} title="Contexto de Utilização" delay="delay-2">
+              <QuestionCard num={3} title="Contexto de Utilização" delay="delay-2">
                 <OptionGrid
                   options={WHERE_OPTIONS}
                   selected={form.whereUseAi}
@@ -423,7 +423,7 @@ export default function QuestionnairePage() {
                 />
               </QuestionCard>
 
-              <QuestionCard num={2} title="Motivação Principal" delay="delay-2">
+              <QuestionCard num={4} title="Motivação Principal" delay="delay-2">
                 <OptionGrid
                   options={WHY_OPTIONS}
                   selected={form.whyUseAi}
@@ -431,7 +431,7 @@ export default function QuestionnairePage() {
                 />
               </QuestionCard>
 
-              <QuestionCard num={3} title="Método de Interação" delay="delay-3">
+              <QuestionCard num={5} title="Método de Interação" delay="delay-3">
                 <OptionGrid
                   options={HOW_OPTIONS}
                   selected={form.howUseAi}
@@ -442,14 +442,14 @@ export default function QuestionnairePage() {
           )}
 
           <div className="grid-2" style={{ gap: '24px' }}>
-            <QuestionCard num={4} title="Uso Acadêmico" delay="delay-3">
+            <QuestionCard num={6} title="Uso Acadêmico" delay="delay-3">
               <BooleanToggle
                 value={form.useForStudy}
                 onChange={(v) => set('useForStudy', v)}
               />
             </QuestionCard>
 
-            <QuestionCard num={5} title="Uso Profissional" delay="delay-3">
+            <QuestionCard num={7} title="Uso Profissional" delay="delay-3">
               <BooleanToggle
                 value={form.useForWork}
                 onChange={(v) => set('useForWork', v)}
@@ -457,7 +457,7 @@ export default function QuestionnairePage() {
             </QuestionCard>
           </div>
 
-          <QuestionCard num={6} title="Campo de Atuação" delay="delay-4">
+          <QuestionCard num={8} title="Foco Principal" delay="delay-4">
             <OptionGrid
               options={WORK_AREAS}
               selected={form.workArea}

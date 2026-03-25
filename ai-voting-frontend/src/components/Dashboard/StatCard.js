@@ -49,15 +49,24 @@ export default function StatCard({ value, label, delay, trend, chartConfig, icon
       </div>
 
       {/* Mini Chart Overlay - Contido nas bordas */}
-      <div style={{ position: 'absolute', bottom: '0', right: '0', width: '120px', height: '80px', opacity: 0.6 }}>
+      <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '140px', height: '60px', opacity: 0.8 }}>
         {chartConfig && chartConfig.type === 'line' && (
           <Line 
             data={chartConfig.data} 
             options={{
               responsive: true, maintainAspectRatio: false,
               plugins: { legend: { display: false }, tooltip: { enabled: false } },
-              scales: { x: { display: false }, y: { display: false } },
-              elements: { point: { radius: 0 } }
+              scales: { 
+                x: { display: false }, 
+                y: { 
+                    display: false, 
+                    suggestedMax: Math.max(...chartConfig.data.datasets[0].data) * 1.5 || 10 
+                } 
+              },
+              elements: { 
+                point: { radius: 0 },
+                line: { tension: 0.5, borderWidth: 2.5, capStyle: 'round' }
+              }
             }} 
           />
         )}

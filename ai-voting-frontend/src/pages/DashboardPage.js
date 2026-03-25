@@ -370,8 +370,8 @@ export default function DashboardPage() {
         type: 'line',
         data: lineB,
         borderColor: 'rgba(255, 0, 204, 0.4)',
-        borderWidth: 16,
-        tension: 0, 
+        borderWidth: 8,
+        tension: 0.4, 
         fill: true,
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
@@ -391,7 +391,7 @@ export default function DashboardPage() {
         data: lineB,
         borderColor: '#ff00cc',
         borderWidth: 3,
-        tension: 0,
+        tension: 0.4,
         fill: false,
         pointRadius: 0,
         pointHoverRadius: 0,
@@ -402,7 +402,7 @@ export default function DashboardPage() {
         data: lineB,
         borderColor: '#ffffff',
         borderWidth: 1.5,
-        tension: 0,
+        tension: 0.4,
         fill: false,
         pointRadius: 0,
         pointHoverRadius: 0,
@@ -832,7 +832,7 @@ export default function DashboardPage() {
               datasets: [{
                 // Real data points from last 7 days
                 data: dailyVotes,
-                borderColor: '#6366f1', borderWidth: 2, tension: 0.4, fill: true,
+                borderColor: '#6366f1', borderWidth: 2, tension: 0.5, fill: true,
                 backgroundColor: 'rgba(99, 102, 241, 0.1)'
               }]
             }

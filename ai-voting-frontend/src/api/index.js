@@ -179,6 +179,9 @@ export const questionnaireAPI = {
       use_for_work: formData.useAiWork || formData.useForWork,
       work_area: cleanLabel(formData.workArea),
       work_area_other: formData.workAreaOther,
+      why_not: Array.isArray(formData.whyNot) ? formData.whyNot.join(', ') : (formData.whyNot || ''),
+      alts: Array.isArray(formData.alts) ? formData.alts.join(', ') : (formData.alts || ''),
+      interest: formData.interest || '',
       answered_at: new Date().toISOString()
     };
 
@@ -385,7 +388,10 @@ export const dashboardAPI = {
       { id: 'how_use_ai', label: 'Como você usa?', type: 'multi' },
       { id: 'use_for_study', label: 'Usa para estudar?', type: 'boolean' },
       { id: 'use_for_work', label: 'Usa para trabalho?', type: 'boolean' },
-      { id: 'work_area', label: 'Área de atuação', type: 'single' }
+      { id: 'work_area', label: 'Área de atuação', type: 'single' },
+      { id: 'why_not', label: 'Motivo do Não Uso', type: 'multi', hideForIAs: true },
+      { id: 'alts', label: 'Fontes Alternativas', type: 'multi', hideForIAs: true },
+      { id: 'interest', label: 'Interesse Futuro', type: 'single', hideForIAs: true }
     ];
 
     const report = questions.map(q => {
@@ -444,6 +450,7 @@ export const dashboardAPI = {
       });
 
       return {
+        id: q.id,
         question: q.label,
         totalResponses: activeParticipants.length,
         options: aiDistribution,
@@ -451,7 +458,10 @@ export const dashboardAPI = {
       };
     });
 
-    return { data: report };
+    return { 
+      data: report,
+      otherWorkAreas: activeParticipants.filter(p => p.work_area === 'Outros' && p.work_area_other).map(p => p.work_area_other)
+    };
   }
 };
 
