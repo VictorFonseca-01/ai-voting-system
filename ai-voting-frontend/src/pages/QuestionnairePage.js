@@ -58,10 +58,10 @@ export default function QuestionnairePage() {
   const identSectionRef = useRef(null);
 
   useEffect(() => {
-    // 1. Bloqueio Antifraude Preventivo (ELITE 4.5)
-    if (checkLocalVoteStatus()) {
-      setAlreadyParticipated(true);
-    }
+    // 1. Bloqueio Antifraude Preventivo Removido (Conforme nova regra: Sem bloqueio por dispositivo)
+    // if (checkLocalVoteStatus()) {
+    //   setAlreadyParticipated(true);
+    // }
 
     const saved = sessionStorage.getItem('selectedIAs');
     if (saved) {

@@ -20,6 +20,17 @@ const AI_CANONICAL_MAP = {
   'none': 'Não utilizo IA'
 };
 
+const ALL_AI_OPTIONS = [
+  'ChatGPT',
+  'Gemini',
+  'Claude',
+  'Grok',
+  'Copilot',
+  'Meta AI',
+  'DeepSeek',
+  'Não utilizo IA'
+];
+
 const normalizeAiName = (name) => {
   if (!name) return 'Indefinido';
   const clean = name.replace(/[\[\]"]/g, '').trim();
@@ -215,12 +226,21 @@ export const dashboardAPI = {
     // Para simplificar, contamos todos e filtramos na exibição se necessário
     const uniqueVoters = new Set(votes.map(v => v.user_id));
     
-    // 2. Ranking de IAs (Normalizado para evitar duplicidade Case-Sensitive)
-    const votesByAi = votes.reduce((acc, v) => {
-      const name = normalizeAiName(v.ai_name);
-      acc[name] = (acc[name] || 0) + 1;
+    // 2. Ranking de IAs (Normalizado e Completo - ELITE 4.6)
+    const votesByAi = ALL_AI_OPTIONS.reduce((acc, name) => {
+      acc[name] = 0;
       return acc;
     }, {});
+
+    votes.forEach(v => {
+      const name = normalizeAiName(v.ai_name);
+      if (votesByAi.hasOwnProperty(name)) {
+        votesByAi[name]++;
+      } else {
+        // Fallback para nomes não mapeados mas existentes no banco
+        votesByAi[name] = (votesByAi[name] || 0) + 1;
+      }
+    });
 
     // 3. Estatísticas de Uso
     const useForStudy = responses.filter(r => r.use_for_study === true).length;
@@ -578,6 +598,107 @@ export const adminAPI = {
         aiReports: aiReports.sort((a,b) => b.totalVotes - a.totalVotes)
       }
     };
+  },
+
+  getQuestionnaireReport: async () => {
+    // 1. Busca dados base
+    const [votesRes, responsesRes] = await Promise.all([
+      supabase.from('votes').select('user_id, ai_name'),
+      supabase.from('question_responses').select('*')
+    ]);
+
+    if (votesRes.error) throw votesRes.error;
+    if (responsesRes.error) throw responsesRes.error;
+
+    const votes = votesRes.data || [];
+    const responses = responsesRes.data || [];
+
+    // Mapeia usuário para suas respostas e IAs votadas
+    const userMap = {};
+    responses.forEach(r => {
+      userMap[r.user_id] = { ...r, ias: [] };
+    });
+    votes.forEach(v => {
+      if (userMap[v.user_id]) {
+        userMap[v.user_id].ias.push(normalizeAiName(v.ai_name));
+      }
+    });
+
+    const activeParticipants = Object.values(userMap);
+
+    const questions = [
+      { id: 'where_use_ai', label: 'Onde você usa?', type: 'multi' },
+      { id: 'why_use_ai', label: 'Por que você usa?', type: 'multi' },
+      { id: 'how_use_ai', label: 'Como você usa?', type: 'multi' },
+      { id: 'use_for_study', label: 'Usa para estudar?', type: 'boolean' },
+      { id: 'use_for_work', label: 'Usa para trabalho?', type: 'boolean' },
+      { id: 'work_area', label: 'Área de atuação', type: 'single' }
+    ];
+
+    const report = questions.map(q => {
+      const aiDistribution = ALL_AI_OPTIONS.map(ai => {
+        const aiParticipants = activeParticipants.filter(p => p.ias.includes(ai));
+        const answers = {};
+
+        aiParticipants.forEach(p => {
+          let val = p[q.id];
+          if (q.id === 'work_area' && val === 'Outros' && p.work_area_other) {
+            val = p.work_area_other;
+          }
+
+          if (q.type === 'multi' && val) {
+            const parts = String(val).split(',').map(s => s.trim()).filter(Boolean);
+            parts.forEach(part => {
+              const cleanPart = part.replace(/[\[\]"]/g, '').trim();
+              if (cleanPart) answers[cleanPart] = (answers[cleanPart] || 0) + 1;
+            });
+          } else if (q.type === 'boolean') {
+            const label = val ? 'Sim' : 'Não';
+            answers[label] = (answers[label] || 0) + 1;
+          } else if (val) {
+            const part = String(val).replace(/[\[\]"]/g, '').trim();
+            if (part && part !== 'undefined' && part !== 'null') {
+              answers[part] = (answers[part] || 0) + 1;
+            }
+          }
+        });
+
+        return {
+          ai,
+          total: aiParticipants.length,
+          answers: Object.entries(answers).map(([label, count]) => ({ label, count }))
+        };
+      });
+
+      // Cálculo de respostas absolutas (sem filtro de IA)
+      const globalAnswers = {};
+      activeParticipants.forEach(p => {
+        let val = p[q.id];
+        if (q.id === 'work_area' && val === 'Outros' && p.work_area_other) val = p.work_area_other;
+        
+        if (q.type === 'multi' && val) {
+          String(val).split(',').map(s => s.trim()).filter(Boolean).forEach(part => {
+             const cleanPart = part.replace(/[\[\]"]/g, '').trim();
+             if (cleanPart) globalAnswers[cleanPart] = (globalAnswers[cleanPart] || 0) + 1;
+          });
+        } else if (q.type === 'boolean') {
+          const label = val ? 'Sim' : 'Não';
+          globalAnswers[label] = (globalAnswers[label] || 0) + 1;
+        } else if (val) {
+          const part = String(val).replace(/[\[\]"]/g, '').trim();
+          if (part && part !== 'undefined' && part !== 'null') globalAnswers[part] = (globalAnswers[part] || 0) + 1;
+        }
+      });
+
+      return {
+        question: q.label,
+        totalResponses: activeParticipants.length,
+        options: aiDistribution,
+        globalAnswers: Object.entries(globalAnswers).map(([label, count]) => ({ label, count }))
+      };
+    });
+
+    return { data: report };
   }
 };
 
@@ -594,16 +715,26 @@ export const participationAPI = {
       const fingerprint = getFingerprint();
       const sessionId = getPersistentSessionId();
 
-      // BLOQUEIO ANTIFRAUDE (ELITE 4.5)
-      if (!isAdmin) {
-          const { data: existing } = await supabase
+      // BLOQUEIO ANTIFRAUDE SIMPLIFICADO (ELITE 4.6)
+      // Remove bloqueio por dispositivo (IP/Fingerprint/Session)
+      // Mantém apenas BLOQUEIO POR NOME REPETIDO
+      if (!isAdmin && fullName) {
+          const normalizedName = fullName.trim().toLowerCase().replace(/\s+/g, ' ');
+          
+          // Busca usuários com o mesmo nome (Normalização básica via PostgreSQL se possível, 
+          // ou pegamos todos e filtramos aqui para garantir 100% de precisão no trim/case)
+          const { data: existingUser } = await supabase
             .from('users')
-            .select('id')
-            .or(`fingerprint.eq.${fingerprint},session_id.eq.${sessionId}`)
-            .limit(1);
+            .select('id, name')
+            .ilike('name', normalizedName)
+            .limit(10); // Busca uma amostra para bater exact match no JS
 
-          if (existing && existing.length > 0) {
-              throw new Error("Este dispositivo já participou da votação. Obrigado por sua contribuição!");
+          const isDuplicate = existingUser?.some(u => 
+            u.name.trim().toLowerCase().replace(/\s+/g, ' ') === normalizedName
+          );
+
+          if (isDuplicate) {
+              throw new Error("Este nome já foi utilizado na votação. Por favor, utilize seu nome completo ou uma variação única.");
           }
       }
       

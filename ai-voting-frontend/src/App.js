@@ -15,6 +15,7 @@ import QuestionnairePage from './pages/QuestionnairePage';
 import DashboardPage from './pages/DashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import ReportPage from './pages/ReportPage';
+import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
 
 export default function App() {
   return (
@@ -41,6 +42,9 @@ export default function App() {
           } />
           <Route path="/admin/report" element={
             <AdminRoute><ReportPage /></AdminRoute>
+          } />
+          <Route path="/admin/analytics" element={
+            <AdminRoute><AdminAnalyticsPage /></AdminRoute>
           } />
 
           {/* Fallback */}
