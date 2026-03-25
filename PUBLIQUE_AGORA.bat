@@ -1,7 +1,7 @@
 @echo off
-echo 🚀 Sincronizando: Elite 7.5.2 (Master Final)...
+echo 🚀 Sincronizando: Elite 7.5.5 (Final Boss Release)...
 git add .
-git commit -m "🛡️ Sync: Elite 7.5.2 (Auditoria Master Final: Unificação Total de Área de Atuação, Busca Híbrida e UX)"
+git commit -m "🛡️ Sync: Elite 7.5.5 (Fix Chart Labels: autoSkip false & Universal Search Perfection)"
 git push origin HEAD --force
-echo 🚀 Sucesso! Elite 7.5.2 (Master Final) implantada. Sistema 100%% Consistente.
+echo 🚀 Sucesso! Elite 7.5.5 (Final Release) implantada.
 pause

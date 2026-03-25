@@ -450,6 +450,7 @@ export default function DashboardPage() {
           font: { size: 11, weight: 600 },
           precision: 0,
           padding: 8,
+          autoSkip: false,
           callback: (value) => Number.isInteger(value) ? value : null
         },
         beginAtZero: true,

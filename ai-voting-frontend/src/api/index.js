@@ -592,12 +592,25 @@ export const dashboardAPI = {
    * Garante: WHERE ia = IA_SELECIONADA AND work_area_other ILIKE %search%
    */
   searchOtherWorkAreas: async (aiFilter = 'Todas', searchTerm = '') => {
-    // 1. Filtro OBRIGATÓRIO por IA (Deduplicado por user_id)
+    // 1. Filtro OBRIGATÓRIO (Completo e Não Anônimo) - Mesma base do Report
     let userIds = null;
     if (aiFilter !== 'Todas') {
-      const { data: vData } = await supabase.from('votes').select('user_id').eq('ai_name', aiFilter);
+      const { data: vData } = await supabase
+        .from('votes')
+        .select('user_id')
+        .ilike('ai_name', aiFilter)
+        .eq('is_complete', true)
+        .eq('is_anonymous', false);
       if (vData) userIds = [...new Set(vData.map(v => v.user_id))];
       if (!userIds || userIds.length === 0) return [];
+    } else {
+      // Para 'Todas', pegamos todos os user_ids únicos de votos completos/não-anônimos
+      const { data: vData } = await supabase
+        .from('votes')
+        .select('user_id')
+        .eq('is_complete', true)
+        .eq('is_anonymous', false);
+      if (vData) userIds = [...new Set(vData.map(v => v.user_id))];
     }
 
     // 2. Busca INCLUSIVA (Padrão + Outros) - ELITE 7.5.1
