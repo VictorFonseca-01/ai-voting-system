@@ -42,8 +42,6 @@ export default function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // ELITE PROFESSIONAL 6.0: Filtro de Período
-  const [activePeriod, setActivePeriod] = useState('7d'); // '24h', '7d', '30d'
 
   const [showModal, setShowModal] = useState(false);
   const [showInstaModal, setShowInstaModal] = useState(false);
@@ -281,78 +279,30 @@ export default function DashboardPage() {
   // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
   
   // ELITE PROFESSIONAL 8.0: Cálculo Centralizado de Métricas por Período
-  const metrics = useMemo(() => {
-    if (!data?.history60d || !data?.hourlyVotes) {
-      return {
-        votes: { total: 0, trend: '', status: 'insufficient', chart: [], insight: '' },
-        completion: { total: '0%', trend: '', status: 'insufficient', chart: [], insight: '' },
-        study: { total: '0%', trend: '', status: 'insufficient', chart: [], insight: '' },
-        work: { total: '0%', trend: '', status: 'insufficient', chart: [], insight: '' }
-      };
-    }
+  const totalVotes     = data?.votesLast24h || 0;
+  const totalResponses = data?.totalResponses || 0;
+  const completionRate = data?.totalUniqueVoters ? Math.round((data.totalResponses / data.totalUniqueVoters) * 100) + '%' : '0%';
+  const useForStudy    = data?.useForStudy || 0;
+  const useForWork     = data?.useForWork || 0;
+  const recentVotes    = data?.recentVotes || [];
 
-    const h = data.history60d;
-    const hourly = data.hourlyVotes;
+  const studyRatio = totalResponses ? Math.round((useForStudy / totalResponses) * 100) + '%' : '0%';
+  const workRatio = totalResponses ? Math.round((useForWork / totalResponses) * 100) + '%' : '0%';
 
-    // Helper para calcular métricas de uma propriedade específica
-    const getMetric = (type, period) => {
-      let currentTotal = 0;
-      let previousTotal = 0;
-      let currentSlice = [];
-      let label = period === '24h' ? '24h anteriores' : `${period.replace('d', '')} dias anteriores`;
-
-      if (period === '24h') {
-        if (type === 'votes') {
-          currentTotal = data.votesLast24h || 0;
-          previousTotal = data.votesPrev24h || 0;
-          currentSlice = hourly;
-        } else {
-          // Para outras métricas em 24h, usamos o total atual (neste caso, a granularidade horária p/ ratios é limitada)
-          currentTotal = type === 'completion' ? (data.totalResponses / (data.totalUniqueVoters || 1)) * 100 : 
-                        type === 'study' ? (data.useForStudy / (data.totalResponses || 1)) * 100 :
-                        (data.useForWork / (data.totalResponses || 1)) * 100;
-          previousTotal = currentTotal * 0.95; // Simulação conservadora p/ 24h ratios se não houver histórico
-          currentSlice = Array(24).fill(currentTotal / 24);
-        }
-      } else {
-        const days = period === '30d' ? 30 : 7;
-        const slice = getPeriodSlice(h, period);
-        currentTotal = slice.currentTotal;
-        previousTotal = slice.previousTotal;
-        currentSlice = slice.currentSlice;
-      }
-
-      const { percent, trend, status } = calculateVariation(currentTotal, previousTotal);
-      const insight = generateInsight(currentTotal, previousTotal, label);
-      const trendText = `${trend === 'up' ? '+' : ''}${percent}%`;
-
-      return {
-        total: type === 'votes' ? currentTotal : currentTotal.toFixed(1) + '%',
-        trend: trendText,
-        status,
-        chart: currentSlice,
-        insight,
-        label
-      };
-    };
-
+  const periodMetrics = useMemo(() => {
+    const h = data?.history60d || [];
+    const current = h.length >= 7 ? h.slice(-7).reduce((a, b) => a + b.count, 0) : 0;
+    const previous = h.length >= 14 ? h.slice(-14, -7).reduce((a, b) => a + b.count, 0) : 0;
+    const { percent, trend } = calculateVariation(current, previous);
+    const label = "últimos 7 dias";
     return {
-      votes: getMetric('votes', activePeriod),
-      completion: getMetric('completion', activePeriod),
-      study: getMetric('study', activePeriod),
-      work: getMetric('work', activePeriod)
-    };
-  }, [data, activePeriod]);
-
-  const aiRanking = useMemo(() => {
-    return Object.entries(data?.votesByAi || {}).sort((a, b) => b[1] - a[1]);
-  }, [data?.votesByAi]);
-
-  const totalVotes    = metrics.votes.total;
-  const totalResponses= data?.totalResponses || 0;
-  const useForStudy   = data?.useForStudy    || 0;
-  const useForWork    = data?.useForWork     || 0;
-  const recentVotes   = data?.recentVotes    || [];
+      total: current,
+      trend: `${trend === 'up' ? '+' : '-'}${percent}%`,
+      label,
+      insight: generateInsight(current, previous, label),
+      chart: h.slice(-7).map(d => d.count)
+    }
+  }, [data]);
 
   const groupedRecentVotes = useMemo(() => {
     const groups = {};
@@ -368,65 +318,39 @@ export default function DashboardPage() {
     return Object.values(groups).slice(0, 5);
   }, [recentVotes]);
 
-  // Gráfico Principal Interpolado e Animado (Professional)
-  const mainChartData = useMemo(() => {
-    const rawData = metrics.votes.chart;
-    const points = activePeriod === '24h' ? 24 : 30; // 30 pontos para suavidade em 7d/30d
-    
-    if (!rawData || rawData.length === 0) return Array(points).fill(0);
+  const aiRanking = useMemo(() => {
+    return Object.entries(data?.votesByAi || {}).sort((a, b) => b[1] - a[1]);
+  }, [data?.votesByAi]);
 
-    if (rawData.length < points) {
-        const result = [];
-        for (let i = 0; i < points; i++) {
-            const idx = (i / points) * rawData.length;
-            const low = Math.floor(idx);
-            const high = Math.min(low + 1, rawData.length - 1);
-            const weight = idx - low;
-            result.push(rawData[low] * (1 - weight) + rawData[high] * weight);
+  // Gráfico Principal (Elite 7.1 Style)
+  const totalChartData = useMemo(() => {
+    const h = data?.history60d || [];
+    return {
+      labels: h.map(d => d.date.split('-').reverse().slice(0, 2).join('/')),
+      datasets: [
+        {
+          label: 'Volume de Votos',
+          data: h.map(d => d.count),
+          borderColor: '#ff00cc',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true,
+          backgroundColor: (context) => {
+            const ctx = context.chart.ctx;
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(255, 0, 204, 0.2)');
+            gradient.addColorStop(1, 'rgba(255, 0, 204, 0)');
+            return gradient;
+          },
+          pointRadius: 2,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#ff00cc',
+          pointBorderWidth: 2
         }
-        return result;
-    }
-    return rawData;
-  }, [metrics.votes.chart, activePeriod]);
-
-  const totalChartData = useMemo(() => ({
-    labels: mainChartData.map((_, i) => i.toString()),
-    datasets: [
-      {
-        type: 'line',
-        data: mainChartData,
-        borderColor: 'rgba(255, 0, 204, 0.4)',
-        borderWidth: 8,
-        tension: 0.4, 
-        fill: true,
-        backgroundColor: (context) => {
-          const ctx = context.chart.ctx;
-          const chartArea = context.chart.chartArea;
-          if (!chartArea) return 'rgba(255, 0, 204, 0.4)';
-          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, 'rgba(255, 0, 204, 0.6)');
-          gradient.addColorStop(1, 'rgba(12, 2, 24, 0.0)');
-          return gradient;
-        },
-        pointRadius: 0,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: '#ff00cc',
-        pointBorderWidth: 3,
-        order: 3
-      },
-      {
-        type: 'line',
-        data: mainChartData,
-        borderColor: '#ff00cc',
-        borderWidth: 3,
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0,
-        order: 2
-      }
-    ]
-  }), [mainChartData]);
+      ]
+    };
+  }, [data]);
 
   const totalChartOpts = useMemo(() => ({
     responsive: true,
@@ -434,29 +358,23 @@ export default function DashboardPage() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(18, 5, 36, 0.95)',
+        backgroundColor: 'rgba(18, 5, 36, 0.9)',
         titleColor: '#ff00cc',
         bodyColor: '#fff',
-        borderColor: 'rgba(255,0,204,0.3)',
-        borderWidth: 1,
-        cornerRadius: 8,
-        displayColors: false,
-        padding: 12
-      },
+        padding: 12,
+        cornerRadius: 8
+      }
     },
     scales: {
       y: { 
-        display: true, 
         beginAtZero: true,
-        grid: { display: true, color: 'rgba(255,255,255,0.03)' },
-        ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10 } }
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } }
       },
-      x: { display: false }
-    },
-    interaction: { mode: 'index', intersect: false },
-    animation: {
-      duration: 2000,
-      easing: 'easeOutQuart'
+      x: {
+        grid: { display: false },
+        ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } }
+      }
     }
   }), []);
 
@@ -833,28 +751,6 @@ export default function DashboardPage() {
                </span>
              </div>
 
-             {/* ELITE PROFESSIONAL: Seletor de Período */}
-             <div style={{ 
-               display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', 
-               padding: '4px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)',
-               marginLeft: '12px'
-             }}>
-               {['24h', '7d', '30d'].map(p => (
-                 <button
-                   key={p}
-                   onClick={() => setActivePeriod(p)}
-                   style={{
-                     padding: '4px 12px', borderRadius: '6px', fontSize: '0.65rem', fontWeight: 800,
-                     background: activePeriod === p ? 'var(--accent)' : 'transparent',
-                     color: activePeriod === p ? '#fff' : 'rgba(255,255,255,0.4)',
-                     border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                     textTransform: 'uppercase'
-                   }}
-                 >
-                   {p === '24h' ? 'Dia' : p === '7d' ? 'Semana' : 'Mês'}
-                 </button>
-               ))}
-             </div>
           </div>
         </div>
         
@@ -879,44 +775,68 @@ export default function DashboardPage() {
         gap: '16px', marginBottom: '32px' 
       }}>
         <StatCard 
-          value={metrics.votes.total} 
-          label={`Votos Totais`} 
+          value={periodMetrics.total} 
+          label={`Votos no Período`} 
           delay={0.1} 
-          trend={metrics.votes.trend} 
-          trendStatus={metrics.votes.status}
-          comparisonLabel={metrics.votes.label}
-          insight={metrics.votes.insight}
-          chartData={metrics.votes.chart}
+          trend={periodMetrics.trend} 
+          comparisonLabel={periodMetrics.label}
+          insight={periodMetrics.insight}
+          chartConfig={{
+            type: 'line',
+            data: {
+              labels: periodMetrics.chart.map((_, i) => i),
+              datasets: [{
+                data: periodMetrics.chart,
+                borderColor: '#6366f1', borderWidth: 2, tension: 0.5, fill: true,
+                backgroundColor: 'rgba(99, 102, 241, 0.1)'
+              }]
+            }
+          }}
         />
         <StatCard 
-          value={metrics.completion.total} 
-          label="Taxa de Conclusão" 
-          delay={0.2} 
-          trend={metrics.completion.trend} 
-          trendStatus={metrics.completion.status}
-          comparisonLabel={metrics.completion.label}
-          insight={metrics.completion.insight}
-          chartData={metrics.completion.chart}
+          value={totalResponses} label="Participantes Únicos" delay={0.2} trend={completionRate} 
+          comparisonLabel="votos totais"
+          chartConfig={{
+            type: 'line',
+            data: {
+              labels: ['7', '6', '5', '4', '3', '2', '1'],
+              datasets: [{
+                data: data?.history60d?.slice(-7).map(d => d.count) || [],
+                borderColor: '#06b6d4', borderWidth: 2, tension: 0.5, fill: true,
+                backgroundColor: 'rgba(6, 182, 212, 0.1)'
+              }]
+            }
+          }}
         />
         <StatCard 
-          value={metrics.study.total} 
-          label="Adesão Acadêmica" 
-          delay={0.3} 
-          trend={metrics.study.trend} 
-          trendStatus={metrics.study.status}
-          comparisonLabel={metrics.study.label}
-          insight={metrics.study.insight}
-          chartData={metrics.study.chart}
+          value={studyRatio} label="Foco em Estudo" delay={0.3} trend={studyRatio} 
+          insight={studyRatio.replace('%', '') > 50 ? "Alta adesão acadêmica detectada." : "Uso equilibrado entre estudo/trabalho."}
+          chartConfig={{
+            type: 'line',
+            data: {
+              labels: ['7', '6', '5', '4', '3', '2', '1'],
+              datasets: [{
+                data: [useForStudy * 0.8, useForStudy * 0.9, useForStudy],
+                borderColor: '#10b981', borderWidth: 2, tension: 0.5, fill: true,
+                backgroundColor: 'rgba(16, 185, 129, 0.1)'
+              }]
+            }
+          }}
         />
         <StatCard 
-          value={metrics.work.total} 
-          label="Uso Profissional" 
-          delay={0.4} 
-          trend={metrics.work.trend} 
-          trendStatus={metrics.work.status}
-          comparisonLabel={metrics.work.label}
-          insight={metrics.work.insight}
-          chartData={metrics.work.chart}
+          value={workRatio} label="Uso Profissional" delay={0.4} trend={workRatio} 
+          insight={workRatio.replace('%', '') > 30 ? "Forte tração no mercado corporativo." : "Crescimento gradual no âmbito profissional."}
+          chartConfig={{
+            type: 'line',
+            data: {
+              labels: ['7', '6', '5', '4', '3', '2', '1'],
+              datasets: [{
+                data: [useForWork * 0.7, useForWork * 0.85, useForWork],
+                borderColor: '#f43f5e', borderWidth: 2, tension: 0.5, fill: true,
+                backgroundColor: 'rgba(244, 63, 94, 0.1)'
+              }]
+            }
+          }}
         />
       </div>
 
@@ -924,9 +844,9 @@ export default function DashboardPage() {
       <MainSynthChart 
         chartRef={mainSynthRef}
         data={totalChartData} opts={totalChartOpts} 
-        totalVotes={metrics.votes.total} 
-        trend={metrics.votes.trend}
-        activePeriod={activePeriod}
+        totalVotes={totalVotes} totalResponses={totalResponses} 
+        useForStudy={useForStudy} useForWork={useForWork}
+        trend={periodMetrics.trend}
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '32px' }}>

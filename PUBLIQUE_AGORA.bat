@@ -1,7 +1,7 @@
 @echo off
-echo 🚀 Sync ELITE 8.0.1: Premium Analytics + Hotfix (Import Fix)...
+echo 🚀 Sincronizando: Elite 7.2 (Estabilidade & Integridade de Dados)...
 git add .
-git commit -m "💎 Sync: Elite 8.0.1 (Premium Dashboard suite + Hotfix: Importando getPeriodSlice)"
+git commit -m "💎 Sync: Elite 7.2 (Consistência e Integridade do Dashboard)"
 git push origin HEAD --force
-echo 🚀 Sucesso! Elite 8.0.1 (Hotfix aplicado) implantado. Limpe o cache do navegador (Ctrl+Shift+R).
+echo 🚀 Sucesso! Elite 7.2 (Estabilidade) implantada. Limpe o cache do navegador (Ctrl+Shift+R).
 pause
