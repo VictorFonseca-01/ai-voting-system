@@ -175,7 +175,10 @@ export default function QuestionnairePage() {
         howUseAi: form.howUseAi,
         useForStudy: form.useForStudy,
         useForWork: form.useForWork,
-        workAreaOther: form.workAreaOther
+        workAreaOther: form.workAreaOther,
+        whyNot: form.whyNot,
+        alts: form.alts,
+        interest: form.interest
       };
       
       await participationAPI.submit(payload);
