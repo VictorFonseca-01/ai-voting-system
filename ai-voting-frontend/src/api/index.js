@@ -288,12 +288,21 @@ export const dashboardAPI = {
     const useForWork = responses.filter(r => r.use_for_work === true).length;
 
     // 4. Área de Atuação (Sanitizada + Coleta de 'Outros' para análise profunda)
-    const otherWorkAreas = [];
+    const otherWorkAreasByAi = {};
+    ALL_AI_OPTIONS.forEach(ai => otherWorkAreasByAi[ai] = []);
+
     const workAreas = responses.reduce((acc, r) => {
       let val = r.work_area;
+      const userIas = userMap[r.user_id]?.ias || [];
+
       if (val === 'Outros' && r.work_area_other) {
         val = r.work_area_other;
-        otherWorkAreas.push(r.work_area_other);
+        // Adiciona aos grupos de cada IA que o usuário votou
+        userIas.forEach(ai => {
+          if (otherWorkAreasByAi[ai]) {
+            otherWorkAreasByAi[ai].push(r.work_area_other);
+          }
+        });
       }
       
       const area = getCanonicalName(val) || 'Outros';
@@ -341,28 +350,41 @@ export const dashboardAPI = {
       };
     });
 
-    // 7. Métricas Temporais (ELITE 4.4)
+    // 7. Métricas Temporais (ELITE PROFESSIONAL 6.0)
     const now = new Date();
-    const ms24h = 24 * 60 * 60 * 1000;
-    const votesLast24h = votes.filter(v => (now - new Date(v.voted_at)) < ms24h).length;
-    const votesPrevious24h = votes.filter(v => {
-      const diff = now - new Date(v.voted_at);
-      return diff >= ms24h && diff < (ms24h * 2);
-    }).length;
-
-    // Cálculo Sparkline (Últimos 7 dias)
-    const dailyCounts = Array.from({ length: 7 }).map((_, i) => {
-      const targetDate = new Date(now - (i * ms24h));
-      return votes.filter(v => {
+    const msH = 60 * 60 * 1000;
+    const msD = 24 * msH;
+    
+    // Histórico Estendido (60 dias para comparação Mês vs Mês Anterior)
+    const history60d = Array.from({ length: 60 }).map((_, i) => {
+      const targetDate = new Date(now - (i * msD));
+      const count = votes.filter(v => {
         const d = new Date(v.voted_at);
         return d.toDateString() === targetDate.toDateString();
       }).length;
+      return { day: targetDate.getDate(), month: targetDate.getMonth() + 1, count };
     }).reverse();
 
-    // Lógica Trend
+    // Distribuição por Hora (Últimas 24h)
+    const hourlyVotes = Array.from({ length: 24 }).map((_, i) => {
+      const targetTime = new Date(now - (i * msH));
+      const count = votes.filter(v => {
+        const d = new Date(v.voted_at);
+        return d > new Date(targetTime.getTime() - msH) && d <= targetTime;
+      }).length;
+      return count;
+    }).reverse();
+
+    // Votos últimos 24h vs 24h anteriores (Para o Card principal)
+    const votesLast24h = votes.filter(v => (now - new Date(v.voted_at)) < msD).length;
+    const votesPrev24h = votes.filter(v => {
+      const diff = now - new Date(v.voted_at);
+      return diff >= msD && diff < (msD * 2);
+    }).length;
+
     let vTrend = '+0.0%';
-    if (votesPrevious24h > 0) {
-      vTrend = (((votesLast24h - votesPrevious24h) / votesPrevious24h) * 100).toFixed(1) + "%";
+    if (votesPrev24h > 0) {
+      vTrend = (((votesLast24h - votesPrev24h) / votesPrev24h) * 100).toFixed(1) + "%";
       if (!vTrend.startsWith('-')) vTrend = '+' + vTrend;
     } else if (votesLast24h > 0) {
       vTrend = '+100%';
@@ -377,11 +399,13 @@ export const dashboardAPI = {
         useForStudy: responseCounts.study,
         useForWork: responseCounts.work,
         votesTrend: vTrend,
-        dailyVotes: dailyCounts,
+        dailyVotes: history60d.slice(-7).map(d => d.count), // Compatibilidade Legada (7 dias)
+        history60d, // Novo padrão Professional
+        hourlyVotes, // Novo padrão Professional
         votesByAi,
         whereUseAi,
         workAreas,
-        otherWorkAreas,
+        otherWorkAreas: otherWorkAreasByAi,
         recentVotes
       }
     };
@@ -522,9 +546,19 @@ export const dashboardAPI = {
       };
     });
 
+    const otherWorkAreasByAi = {};
+    ALL_AI_OPTIONS.forEach(ai => otherWorkAreasByAi[ai] = []);
+    activeParticipants.forEach(p => {
+      if (p.work_area === 'Outros' && p.work_area_other) {
+        (p.ias || []).forEach(ai => {
+          if (otherWorkAreasByAi[ai]) otherWorkAreasByAi[ai].push(p.work_area_other);
+        });
+      }
+    });
+
     return { 
       data: report,
-      otherWorkAreas: activeParticipants.filter(p => p.work_area === 'Outros' && p.work_area_other).map(p => p.work_area_other)
+      otherWorkAreas: otherWorkAreasByAi
     };
   }
 };

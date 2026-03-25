@@ -7,7 +7,10 @@ const fUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-export default function MainSynthChart({ data, opts, totalVotes, totalResponses, useForStudy, useForWork, chartRef }) {
+export default function MainSynthChart({ data, opts, totalVotes, totalResponses, useForStudy, useForWork, chartRef, trend }) {
+  const isPositive = trend?.includes('+');
+  const isNegative = trend?.includes('-');
+
   const drawCustomFeaturesPlugin = useMemo(() => ({
     id: 'drawCustomFeaturesPlugin',
     beforeDraw(chart) {
@@ -80,15 +83,20 @@ export default function MainSynthChart({ data, opts, totalVotes, totalResponses,
               letterSpacing: '0',
               lineHeight: 1.3
             }}>
-              {totalVotes + totalResponses + useForStudy + useForWork} <span style={{ fontSize: '0.8rem', opacity: 0.4, fontWeight: 500, letterSpacing: '1px' }}>SCORE GLOBAL</span>
+              {totalVotes} <span style={{ fontSize: '0.8rem', opacity: 0.4, fontWeight: 500, letterSpacing: '1px' }}>VOTOS NO PERÍODO</span>
             </h2>
             <p style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Σ Consolidada: Votos + Questionários + Perfis de Uso
+              Análise estatística baseada em frequência real
             </p>
           </div>
           <div style={{ textAlign: 'right', minWidth: '100px' }}>
             <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 800 }}>LIVE</div>
-            <div style={{ color: 'var(--success)', fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' }}>+2.4% Estabilidade</div>
+            <div style={{ 
+                color: isPositive ? 'var(--success)' : isNegative ? 'var(--danger)' : 'var(--text-muted)', 
+                fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' 
+            }}>
+                {trend || '+0%'} Volatilidade
+            </div>
           </div>
         </div>
       </div>

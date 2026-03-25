@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { dashboardAPI, adminAPI } from '../api';
+import { dashboardAPI } from '../api';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend
 } from 'chart.js';
 import AIIcon from '../components/AIIcon.jsx';
 import { useAuth } from '../context/AuthContext';
-import { aggregateItems, normalize } from '../utils/workAreaUtils';
+import { getFilteredOtherResponses, normalize } from '../utils/workAreaUtils';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -49,18 +49,20 @@ export default function AnalyticsPage() {
   useEffect(() => {
     fetchData();
   }, []);
-  
-  const workAreaAggregated = useMemo(() => {
-    return aggregateItems(otherWorkAreas);
-  }, [otherWorkAreas]);
+
+  // USA A FUNÇÃO CENTRALIZADA (ELITE 6.0)
+  const { results: workAreaResults, totalRaw: workAreaTotalRaw, totalMatched: workAreaTotalMatched } = useMemo(() => {
+    return getFilteredOtherResponses({
+      otherData: otherWorkAreas,
+      activeAiFilter: filterAi,
+      searchTerm: workAreaSearch
+    });
+  }, [otherWorkAreas, filterAi, workAreaSearch]);
 
   const workAreaSuggestions = useMemo(() => {
     if (!workAreaSearch.trim()) return [];
-    const term = normalize(workAreaSearch);
-    return workAreaAggregated
-      .filter(item => normalize(item.label).includes(term))
-      .slice(0, 5);
-  }, [workAreaSearch, workAreaAggregated]);
+    return workAreaResults.slice(0, 5);
+  }, [workAreaSearch, workAreaResults]);
 
   const exportCSV = async () => {
     if (!isAdmin) return;
@@ -158,18 +160,14 @@ export default function AnalyticsPage() {
 
           if (!relevantData) relevantData = { answers: [], total: 0 };
 
-          // Lógica de Busca específica para Área de Atuação
+          // Lógica de Busca específica para Área de Atuação (Elite 6.0 Unificada)
           const isWorkArea = q.id === 'work_area';
           const isSearchActive = isWorkArea && workAreaSearch.trim().length > 0;
           
           if (isSearchActive) {
-            const term = normalize(workAreaSearch);
-            const results = workAreaAggregated.filter(item => 
-              normalize(item.label).includes(term)
-            );
             relevantData = {
-              answers: results,
-              total: results.reduce((acc, curr) => acc + curr.count, 0)
+              answers: workAreaResults,
+              total: workAreaTotalMatched
             };
           }
 

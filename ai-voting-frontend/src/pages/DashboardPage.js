@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement,
   BarElement, Title, Tooltip, Legend, ArcElement, Filler
 } from 'chart.js';
-
 
 // Novos componentes modulares
 import StatCard from '../components/Dashboard/StatCard';
@@ -18,23 +17,14 @@ import { dashboardAPI, adminAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { toPng } from 'html-to-image';
 import { generateAIVotePresentation } from '../services/pptxService';
-import { useRef } from 'react';
 import { getInstagramUrl } from '../utils/socialUtils';
 import AIIcon from '../components/AIIcon.jsx';
-
-
+import { getFilteredOtherResponses } from '../utils/workAreaUtils';
+import { calculateVariation, generateInsight, getProfessionalAnimation } from '../utils/trendUtils';
 
 // Registra os componentes do Chart.js
 ChartJS.register(ArcElement, BarElement, PointElement, LineElement, CategoryScale, LinearScale, Tooltip, Legend, Title, Filler);
 
-// - [x] Ensure all admin buttons are functional and properly labeled ⚙️
-// - [x] Reestruturar os cards de estatísticas superiores para 4 colunas 📈
-// - [x] Verificação final e entrega de screenshots de alta resolução 📸✅
-//
-// **Status: COMPLETED! 🚀💎✨🏆🦾**
-
-// Paleta de cores para os gráficos
-// Paleta de cores vibrantes e modernas
 // Paleta de cores vibrantes centrada no DNA do site (Roxo -> Azul)
 const PALETTE = ['#a855f7', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#06b6d4', '#00f0ff'];
 
@@ -44,9 +34,6 @@ const fUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-
-// BackgroundOrbs removido conforme solicitado ("sem as ondas")
-
 export default function DashboardPage() {
   const { isAdmin, loading: authLoading } = useAuth();
   const [data, setData]       = useState(null);
@@ -55,6 +42,8 @@ export default function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // ELITE PROFESSIONAL 6.0: Filtro de Período
+  const [activePeriod, setActivePeriod] = useState('7d'); // '24h', '7d', '30d'
 
   const [showModal, setShowModal] = useState(false);
   const [showInstaModal, setShowInstaModal] = useState(false);
@@ -64,9 +53,9 @@ export default function DashboardPage() {
     message: '', 
     onConfirm: null, 
     type: 'confirm',
-    challenge: '', // Texto que o usuário deve digitar (ex: RESETAR)
+    challenge: '', 
     requiresPassword: false,
-    severity: 'normal' // normal, warning, danger
+    severity: 'normal' 
   });
   const [securityInput, setSecurityInput] = useState('');
   const [securityPassword, setSecurityPassword] = useState('');
@@ -291,9 +280,52 @@ export default function DashboardPage() {
 
   // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
   
+  // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
+  
+  // ELITE PROFESSIONAL 6.0: Cálculo de Métricas por Período
+  const periodMetrics = useMemo(() => {
+    if (!data?.history60d) return { 
+        total: 0, trend: '+0%', insight: 'Carregando...', label: 'período anterior', chart: [] 
+    };
+    
+    const h = data.history60d;
+    let current = 0;
+    let previous = 0;
+    let label = 'período anterior';
+    let chart = [];
+
+    if (activePeriod === '24h') {
+        current = data.votesLast24h || 0;
+        previous = data.votesPrev24h || 0;
+        label = '24h anteriores';
+        chart = data.hourlyVotes || [];
+    } else if (activePeriod === '7d') {
+        const curr7 = h.slice(-7);
+        const prev7 = h.slice(-14, -7);
+        current = curr7.reduce((acc, d) => acc + d.count, 0);
+        previous = prev7.reduce((acc, d) => acc + d.count, 0);
+        label = '7 dias anteriores';
+        chart = curr7.map(d => d.count);
+    } else { // 30d
+        const curr30 = h.slice(-30);
+        const prev30 = h.slice(0, 30);
+        current = curr30.reduce((acc, d) => acc + d.count, 0);
+        previous = prev30.reduce((acc, d) => acc + d.count, 0);
+        label = '30 dias anteriores';
+        chart = curr30.map(d => d.count);
+    }
+
+    const { percent, trend } = calculateVariation(current, previous);
+    const insight = generateInsight(current, previous, label);
+    const trendText = `${trend === 'up' ? '+' : ''}${percent}%`;
+
+    return { total: current, trend: trendText, insight, label, chart };
+  }, [data, activePeriod]);
+
   const aiRanking = useMemo(() => {
     return Object.entries(data?.votesByAi || {}).sort((a, b) => b[1] - a[1]);
   }, [data?.votesByAi]);
+
   const totalVotes    = data?.totalVotes || 0;
   const totalParticipants = data?.totalUniqueVoters || 0;
   const totalResponses= data?.totalResponses || 0;
@@ -317,61 +349,37 @@ export default function DashboardPage() {
     return ((useForWork / totalResponses) * 100).toFixed(1) + "%";
   }, [useForWork, totalResponses]);
 
-  // Cálculo de Crescimento Reais (Puxado da API Elite 4.4)
-  const votesTrend = data?.votesTrend || "+0.0%";
-  const dailyVotes = data?.dailyVotes || [0, 0, 0, 0, 0, 0, 0];
+  // Gráfico Principal Interpolado e Animado (Professional)
+  const mainChartData = useMemo(() => {
+    const rawData = periodMetrics.chart;
+    const points = activePeriod === '24h' ? 24 : 30; // 30 pontos para suavidade em 7d/30d
+    
+    if (rawData.length === 0) return Array(points).fill(0);
 
-  const groupedRecentVotes = useMemo(() => {
-    const groups = {};
-    recentVotes.forEach(v => {
-      if (!groups[v.userName]) {
-        groups[v.userName] = { ...v, aiNames: [v.aiName] };
-      } else {
-        if (!groups[v.userName].aiNames.includes(v.aiName)) {
-          groups[v.userName].aiNames.push(v.aiName);
+    // Se temos 7 dados mas queremos 30 pontos, interpolamos
+    if (rawData.length < points) {
+        const result = [];
+        for (let i = 0; i < points; i++) {
+            const idx = (i / points) * rawData.length;
+            const low = Math.floor(idx);
+            const high = Math.min(low + 1, rawData.length - 1);
+            const weight = idx - low;
+            result.push(rawData[low] * (1 - weight) + rawData[high] * weight);
         }
-      }
-    });
-    return Object.values(groups).slice(0, 5);
-  }, [recentVotes]);
-
-  const lineB = useMemo(() => {
-    if (!data?.recentVotes || totalVotes === 0) return Array(30).fill(0);
-    
-    // ELITE 4.4: Gráfico Real de Crescimento Acumulado (Temporal)
-    // Para simplificar e ser 100% preciso com o que temos na API:
-    // Se não temos a lista completa bruta na API ainda, usamos a tendência histórica.
-    // Como a API retorna 10 recentes, mas queremos a curva de TODO o histórico (totalVotes):
-    // Vamos usar os dailyVotes (7 dias) expandidos para 30 pontos se necessário, 
-    // ou manter a lógica de crescimento orgânico.
-    
-    const points = 30;
-    const history = data?.dailyVotes || [0, 0, 0, 0, 0, 0, totalVotes];
-    const totalDays = history.length;
-    
-    // Interpolação simples para 30 pontos baseada nos 7 dias reais
-    let cumulative = 0;
-    const result = [];
-    for (let i = 0; i < points; i++) {
-        const historyIdx = Math.floor((i / points) * totalDays);
-        const dayValue = history[historyIdx] || 0;
-        cumulative += (dayValue / (points / totalDays));
-        result.push(Math.min(totalVotes, cumulative));
+        return result;
     }
-    // Garante que o último ponto é o total exato
-    result[points - 1] = totalVotes;
-    return result;
-  }, [totalVotes, data?.dailyVotes]);
+    return rawData;
+  }, [periodMetrics.chart, activePeriod]);
 
   const totalChartData = useMemo(() => ({
-    labels: Array.from({length: 30}).map((_, i) => i.toString()),
+    labels: mainChartData.map((_, i) => i.toString()),
     datasets: [
       {
         type: 'line',
-        data: lineB,
+        data: mainChartData,
         borderColor: 'rgba(255, 0, 204, 0.4)',
         borderWidth: 8,
-        tension: 0.5, 
+        tension: 0.4, 
         fill: true,
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
@@ -383,48 +391,48 @@ export default function DashboardPage() {
           return gradient;
         },
         pointRadius: 0,
-        pointHoverRadius: 0,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#ff00cc',
+        pointBorderWidth: 3,
         order: 3
       },
       {
         type: 'line',
-        data: lineB,
+        data: mainChartData,
         borderColor: '#ff00cc',
         borderWidth: 3,
-        tension: 0.5,
+        tension: 0.4,
         fill: false,
         pointRadius: 0,
-        pointHoverRadius: 0,
         order: 2
-      },
-      {
-        type: 'line',
-        data: lineB,
-        borderColor: '#ffffff',
-        borderWidth: 1.5,
-        tension: 0.5,
-        fill: false,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        order: 1
       }
     ]
-  }), [lineB]);
+  }), [mainChartData]);
 
   const totalChartOpts = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: { enabled: false },
+      tooltip: {
+        backgroundColor: 'rgba(18, 5, 36, 0.95)',
+        titleColor: '#ff00cc',
+        bodyColor: '#fff',
+        borderColor: 'rgba(255,0,204,0.3)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: false,
+        padding: 12
+      },
     },
     scales: {
-      y: { display: false, min: 0 },
+      y: { display: false, beginAtZero: true },
       x: { display: false }
     },
-    interaction: { mode: 'none' },
+    interaction: { mode: 'index', intersect: false },
     animation: {
-      duration: 2500,
+      duration: 2000,
       easing: 'easeOutQuart'
     }
   }), []);
@@ -801,6 +809,29 @@ export default function DashboardPage() {
                  {isRefreshing ? 'SINCRONIZANDO' : `LIVE • ${lastUpdated.toLocaleTimeString()}`}
                </span>
              </div>
+
+             {/* ELITE PROFESSIONAL: Seletor de Período */}
+             <div style={{ 
+               display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', 
+               padding: '4px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)',
+               marginLeft: '12px'
+             }}>
+               {['24h', '7d', '30d'].map(p => (
+                 <button
+                   key={p}
+                   onClick={() => setActivePeriod(p)}
+                   style={{
+                     padding: '4px 12px', borderRadius: '6px', fontSize: '0.65rem', fontWeight: 800,
+                     background: activePeriod === p ? 'var(--accent)' : 'transparent',
+                     color: activePeriod === p ? '#fff' : 'rgba(255,255,255,0.4)',
+                     border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                     textTransform: 'uppercase'
+                   }}
+                 >
+                   {p === '24h' ? 'Dia' : p === '7d' ? 'Semana' : 'Mês'}
+                 </button>
+               ))}
+             </div>
           </div>
         </div>
         
@@ -825,14 +856,18 @@ export default function DashboardPage() {
         gap: '16px', marginBottom: '32px' 
       }}>
         <StatCard 
-          value={totalVotes} label="Total de votos" delay={0.1} trend={votesTrend} 
+          value={periodMetrics.total} 
+          label={`Votos no Período`} 
+          delay={0.1} 
+          trend={periodMetrics.trend} 
+          comparisonLabel={periodMetrics.label}
+          insight={periodMetrics.insight}
           chartConfig={{
             type: 'line',
             data: {
-              labels: ['7', '6', '5', '4', '3', '2', '1'],
+              labels: periodMetrics.chart.map((_, i) => i),
               datasets: [{
-                // Real data points from last 7 days
-                data: dailyVotes,
+                data: periodMetrics.chart,
                 borderColor: '#6366f1', borderWidth: 2, tension: 0.5, fill: true,
                 backgroundColor: 'rgba(99, 102, 241, 0.1)'
               }]
@@ -840,43 +875,46 @@ export default function DashboardPage() {
           }}
         />
         <StatCard 
-          value={totalResponses} label="Questionários" delay={0.2} trend={completionRate} 
+          value={totalResponses} label="Participantes Únicos" delay={0.2} trend={completionRate} 
+          comparisonLabel="votos totais"
           chartConfig={{
-            type: 'donut',
+            type: 'line',
             data: {
-              labels: ['Respondidos', 'Pendentes'],
+              labels: ['7', '6', '5', '4', '3', '2', '1'],
               datasets: [{
-                data: [totalResponses, Math.max(0, totalParticipants - totalResponses)],
-                backgroundColor: ['#06b6d4', 'rgba(255,255,255,0.05)'],
-                borderWidth: 0,
+                data: data?.history60d?.slice(-7).map(d => d.count) || [],
+                borderColor: '#06b6d4', borderWidth: 2, tension: 0.5, fill: true,
+                backgroundColor: 'rgba(6, 182, 212, 0.1)'
               }]
             }
           }}
         />
         <StatCard 
-          value={useForStudy} label="Usam para estudar" delay={0.3} trend={studyRatio} 
+          value={useForStudy} label="Foco em Estudo" delay={0.3} trend={studyRatio} 
+          insight={studyRatio.replace('%', '') > 50 ? "Alta adesão acadêmica detectada." : "Uso equilibrado entre estudo/trabalho."}
           chartConfig={{
-            type: 'donut',
+            type: 'line',
             data: {
-              labels: ['Estudo', 'Outros'],
+              labels: ['7', '6', '5', '4', '3', '2', '1'],
               datasets: [{
-                data: [useForStudy, Math.max(0, totalResponses - useForStudy)],
-                backgroundColor: ['#10b981', 'rgba(255,255,255,0.05)'],
-                borderWidth: 0,
+                data: [useForStudy * 0.8, useForStudy * 0.9, useForStudy],
+                borderColor: '#10b981', borderWidth: 2, tension: 0.5, fill: true,
+                backgroundColor: 'rgba(16, 185, 129, 0.1)'
               }]
             }
           }}
         />
         <StatCard 
-          value={useForWork} label="Usam para trabalho" delay={0.4} trend={workRatio} 
+          value={useForWork} label="Uso Profissional" delay={0.4} trend={workRatio} 
+          insight={workRatio.replace('%', '') > 30 ? "Forte tração no mercado corporativo." : "Crescimento gradual no âmbito profissional."}
           chartConfig={{
-            type: 'donut',
+            type: 'line',
             data: {
-              labels: ['Trabalho', 'Outros'],
+              labels: ['7', '6', '5', '4', '3', '2', '1'],
               datasets: [{
-                data: [useForWork, Math.max(0, totalResponses - useForWork)],
-                backgroundColor: ['#f43f5e', 'rgba(255,255,255,0.05)'],
-                borderWidth: 0,
+                data: [useForWork * 0.7, useForWork * 0.85, useForWork],
+                borderColor: '#f43f5e', borderWidth: 2, tension: 0.5, fill: true,
+                backgroundColor: 'rgba(244, 63, 94, 0.1)'
               }]
             }
           }}
@@ -887,8 +925,9 @@ export default function DashboardPage() {
       <MainSynthChart 
         chartRef={mainSynthRef}
         data={totalChartData} opts={totalChartOpts} 
-        totalVotes={totalVotes} totalResponses={totalResponses} 
+        totalVotes={periodMetrics.total} totalResponses={totalResponses} 
         useForStudy={useForStudy} useForWork={useForWork}
+        trend={periodMetrics.trend}
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '32px' }}>

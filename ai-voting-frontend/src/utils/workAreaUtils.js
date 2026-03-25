@@ -15,7 +15,7 @@ const groupedAliases = {
 };
 
 /**
- * Normaliza um texto para comparação
+ * Normaliza um texto para comparação (Trim, Lower, Sin Acentos, Sin Pontuação)
  */
 export const normalize = (text) => {
   if (!text) return '';
@@ -32,19 +32,16 @@ export const normalize = (text) => {
  * Retorna o nome canônico de uma área com base nos aliases
  */
 export const getCanonicalName = (rawText) => {
+  if (!rawText) return null;
   const normalized = normalize(rawText);
   if (!normalized) return null;
 
   for (const [canonical, aliases] of Object.entries(groupedAliases)) {
     if (aliases.some(alias => {
       const normAlias = normalize(alias);
-      // Case 1: Exact match
       if (normalized === normAlias) return true;
-      // Case 2: Starts with + space (to avoid 'ti' in 'tiradentes')
       if (normalized.startsWith(normAlias + ' ')) return true;
-      // Case 3: Ends with + space
       if (normalized.endsWith(' ' + normAlias)) return true;
-      // Case 4: Contains as a whole word
       if (normalized.includes(' ' + normAlias + ' ')) return true;
       return false;
     })) {
@@ -52,23 +49,84 @@ export const getCanonicalName = (rawText) => {
     }
   }
 
-  // Se não encontrar no mapa, retorna o texto original com a primeira letra maiúscula
-  return rawText.trim().charAt(0).toUpperCase() + rawText.trim().slice(1);
+  // Sanitização base: Primeira letra maiúscula
+  return rawText.trim().charAt(0).toUpperCase() + rawText.trim().slice(1).toLowerCase();
 };
 
 /**
- * Agrega uma lista de strings brutas em itens com contagem e rótulo canônico
+ * FUNÇÃO ÚNICA CENTRALIZADA (ELITE 6.0)
+ * Filtra, Pesquisa, Agrupa e Retorna resultados de "Outros" de forma consistente.
  */
-export const aggregateItems = (rawStrings) => {
+export const getFilteredOtherResponses = ({
+  otherData,
+  activeAiFilter = 'Todas',
+  searchTerm = ''
+}) => {
+  // ETAPA 1 e 2: Dataset base respeitando o Filtro de IA e Recorte de Dados
+  let baseList = [];
+  if (Array.isArray(otherData)) {
+    baseList = otherData;
+  } else if (typeof otherData === 'object' && otherData !== null) {
+    if (activeAiFilter === 'Todas' || !activeAiFilter) {
+      baseList = Object.values(otherData).flat();
+    } else {
+      baseList = otherData[activeAiFilter] || [];
+    }
+  }
+
+  const totalRaw = baseList.length;
+
+  // ETAPA 3, 4, 5 e 7: Seleção, Normalização e Agrupamento (Aliases)
   const counts = {};
-  rawStrings.forEach(s => {
-    const canonical = getCanonicalName(s);
+  const sourceTerms = {};
+
+  baseList.forEach(raw => {
+    // Somente se houver texto
+    if (!raw || typeof raw !== 'string' || !raw.trim()) return;
+
+    const canonical = getCanonicalName(raw);
     if (canonical) {
-      counts[canonical] = (counts[canonical] || 0) + 1;
+      if (!counts[canonical]) {
+        counts[canonical] = 0;
+        sourceTerms[canonical] = new Set();
+      }
+      counts[canonical]++;
+      sourceTerms[canonical].add(raw.trim());
     }
   });
 
-  return Object.entries(counts)
-    .map(([label, count]) => ({ label, count }))
+  // ETAPA 6: Aplicação da busca textual no termo normalizado
+  const term = normalize(searchTerm);
+  
+  const results = Object.entries(counts)
+    .map(([label, count]) => ({
+      label,
+      count,
+      normalizedLabel: normalize(label),
+      sourceValues: Array.from(sourceTerms[label]),
+      percentage: totalRaw > 0 ? (count / totalRaw) * 100 : 0
+    }))
+    .filter(item => {
+      if (!term) return true;
+      // Busca no label canônico ou nos termos originais (ex: 'RH' encontra 'Recursos Humanos')
+      return item.normalizedLabel.includes(term) || 
+             item.sourceValues.some(sv => normalize(sv).includes(term));
+    })
     .sort((a, b) => b.count - a.count);
+
+  const totalMatched = results.reduce((acc, curr) => acc + curr.count, 0);
+
+  return {
+    results,
+    totalRaw,
+    totalMatched
+  };
+};
+
+/**
+ * Agrega uma lista de strings brutas (Simplified version using the core logic)
+ */
+export const aggregateItems = (rawStrings) => {
+  const { results } = getFilteredOtherResponses({ otherData: rawStrings });
+  return results.map(r => ({ label: r.label, count: r.count }));
 };

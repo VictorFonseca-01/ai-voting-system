@@ -6,6 +6,7 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend
 } from 'chart.js';
 import AIIcon from '../components/AIIcon.jsx';
+import { getFilteredOtherResponses, normalize } from '../utils/workAreaUtils';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -21,7 +22,9 @@ export default function AdminAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterAi, setFilterAi] = useState('Todas');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [workAreaSearch, setWorkAreaSearch] = useState('');
+  const [showWorkAreaSuggestions, setShowWorkAreaSuggestions] = useState(false);
+  const [otherWorkAreas, setOtherWorkAreas] = useState({});
 
   const aiOptions = useMemo(() => {
     return ['Todas', 'ChatGPT', 'Gemini', 'Claude', 'Grok', 'Copilot', 'Meta AI', 'DeepSeek', 'Não utilizo IA'];
@@ -30,8 +33,9 @@ export default function AdminAnalyticsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data } = await adminAPI.getQuestionnaireReport();
+      const { data, otherWorkAreas } = await adminAPI.getQuestionnaireReport();
       setReport(data);
+      setOtherWorkAreas(otherWorkAreas || {});
     } catch (err) {
       console.error(err);
       setError('Erro ao carregar dados analíticos.');
@@ -43,6 +47,20 @@ export default function AdminAnalyticsPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // USA A FUNÇÃO CENTRALIZADA (ELITE 6.0)
+  const { results: workAreaResults, totalRaw: workAreaTotalRaw, totalMatched: workAreaTotalMatched } = useMemo(() => {
+    return getFilteredOtherResponses({
+      otherData: otherWorkAreas,
+      activeAiFilter: filterAi,
+      searchTerm: workAreaSearch
+    });
+  }, [otherWorkAreas, filterAi, workAreaSearch]);
+
+  const workAreaSuggestions = useMemo(() => {
+    if (!workAreaSearch.trim()) return [];
+    return workAreaResults.slice(0, 5);
+  }, [workAreaSearch, workAreaResults]);
 
   const exportCSV = () => {
     const rows = [];
@@ -132,6 +150,22 @@ export default function AdminAnalyticsPage() {
             : { answers: q.globalAnswers.filter(a => a.count > 0), total: q.totalResponses };
 
           if (!relevantData) relevantData = { answers: [], total: 0 };
+          
+          // Lógica de Busca específica para Área de Atuação (Back-ported from AnalyticsPage)
+          const isWorkArea = q.id === 'work_area';
+          const isSearchActive = isWorkArea && workAreaSearch.trim().length > 0;
+          
+          if (isSearchActive) {
+            const term = normalize(workAreaSearch);
+            const results = workAreaAggregated.filter(item => 
+              normalize(item.label).includes(term)
+            );
+            relevantData = {
+              answers: results,
+              total: results.reduce((acc, curr) => acc + curr.count, 0)
+            };
+          }
+
           const hasData = relevantData.answers.length > 0;
 
           const chartData = {
@@ -182,13 +216,74 @@ export default function AdminAnalyticsPage() {
                     {idx + 1}
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{q.question}</h3>
+                    <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{isSearchActive ? `Análise de "${workAreaSearch}"` : q.question}</h3>
                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         {isFiltered ? `Filtro: ${filterAi}` : 'Visão Global'} • {relevantData.total} respostas
                     </p>
                   </div>
                 </div>
-                {isFiltered && <AIIcon name={filterAi} size={32} />}
+
+                {/* Busca contextual para Área de Atuação */}
+                {isWorkArea && (
+                    <div style={{ position: 'relative', width: '250px' }}>
+                        <div style={{ position: 'relative' }}>
+                            <input 
+                                type="text"
+                                placeholder="Pesquisar em 'Outros'..."
+                                value={workAreaSearch}
+                                onChange={(e) => {
+                                    setWorkAreaSearch(e.target.value);
+                                    setShowWorkAreaSuggestions(true);
+                                }}
+                                onFocus={() => setShowWorkAreaSuggestions(true)}
+                                style={{
+                                    width: '100%', padding: '10px 35px 10px 15px', borderRadius: '10px',
+                                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                    color: '#fff', fontSize: '0.85rem', outline: 'none'
+                                }}
+                            />
+                            {workAreaSearch && (
+                                <button 
+                                    onClick={() => setWorkAreaSearch('')}
+                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+                        
+                        <AnimatePresence>
+                            {showWorkAreaSuggestions && workAreaSuggestions.length > 0 && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                                    style={{
+                                        position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 100,
+                                        background: '#120524', border: '1px solid var(--border)', borderRadius: '10px',
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.6)', overflow: 'hidden'
+                                    }}
+                                >
+                                    {workAreaSuggestions.map((s, i) => (
+                                        <div 
+                                            key={i}
+                                            onClick={() => {
+                                                setWorkAreaSearch(s.label);
+                                                setShowWorkAreaSuggestions(false);
+                                            }}
+                                            style={{ padding: '10px 15px', fontSize: '0.85rem', cursor: 'pointer', borderBottom: i < workAreaSuggestions.length -1 ? '1px solid rgba(255,255,255,0.05)' : 'none', display: 'flex', justifyContent: 'space-between' }}
+                                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.08)'}
+                                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                        >
+                                            <span style={{ fontWeight: 600 }}>{s.label}</span>
+                                            <span style={{ color: 'var(--accent)' }}>{s.count}</span>
+                                        </div>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                )}
+
+                {isFiltered && !isWorkArea && <AIIcon name={filterAi} size={32} />}
               </div>
 
               <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

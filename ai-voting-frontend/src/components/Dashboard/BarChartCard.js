@@ -1,51 +1,47 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bar } from 'react-chartjs-2';
-import { aggregateItems, normalize } from '../../utils/workAreaUtils';
+import { getFilteredOtherResponses } from '../../utils/workAreaUtils';
 
 const fUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-export default function BarChartCard({ title, data, options, chartRef, otherData = [] }) {
+export default function BarChartCard({ title, data, options, chartRef, otherData = [], filterAi = 'Todas' }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Agrega todos os dados de "Outros" para sugestões e análise
-  const otherAggregated = useMemo(() => {
-    return aggregateItems(otherData);
-  }, [otherData]);
+  // USA A FUNÇÃO CENTRALIZADA (ELITE 6.0) - Unificando lógica de Dashboard e Analytics
+  const { results: filteredResults, totalRaw, totalMatched } = useMemo(() => {
+    return getFilteredOtherResponses({
+      otherData,
+      activeAiFilter: filterAi,
+      searchTerm
+    });
+  }, [otherData, filterAi, searchTerm]);
 
-  // Filtra as sugestões com base no termo digitado
+  // Filtra as sugestões com base nos resultados já processados pela função única
   const suggestions = useMemo(() => {
     if (!searchTerm.trim()) return [];
-    const term = normalize(searchTerm);
-    return otherAggregated
-      .filter(item => normalize(item.label).includes(term))
-      .slice(0, 5);
-  }, [searchTerm, otherAggregated]);
+    return filteredResults.slice(0, 5);
+  }, [searchTerm, filteredResults]);
 
-  // Se houver busca ativa, cria os dados do gráfico filtrado
+  // Se houver busca ativa, cria os dados do gráfico filtrado usando a estrutura da função central
   const isSearchActive = searchTerm.trim().length > 0;
   
-  const filteredData = useMemo(() => {
+  const finalChartData = useMemo(() => {
     if (!isSearchActive) return data;
 
-    const term = normalize(searchTerm);
-    const results = otherAggregated.filter(item => 
-       normalize(item.label).includes(term)
-    );
-
     return {
-      labels: results.map(r => r.label),
+      labels: filteredResults.slice(0, 10).map(r => r.label),
       datasets: [{
         ...data.datasets[0],
         label: `Resultados para "${searchTerm}"`,
-        data: results.map(r => r.count),
+        data: filteredResults.slice(0, 10).map(r => r.count),
       }]
     };
-  }, [isSearchActive, searchTerm, otherAggregated, data]);
+  }, [isSearchActive, searchTerm, filteredResults, data]);
 
   const handleSelectSuggestion = (label) => {
     setSearchTerm(label);
@@ -62,7 +58,7 @@ export default function BarChartCard({ title, data, options, chartRef, otherData
           </h3>
         </div>
 
-        {/* Campo de Busca Autocomplete */}
+        {/* Campo de Busca Autocomplete - Unificado */}
         <div style={{ position: 'relative', width: '220px' }}>
             <div style={{ position: 'relative' }}>
                 <input 
@@ -131,21 +127,22 @@ export default function BarChartCard({ title, data, options, chartRef, otherData
       </div>
 
       <div style={{ height: '300px', width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
-        {isSearchActive && filteredData.labels.length === 0 ? (
+        {isSearchActive && finalChartData.labels.length === 0 ? (
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                 <span style={{ fontSize: '2rem', marginBottom: '10px' }}>🔍</span>
                 Nenhum resultado encontrado para "{searchTerm}"
             </div>
         ) : (
-            <Bar data={filteredData} options={options} />
+            <Bar data={finalChartData} options={options} />
         )}
       </div>
 
       {isSearchActive && (
           <p style={{ margin: '15px 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-             Mostrando dados agrupados de <strong>{otherData.length}</strong> respostas abertas.
+             Mostrando dados agrupados de <strong>{totalMatched}</strong> de <strong>{totalRaw}</strong> respostas "Outros" em <strong>{filterAi}</strong>.
           </p>
       )}
     </motion.div>
   );
 }
+
