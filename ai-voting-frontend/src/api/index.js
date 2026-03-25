@@ -588,27 +588,34 @@ export const dashboardAPI = {
    * Garante: WHERE ia = IA_SELECIONADA AND work_area_other ILIKE %search%
    */
   searchOtherWorkAreas: async (aiFilter = 'Todas', searchTerm = '') => {
-    let query = supabase
-      .from('question_responses')
-      .select('work_area_other, user_id, votes!inner(ai_name)')
-      .eq('work_area', 'Outros');
-
-    // 1. Filtro OBRIGATÓRIO por IA (no Backend via Inner Join)
+    // 1. Filtro OBRIGATÓRIO por IA (Deduplicado por user_id)
+    let userIds = null;
     if (aiFilter !== 'Todas') {
-      // Supabase filter on joined table
-      query = query.filter('votes.ai_name', 'eq', aiFilter);
+      const { data: vData } = await supabase.from('votes').select('user_id').eq('ai_name', aiFilter);
+      if (vData) userIds = [...new Set(vData.map(v => v.user_id))];
+      if (!userIds || userIds.length === 0) return [];
     }
 
-    // 2. Filtro de BUSCA (no Backend via ILIKE)
+    // 2. Busca INCLUSIVA (Padrão + Outros) - ELITE 7.5.1
+    let query = supabase
+      .from('question_responses')
+      .select('work_area, work_area_other, user_id');
+
+    if (userIds) {
+      query = query.in('user_id', userIds);
+    }
+
     if (searchTerm.trim()) {
-      query = query.ilike('work_area_other', `%${searchTerm.trim()}%`);
+      const term = `%${searchTerm.trim()}%`;
+      query = query.or(`work_area.ilike.${term},work_area_other.ilike.${term}`);
     }
 
     const { data, error } = await query;
     if (error) throw error;
 
-    // Retorna lista bruta para normalização final no frontend (agrupamento de aliases)
-    return (data || []).map(r => r.work_area_other);
+    // 3. Normalização Deduplicada: Mapeia cada resposta real para seu valor canônico
+    // Retornamos tudo para que o groupedAliases do frontend faça a mágica final
+    return (data || []).map(r => (r.work_area === 'Outros' ? r.work_area_other : r.work_area)).filter(Boolean);
   }
 };
 

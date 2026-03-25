@@ -181,9 +181,16 @@ export default function AnalyticsPage() {
           })
           .map((q, idx) => {
           const isFiltered = filterAi !== 'Todas';
-          let relevantData = isFiltered 
-            ? q.options.find(o => o.ai === filterAi) 
-            : { answers: q.globalAnswers.filter(a => a.count > 0), total: q.totalResponses };
+          let relevantData = null;
+          
+          if (isFiltered) {
+            relevantData = (q.options || []).find(o => o.ai === filterAi);
+          } else {
+            relevantData = { 
+              answers: (q.globalAnswers || []).filter(a => a.count > 0), 
+              total: q.totalResponses || 0 
+            };
+          }
 
           if (!relevantData) relevantData = { answers: [], total: 0 };
 
