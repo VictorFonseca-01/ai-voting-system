@@ -53,7 +53,12 @@ export const isValidInstagramFormat = (username) => {
  */
 export const getInstagramUrl = (username) => {
   if (!username) return null;
-  return `https://www.instagram.com/${username}/`;
+  
+  // Limpeza defensiva extra para evitar %20 ou lixo de dados antigos
+  const clean = username.toString().trim().toLowerCase().replace(/[^a-z0-9._]/g, '');
+  
+  if (!clean) return null;
+  return `https://www.instagram.com/${clean}/`;
 };
 
 /**
