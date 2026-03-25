@@ -200,8 +200,8 @@ export default function AnalyticsPage() {
           
           if (isSearchActive) {
             relevantData = {
-              answers: workAreaResults,
-              total: workAreaTotalRaw // Mantém base total da IA para cálculo de % real
+              answers: workAreaResults || [],
+              total: workAreaTotalRaw || 0
             };
           }
 
@@ -278,13 +278,17 @@ export default function AnalyticsPage() {
                                 style={{
                                     width: '100%', padding: '10px 35px 10px 15px', borderRadius: '10px',
                                     background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                                    color: '#fff', fontSize: '0.85rem', outline: 'none'
+                                    color: '#fff', fontSize: '0.85rem', outline: 'none',
+                                    paddingRight: isSearching ? '40px' : '35px'
                                 }}
                             />
+                            {isSearching && (
+                                <div className="spinner-mini" style={{ position: 'absolute', right: '35px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px' }} />
+                            )}
                             {workAreaSearch && (
                                 <button 
                                     onClick={() => setWorkAreaSearch('')}
-                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
+                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '5px' }}
                                 >
                                     ✕
                                 </button>

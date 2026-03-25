@@ -567,13 +567,17 @@ export const dashboardAPI = {
     const otherWorkAreasByAi = {};
     ALL_AI_OPTIONS.forEach(ai => otherWorkAreasByAi[ai] = []);
     activeParticipants.forEach(p => {
-      if (p.work_area === 'Outros' && p.work_area_other) {
+      // Coletamos TODAS as respostas de área de atuação para suporte à busca híbrida (ELITE 7.5.2)
+      let val = p.work_area;
+      if (val === 'Outros' && p.work_area_other) val = p.work_area_other;
+      
+      if (val) {
         (p.ias || []).forEach(ai => {
-          if (otherWorkAreasByAi[ai]) otherWorkAreasByAi[ai].push(p.work_area_other);
+          if (otherWorkAreasByAi[ai]) otherWorkAreasByAi[ai].push(val);
         });
-        // Lista consolidada global única
+        // Lista consolidada global
         if (!otherWorkAreasByAi['Todas']) otherWorkAreasByAi['Todas'] = [];
-        otherWorkAreasByAi['Todas'].push(p.work_area_other);
+        otherWorkAreasByAi['Todas'].push(val);
       }
     });
 
