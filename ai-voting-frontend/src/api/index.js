@@ -141,19 +141,21 @@ export const votesAPI = {
 
   checkStatus: async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { data: { hasVoted: false, votes: [] } };
+    if (!user) return { data: { hasVoted: false, isComplete: false, votes: [] } };
 
-    const { data, error } = await supabase
-      .from('votes')
-      .select('ai_name')
-      .eq('user_id', user.id);
+    // Busca status consolidado no Usuário (Procedimento SaaS)
+    const [votesRes, userRes] = await Promise.all([
+      supabase.from('votes').select('ai_name').eq('user_id', user.id),
+      supabase.from('users').select('is_complete').eq('id', user.id).single()
+    ]);
       
-    if (error) throw error;
+    if (votesRes.error) throw votesRes.error;
     
     return { 
       data: { 
-        hasVoted: data.length > 0,
-        votes: data.map(v => v.ai_name)
+        hasVoted: (votesRes.data || []).length > 0,
+        isComplete: !!userRes.data?.is_complete,
+        votes: (votesRes.data || []).map(v => v.ai_name)
       } 
     };
   }
@@ -185,11 +187,20 @@ export const questionnaireAPI = {
       answered_at: new Date().toISOString()
     };
 
-    const { error } = await supabase
+    const { error: responseError } = await supabase
       .from('question_responses')
       .upsert(payload, { onConflict: 'user_id' });
       
-    if (error) throw error;
+    if (responseError) throw responseError;
+
+    // MARCA COMO COMPLETO: Finaliza o ciclo de participação
+    const { error: userError } = await supabase
+      .from('users')
+      .update({ is_complete: true })
+      .eq('id', targetId);
+
+    if (userError) console.warn("Aviso: Falha ao marcar is_complete (coluna pode não existir ainda).");
+
     return { data: { success: true } };
   },
 
@@ -209,21 +220,33 @@ export const questionnaireAPI = {
 // ─── DASHBOARD ────────────────────────────────────────────────────────
 export const dashboardAPI = {
   getData: async () => {
-    // Agregação client-side robusta para o dashboard
-    const [votesRes, responsesRes, usersRes] = await Promise.all([
-      supabase.from('votes').select('*').order('voted_at', { ascending: false }),
-      supabase.from('question_responses').select('*'),
-      supabase.from('users').select('id, name, course, institution, instagram')
+    // 1. Busca usuários completos
+    const { data: completeUsers, error: uError } = await supabase
+      .from('users')
+      .select('id, name, course, institution, instagram')
+      .eq('is_complete', true);
+    
+    if (uError) throw uError;
+    const completeIds = (completeUsers || []).map(u => u.id);
+
+    if (completeIds.length === 0) {
+      return { 
+        data: { totalVotes: 0, totalUniqueVoters: 0, totalResponses: 0, votesByAi: {}, whereUseAi: {}, workAreas: {}, recentVotes: [] } 
+      };
+    }
+
+    // 2. Busca votos e respostas apenas dos usuários completos
+    const [votesRes, responsesRes] = await Promise.all([
+      supabase.from('votes').select('*').in('user_id', completeIds).order('voted_at', { ascending: false }),
+      supabase.from('question_responses').select('*').in('user_id', completeIds)
     ]);
 
     if (votesRes.error) throw votesRes.error;
     if (responsesRes.error) throw responsesRes.error;
-    if (usersRes.error) throw usersRes.error;
 
     const votes = votesRes.data || [];
     const responses = responsesRes.data || [];
-    const users = usersRes.data || [];
-    const userMap = users.reduce((acc, u) => ({ 
+    const userMap = completeUsers.reduce((acc, u) => ({ 
       ...acc, 
       [u.id]: { 
         name: u.name, 
@@ -357,10 +380,23 @@ export const dashboardAPI = {
   },
 
   getPublicQuestionnaireReport: async () => {
-    // 1. Busca dados base
+    // 1. Busca usuários completos
+    const { data: completeUsers, error: uError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('is_complete', true);
+    
+    if (uError) throw uError;
+    const completeIds = (completeUsers || []).map(u => u.id);
+
+    if (completeIds.length === 0) {
+      return { data: [], otherWorkAreas: [] };
+    }
+
+    // 2. Busca votos e respostas apenas dos usuários completos
     const [votesRes, responsesRes] = await Promise.all([
-      supabase.from('votes').select('user_id, ai_name'),
-      supabase.from('question_responses').select('*')
+      supabase.from('votes').select('user_id, ai_name').in('user_id', completeIds),
+      supabase.from('question_responses').select('*').in('user_id', completeIds)
     ]);
 
     if (votesRes.error) throw votesRes.error;
@@ -480,6 +516,10 @@ export const adminAPI = {
       query = query.eq('role', filters.role);
     }
     
+    if (filters.is_complete !== undefined && filters.is_complete !== '') {
+      query = query.eq('is_complete', filters.is_complete === 'true' || filters.is_complete === true);
+    }
+
     // Filtros de Voto/Questionário exigem cruzamento ou flags na tabela users
     // Para performance SaaS, o ideal é que essas flags existam na tabela 'users'
     // Como o sistema atual as calcula dinamicamente, vamos manter a lógica de cruzamento 
@@ -525,6 +565,17 @@ export const adminAPI = {
       data: finalData,
       totalCount: count
     };
+  },
+
+  createUser: async (userData) => {
+    // Registra um usuário manualmente (votos e questionários ficam como 'Não' inicialmente)
+    const { data, error } = await supabase.from('users').insert([{
+      ...userData,
+      role: 'ROLE_USER',
+      created_at: new Date().toISOString()
+    }]).select().single();
+    if (error) throw error;
+    return { data, success: true };
   },
 
   updateUser: async (userId, updateData) => {

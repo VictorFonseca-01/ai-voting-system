@@ -47,7 +47,7 @@ export default function VotePage() {
 
   const isSmallScreen = windowWidth < 600;
 
-  // Verifica se o usuário já votou no banco de dados (COM BLOQUEIO ANTIFRAUDE ELITE 4.5)
+  // Verifica se o usuário já votou no banco de dados (COM BLOQUEIO ANTIFRAUDE ELITE 4.5/6.0)
   useEffect(() => {
     const checkStatus = async () => {
       // 1. Verificação Local (Rápida)
@@ -59,7 +59,9 @@ export default function VotePage() {
 
       try {
         const { data } = await votesAPI.checkStatus();
-        if (data.hasVoted) {
+        if (data.isComplete) {
+          setAlreadyParticipated(true); // Bloqueia tudo se já finalizou tudo
+        } else if (data.hasVoted) {
           setHasVoted(true);
           setMyVotes(data.votes);
         }

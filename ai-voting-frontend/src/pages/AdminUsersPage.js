@@ -24,7 +24,11 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState({ role: '', status: '' });
+  const [filters, setFilters] = useState({ 
+    role: '', 
+    status: '', 
+    is_complete: 'true' // Default: apenas participações válidas
+  });
   const [sort, setSort] = useState({ column: 'name', ascending: true });
   const debouncedSearch = useDebounce(search, 300);
 
@@ -37,6 +41,11 @@ export default function AdminUsersPage() {
   // --- STATE: MODAL ---
   const [showModal, setShowModal] = useState(false);
   const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
+  
+  // --- STATE: ADD USER ---
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newData, setNewData] = useState({ name: '', course: '', institution: '' });
+  const [addLoading, setAddLoading] = useState(false);
 
   // --- FETCH DATA ---
   const fetchUsers = useCallback(async () => {
@@ -159,6 +168,22 @@ export default function AdminUsersPage() {
     setShowModal(true);
   };
 
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!newData.name) return alert('O nome é obrigatório');
+    setAddLoading(true);
+    try {
+      await adminAPI.createUser(newData);
+      setShowAddModal(false);
+      setNewData({ name: '', course: '', institution: '' });
+      fetchUsers();
+    } catch (err) {
+      alert('Erro ao criar usuário.');
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   // --- RENDER HELPERS ---
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -197,8 +222,46 @@ export default function AdminUsersPage() {
               Controle total de participantes e permissões do sistema.
             </p>
           </div>
-          <button onClick={() => window.history.back()} className="btn btn-ghost">← Voltar para Dashboard</button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={() => setShowAddModal(true)} className="btn btn-primary" style={{ background: 'var(--grad-primary)', border: 'none' }}>
+              + Adicionar Usuário
+            </button>
+            <button onClick={() => window.history.back()} className="btn btn-ghost">← Voltar</button>
+          </div>
         </div>
+
+        {/* Modal: Adicionar Usuário */}
+        {showAddModal && (
+          <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+              <div className="modal-header">
+                <div className="accent-line" style={{ width: '40px', marginBottom: '8px' }} />
+                <h3>Novo Participante</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>O usuário será criado sem votos e sem respostas iniciais.</p>
+              </div>
+              <form onSubmit={handleCreateUser} style={{ display: 'grid', gap: '16px', marginTop: '20px' }}>
+                <div>
+                  <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.6, marginBottom: '6px', display: 'block' }}>Nome Completo *</label>
+                  <input className="form-control" value={newData.name} onChange={e => setNewData({...newData, name: e.target.value})} required placeholder="Nome do participante" />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.6, marginBottom: '6px', display: 'block' }}>Curso</label>
+                  <input className="form-control" value={newData.course} onChange={e => setNewData({...newData, course: e.target.value})} placeholder="Engenharia, Direito, etc." />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.6, marginBottom: '6px', display: 'block' }}>Instituição</label>
+                  <input className="form-control" value={newData.institution} onChange={e => setNewData({...newData, institution: e.target.value})} placeholder="Faculdade ou Empresa" />
+                </div>
+                <div className="modal-footer" style={{ marginTop: '10px', padding: '0' }}>
+                  <button type="button" className="btn btn-ghost" onClick={() => setShowAddModal(false)}>Cancelar</button>
+                  <button type="submit" className="btn btn-primary" disabled={addLoading} style={{ background: 'var(--grad-primary)', border: 'none' }}>
+                    {addLoading ? 'Criando...' : 'Registrar Usuário'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* --- TOOLBAR --- */}
         <div className="saas-toolbar" style={{ 
@@ -217,6 +280,19 @@ export default function AdminUsersPage() {
               className="form-control"
               style={{ width: '100%' }}
             />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Status de Registro</label>
+            <select 
+              className="form-control" 
+              value={filters.is_complete} 
+              onChange={e => setFilters({...filters, is_complete: e.target.value})}
+              style={{ width: '100%' }}
+            >
+              <option value="true">✅ Completos</option>
+              <option value="false">⏳ Incompletos</option>
+              <option value="">👥 Todos os Registros</option>
+            </select>
           </div>
           <div>
             <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Nível de Acesso</label>
@@ -273,32 +349,38 @@ export default function AdminUsersPage() {
         </AnimatePresence>
 
         {/* --- TABLE --- */}
-        <div className="saas-table-container" style={{ overflowX: 'auto', minHeight: '300px' }}>
-          <table className="saas-table-flat">
+        <div className="saas-table-container" style={{ 
+          overflowX: 'auto', 
+          minHeight: '300px', 
+          borderRadius: '12px',
+          border: '1px solid rgba(255,255,255,0.05)',
+          background: 'rgba(0,0,0,0.1)'
+        }}>
+          <table className="saas-table-flat" style={{ tableLayout: 'fixed', minWidth: '1100px' }}>
             <thead>
               <tr>
-                <th style={{ width: '40px' }}>#</th>
+                <th style={{ width: '50px' }}>#</th>
                 <th style={{ width: '40px' }}>
                   <input type="checkbox" checked={selectedIds.size === users.length && users.length > 0} onChange={toggleSelectAll} />
                 </th>
-                <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
-                  Nome {sort.column === 'name' && (sort.ascending ? '↑' : '↓')}
+                <th onClick={() => handleSort('name')} style={{ cursor: 'pointer', width: '220px' }}>
+                  Participante {sort.column === 'name' && (sort.ascending ? '↑' : '↓')}
                 </th>
-                <th onClick={() => handleSort('course')} style={{ cursor: 'pointer' }} className="hide-mobile">
+                <th onClick={() => handleSort('course')} style={{ cursor: 'pointer', width: '200px' }}>
                   Curso {sort.column === 'course' && (sort.ascending ? '↑' : '↓')}
                 </th>
-                <th className="hide-mobile">Instituição</th>
-                <th style={{ textAlign: 'center' }}>Insta</th>
-                <th style={{ textAlign: 'center' }}>Votou?</th>
-                <th style={{ textAlign: 'center' }} className="hide-tablet">Quest?</th>
-                <th style={{ textAlign: 'right' }}>Ações</th>
+                <th style={{ width: '180px' }}>Instituição</th>
+                <th style={{ textAlign: 'center', width: '70px' }}>Insta</th>
+                <th style={{ textAlign: 'center', width: '90px' }}>Votou?</th>
+                <th style={{ textAlign: 'center', width: '90px' }}>Quest?</th>
+                <th style={{ textAlign: 'right', width: '100px' }}>Ações</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '100px 0' }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '100px 0' }}><div className="spinner" style={{ margin: '0 auto' }} /></td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>Nenhum usuário encontrado com estes critérios.</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>Nenhum usuário encontrado com estes critérios.</td></tr>
               ) : users.map((u, index) => (
                 <tr key={u.id} className={selectedIds.has(u.id) ? 'row-selected' : ''}>
                   {/* 1. ID/Index */}
@@ -322,18 +404,25 @@ export default function AdminUsersPage() {
                         autoFocus
                       />
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontWeight: 600 }}>{u.name || 'Participante'}</span>
-                        {u.role === 'ROLE_ADMIN' && <span className="badge badge-accent" style={{ fontSize: '0.6rem' }}>ADMIN</span>}
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <div className="text-truncate" style={{ fontWeight: 600, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ 
+                            width: '8px', height: '8px', borderRadius: '50%', 
+                            background: u.is_complete ? '#10b981' : '#6b7280',
+                            flexShrink: 0 
+                          }} title={u.is_complete ? 'Completo' : 'Incompleto'} />
+                          {u.name || 'Participante'}
+                          {u.role === 'ROLE_ADMIN' && <span className="badge badge-accent" style={{ fontSize: '0.6rem', marginLeft: '6px' }}>ADMIN</span>}
+                        </div>
+                        {u.email && !u.email.includes('guest_') && !u.email.includes('test_') && !u.email.includes('anon_') && (
+                          <div className="text-truncate" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>{u.email}</div>
+                        )}
                       </div>
-                    )}
-                    {u.email && !u.email.includes('guest_') && !u.email.includes('test_') && !u.email.includes('anon_') && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{u.email}</div>
                     )}
                   </td>
 
                   {/* 4. Curso */}
-                  <td className="hide-mobile">
+                  <td>
                     {editingId === u.id ? (
                       <input 
                         className="form-control" 
@@ -343,12 +432,12 @@ export default function AdminUsersPage() {
                         placeholder="Curso"
                       />
                     ) : (
-                      u.course || '-'
+                      <div className="text-truncate">{u.course || '-'}</div>
                     )}
                   </td>
 
                   {/* 5. Instituição */}
-                  <td className="hide-mobile">
+                  <td>
                     {editingId === u.id ? (
                       <input 
                         className="form-control" 
@@ -358,7 +447,7 @@ export default function AdminUsersPage() {
                         placeholder="Instituição"
                       />
                     ) : (
-                      u.institution || '-'
+                      <div className="text-truncate">{u.institution || '-'}</div>
                     )}
                   </td>
 
@@ -449,12 +538,45 @@ export default function AdminUsersPage() {
       
       {/* Estilos Inline SaaS */}
       <style>{`
-        .saas-table-flat { width: 100%; border-collapse: collapse !important; border-spacing: 0 !important; margin-top: 10px; background: transparent !important; table-layout: auto; }
-        .saas-table-flat th { padding: 18px 16px; color: var(--accent-light); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; background: transparent !important; }
-        .saas-table-flat tr { border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; }
-        .saas-table-flat td { padding: 20px 16px; background: transparent !important; box-shadow: none !important; color: #fff; vertical-align: middle; }
-        .saas-table-flat tr:hover { background: rgba(255,255,255,0.02) !important; }
+        .saas-table-container { 
+          scrollbar-width: thin; 
+          scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+        .saas-table-container::-webkit-scrollbar { height: 6px; }
+        .saas-table-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        
+        .saas-table-flat { width: 100%; border-collapse: collapse !important; border-spacing: 0 !important; margin-top: 0; background: transparent !important; }
+        .saas-table-flat th { 
+          padding: 16px; 
+          color: var(--accent-light); 
+          font-size: 0.65rem; 
+          text-transform: uppercase; 
+          letter-spacing: 1.5px; 
+          border-bottom: 2px solid rgba(255,255,255,0.05); 
+          text-align: left; 
+          background: rgba(255,255,255,0.02) !important;
+          font-weight: 800;
+        }
+        .saas-table-flat tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s; }
+        .saas-table-flat td { 
+          padding: 14px 16px; 
+          background: transparent !important; 
+          box-shadow: none !important; 
+          color: #fff; 
+          vertical-align: middle;
+          font-size: 0.9rem;
+        }
+        .saas-table-flat tr:hover { background: rgba(255,255,255,0.03) !important; }
         .row-selected { background: rgba(217, 70, 239, 0.05) !important; }
+        
+        .text-truncate {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          display: block;
+        }
+
         .btn-icon { background: transparent !important; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 6px; transition: 0.2s; box-shadow: none !important; }
         .btn-icon:hover { background: rgba(255,255,255,0.1); }
         .btn-icon-danger:hover { background: rgba(255, 77, 109, 0.2); }
@@ -462,13 +584,11 @@ export default function AdminUsersPage() {
         .badge-accent { background: rgba(217, 70, 239, 0.15); color: #d946ef; padding: 2px 8px; border-radius: 4px; font-weight: 800; }
         .btn-danger { background: #ff4d6d; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; }
         .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+        
         @media (max-width: 768px) {
-          .hide-mobile { display: none; }
           .saas-toolbar { grid-template-columns: 1fr !important; }
+          .pagination { width: 100%; justify-content: space-between; margin-top: 10px; }
           .pagination button { padding: 4px 8px !important; font-size: 0.8rem; }
-        }
-        @media (max-width: 1024px) {
-          .hide-tablet { display: none; }
         }
       `}</style>
     </div>

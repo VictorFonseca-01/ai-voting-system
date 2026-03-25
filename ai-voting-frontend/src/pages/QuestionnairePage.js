@@ -59,10 +59,18 @@ export default function QuestionnairePage() {
   const identSectionRef = useRef(null);
 
   useEffect(() => {
-    // 1. Bloqueio Antifraude Preventivo Removido (Conforme nova regra: Sem bloqueio por dispositivo)
-    // if (checkLocalVoteStatus()) {
-    //   setAlreadyParticipated(true);
-    // }
+    // 1. Verificação de Status Consolidado (ELITE 6.0 Integrity)
+    const checkStatus = async () => {
+      try {
+        const { data } = await votesAPI.checkStatus();
+        if (data.isComplete) {
+          setAlreadyParticipated(true);
+        }
+      } catch (err) {
+        console.error("Erro ao checar status no Questionário:", err);
+      }
+    };
+    checkStatus();
 
     const saved = sessionStorage.getItem('selectedIAs');
     if (saved) {
