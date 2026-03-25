@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { hasInappropriateContent } from '../utils/moderation';
 import { getFingerprint, getPersistentSessionId, markAsVotedLocally } from '../utils/security';
+import { extractInstagramUsername, isValidInstagramFormat } from '../utils/socialUtils';
 
 /**
  * Camada de API - Versão Supabase (Safe Mode)
@@ -717,7 +718,6 @@ export const adminAPI = {
   }
 };
 
-import { extractInstagramUsername, isValidInstagramFormat } from '../utils/socialUtils';
 
 // ─── PARTICIPATION ───────────────────────────────────────────────────
 export const participationAPI = {
