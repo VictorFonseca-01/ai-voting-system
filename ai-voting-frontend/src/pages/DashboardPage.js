@@ -276,31 +276,12 @@ export default function DashboardPage() {
 
   // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
   
-  // ELITE PROFESSIONAL 8.0: Cálculo Centralizado de Métricas por Período
-  const totalVotes     = data?.votesLast24h || 0;
+  // MÉTRICAS ORIGINAIS (RESTORE ELITE 7.0)
+  const totalVotes     = data?.totalVotes || 0;
   const totalResponses = data?.totalResponses || 0;
-  const completionRate = data?.totalUniqueVoters ? Math.round((data.totalResponses / data.totalUniqueVoters) * 100) + '%' : '0%';
   const useForStudy    = data?.useForStudy || 0;
   const useForWork     = data?.useForWork || 0;
   const recentVotes    = data?.recentVotes || [];
-
-  const studyRatio = totalResponses ? Math.round((useForStudy / totalResponses) * 100) + '%' : '0%';
-  const workRatio = totalResponses ? Math.round((useForWork / totalResponses) * 100) + '%' : '0%';
-
-  const periodMetrics = useMemo(() => {
-    const h = data?.history60d || [];
-    const current = h.length >= 7 ? h.slice(-7).reduce((a, b) => a + (b?.count || 0), 0) : 0;
-    const previous = h.length >= 14 ? h.slice(-14, -7).reduce((a, b) => a + (b?.count || 0), 0) : 0;
-    const { percent, trend } = calculateVariation(current, previous);
-    const label = "últimos 7 dias";
-    return {
-      total: current,
-      trend: `${trend === 'up' ? '+' : trend === 'down' ? '-' : ''}${percent}%`,
-      label,
-      insight: generateInsight(current, previous, label),
-      chart: h.slice(-7).map(d => d?.count || 0)
-    }
-  }, [data]);
 
   const groupedRecentVotes = useMemo(() => {
     const groups = {};
@@ -324,7 +305,7 @@ export default function DashboardPage() {
   const totalChartData = useMemo(() => {
     const h = data?.history60d || [];
     return {
-      labels: h.map(d => d?.date ? d.date.split('-').reverse().slice(0, 2).join('/') : ''),
+      labels: h.map(d => `${d.day}/${d.month}`),
       datasets: [
         {
           label: 'Volume de Votos',
@@ -785,18 +766,14 @@ export default function DashboardPage() {
         gap: '16px', marginBottom: '32px' 
       }}>
         <StatCard 
-          value={periodMetrics.total} 
-          label={`Votos no Período`} 
-          delay={0.1} 
-          trend={periodMetrics.trend} 
-          comparisonLabel={periodMetrics.label}
-          insight={periodMetrics.insight}
+          value={totalVotes} label="Total de Votos" delay={0.1} 
+          comparisonLabel="desde o início"
           chartConfig={{
             type: 'line',
             data: {
-              labels: periodMetrics.chart.map((_, i) => i),
+              labels: data?.history60d?.slice(-7).map((_, i) => i) || [],
               datasets: [{
-                data: periodMetrics.chart,
+                data: data?.history60d?.slice(-7).map(d => d.count) || [],
                 borderColor: '#6366f1', borderWidth: 2, tension: 0.5, fill: true,
                 backgroundColor: 'rgba(99, 102, 241, 0.1)'
               }]
@@ -804,8 +781,8 @@ export default function DashboardPage() {
           }}
         />
         <StatCard 
-          value={totalResponses} label="Participantes Únicos" delay={0.2} trend={completionRate} 
-          comparisonLabel="votos totais"
+          value={totalResponses} label="Questionários Respondidos" delay={0.2} 
+          comparisonLabel="participantes únicos"
           chartConfig={{
             type: 'line',
             data: {
@@ -819,8 +796,8 @@ export default function DashboardPage() {
           }}
         />
         <StatCard 
-          value={studyRatio} label="Foco em Estudo" delay={0.3} trend={studyRatio} 
-          insight={studyRatio.replace('%', '') > 50 ? "Alta adesão acadêmica detectada." : "Uso equilibrado entre estudo/trabalho."}
+          value={useForStudy} label="Uso em Estudos" delay={0.3} 
+          comparisonLabel="volume absoluto"
           chartConfig={{
             type: 'line',
             data: {
@@ -834,8 +811,8 @@ export default function DashboardPage() {
           }}
         />
         <StatCard 
-          value={workRatio} label="Uso Profissional" delay={0.4} trend={workRatio} 
-          insight={workRatio.replace('%', '') > 30 ? "Forte tração no mercado corporativo." : "Crescimento gradual no âmbito profissional."}
+          value={useForWork} label="Uso no Trabalho" delay={0.4} 
+          comparisonLabel="volume absoluto"
           chartConfig={{
             type: 'line',
             data: {
@@ -856,7 +833,6 @@ export default function DashboardPage() {
         data={totalChartData} opts={totalChartOpts} 
         totalVotes={totalVotes} totalResponses={totalResponses} 
         useForStudy={useForStudy} useForWork={useForWork}
-        trend={periodMetrics.trend}
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '32px' }}>

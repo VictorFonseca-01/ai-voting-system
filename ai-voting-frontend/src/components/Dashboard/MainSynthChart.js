@@ -7,9 +7,7 @@ const fUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-export default function MainSynthChart({ data, opts, totalVotes, totalResponses, useForStudy, useForWork, chartRef, trend }) {
-  const isPositive = trend?.includes('+');
-  const isNegative = trend?.includes('-');
+export default function MainSynthChart({ data, opts, totalVotes, totalResponses, useForStudy, useForWork, chartRef }) {
 
   const drawCustomFeaturesPlugin = useMemo(() => ({
     id: 'drawCustomFeaturesPlugin',
@@ -83,19 +81,16 @@ export default function MainSynthChart({ data, opts, totalVotes, totalResponses,
               letterSpacing: '0',
               lineHeight: 1.3
             }}>
-              {totalVotes} <span style={{ fontSize: '0.8rem', opacity: 0.4, fontWeight: 500, letterSpacing: '1px' }}>VOTOS NO PERÍODO</span>
+              {totalVotes} <span style={{ fontSize: '0.8rem', opacity: 0.4, fontWeight: 500, letterSpacing: '1px' }}>TOTAL DE VOTOS</span>
             </h2>
             <p style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Análise estatística baseada em frequência real
+              Consolidado histórico do ecossistema AI Vote
             </p>
           </div>
           <div style={{ textAlign: 'right', minWidth: '100px' }}>
             <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 800 }}>LIVE</div>
-            <div style={{ 
-                color: isPositive ? 'var(--success)' : isNegative ? 'var(--danger)' : 'var(--text-muted)', 
-                fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' 
-            }}>
-                {trend || '+0%'} Volatilidade
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                Sistema Estabilizado
             </div>
           </div>
         </div>
