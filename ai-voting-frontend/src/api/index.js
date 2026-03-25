@@ -194,13 +194,12 @@ export const questionnaireAPI = {
       
     if (responseError) throw responseError;
 
-    /* 
     const { error: userError } = await supabase
       .from('users')
       .update({ is_complete: true })
       .eq('id', targetId);
-    if (userError) console.warn("Aviso: Falha ao marcar is_complete (coluna pode não existir ainda).");
-    */
+    
+    if (userError) console.warn("Aviso: Falha ao marcar is_complete:", userError.message);
 
     return { data: { success: true } };
   },
@@ -1004,6 +1003,7 @@ export const participationAPI = {
         instagram: validInstagram,
         email: isAdmin ? `test_vote_${targetUserId}@aivote.com` : (user?.email || `anon_${targetUserId}@aivote.com`),
         role: 'ROLE_USER',
+        is_complete: true, // Garante integridade Elite 7.5.0
         fingerprint,
         session_id: sessionId
       });
