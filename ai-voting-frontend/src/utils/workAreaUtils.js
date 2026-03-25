@@ -3,15 +3,15 @@
  */
 
 const groupedAliases = {
-  "Recursos Humanos": ["rh", "r h", "r.h.", "recursos humanos", "setor de rh", "gestão de pessoas", "dp", "departamento pessoal", "human resources"],
-  "TI": ["ti", "t.i.", "tecnologia da informacao", "tecnologia da informação", "informatica", "informática", "desenvolvedor", "dev", "programador", "software", "tecnologia", "it", "i.t."],
-  "Administração": ["adm", "administracao", "administração", "administrativo", "gestão", "gestao", "management", "administration"],
-  "Direito": ["direito", "juridico", "jurídico", "advogado", "advocacia", "law", "legal"],
-  "Marketing": ["marketing", "marketing digital", "social media", "comunicação", "comunicacao", "publicidade", "ads", "propaganda"],
-  "Educação": ["educação", "educacao", "professor", "ensino", "docente", "pedagogia", "teacher", "education"],
-  "Saúde": ["saúde", "saude", "médico", "medico", "enfermagem", "psicologia", "fisioterapia", "dentista", "nutrição", "health"],
-  "Engenharia": ["engenharia", "engenheiro", "engineering", "engineer", "civil", "mecânica", "elétrica"],
-  "Design": ["design", "designer", "ux", "ui", "criativo", "artes", "arts"]
+  "Recursos Humanos": ["rh", "r h", "r.h.", "recursos humanos", "setor de rh", "gestão de pessoas", "dp", "departamento pessoal", "human resources", "talent acquisition", "gente e cultura"],
+  "TI": ["ti", "t.i.", "tecnologia da informacao", "tecnologia da informação", "informatica", "informática", "desenvolvedor", "dev", "programador", "software", "tecnologia", "it", "i.t.", "suporte", "infra", "sistemas"],
+  "Administração": ["adm", "administracao", "administração", "administrativo", "gestão", "gestao", "management", "administration", "secretariado", "financeiro", "comercial"],
+  "Direito": ["direito", "juridico", "jurídico", "advogado", "advocacia", "law", "legal", "compliance", "tabelião", "cartório"],
+  "Marketing": ["marketing", "marketing digital", "social media", "comunicação", "comunicacao", "publicidade", "ads", "propaganda", "relações públicas", "rp", "growth"],
+  "Educação": ["educação", "educacao", "professor", "ensino", "docente", "pedagogia", "teacher", "education", "instrutor", "treinamento", "academia"],
+  "Saúde": ["saúde", "saude", "médico", "medico", "enfermagem", "psicologia", "fisioterapia", "dentista", "nutrição", "health", "hospitalar", "clínica", "clinica", "biomedicina"],
+  "Engenharia": ["engenharia", "engenheiro", "engineering", "engineer", "civil", "mecânica", "elétrica", "produção", "arquitetura", "urbanismo"],
+  "Design": ["design", "designer", "ux", "ui", "criativo", "artes", "arts", "gráfico", "ilustrador", "fotografia", "vídeo", "video"]
 };
 
 /**
@@ -67,11 +67,9 @@ export const getFilteredOtherResponses = ({
   if (Array.isArray(otherData)) {
     baseList = otherData;
   } else if (typeof otherData === 'object' && otherData !== null) {
-    if (activeAiFilter === 'Todas' || !activeAiFilter) {
-      baseList = Object.values(otherData).flat();
-    } else {
-      baseList = otherData[activeAiFilter] || [];
-    }
+    // Busca prioritária na chave 'Todas' se o filtro for global (Elite 7.3.2 Fix)
+    const filter = activeAiFilter || 'Todas';
+    baseList = otherData[filter] || [];
   }
 
   const totalRaw = baseList.length;

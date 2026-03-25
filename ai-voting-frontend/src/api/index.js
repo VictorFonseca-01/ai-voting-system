@@ -260,9 +260,20 @@ export const dashboardAPI = {
         name: u.name, 
         course: u.course,
         institution: u.institution,
-        instagram: u.instagram
+        instagram: u.instagram,
+        ias: [] // Inicializa lista de IAs (ELITE 7.3.2 Fix)
       } 
     }), {});
+
+    // Mapeia IAs votadas para cada usuário no userMap
+    votes.forEach(v => {
+      if (userMap[v.user_id]) {
+        const normalized = normalizeAiName(v.ai_name);
+        if (!userMap[v.user_id].ias.includes(normalized)) {
+          userMap[v.user_id].ias.push(normalized);
+        }
+      }
+    });
 
     // 1. Participantes únicos que votaram (Excluindo Admin se possível)
     // Para simplificar, contamos todos e filtramos na exibição se necessário
@@ -303,6 +314,9 @@ export const dashboardAPI = {
             otherWorkAreasByAi[ai].push(r.work_area_other);
           }
         });
+        // Adiciona à lista global sem duplicatas por IA (Elite 7.3.2 Fix)
+        if (!otherWorkAreasByAi['Todas']) otherWorkAreasByAi['Todas'] = [];
+        otherWorkAreasByAi['Todas'].push(r.work_area_other);
       }
       
       const area = getCanonicalName(val) || 'Outros';
@@ -441,9 +455,14 @@ export const dashboardAPI = {
     responses.forEach(r => {
       userMap[r.user_id] = { ...r, ias: [] };
     });
+
+    // Mapeia IAs votadas de forma única (Elite 7.3.2 Fix)
     votes.forEach(v => {
       if (userMap[v.user_id]) {
-        userMap[v.user_id].ias.push(normalizeAiName(v.ai_name));
+        const normalized = normalizeAiName(v.ai_name);
+        if (!userMap[v.user_id].ias.includes(normalized)) {
+          userMap[v.user_id].ias.push(normalized);
+        }
       }
     });
 
@@ -553,6 +572,9 @@ export const dashboardAPI = {
         (p.ias || []).forEach(ai => {
           if (otherWorkAreasByAi[ai]) otherWorkAreasByAi[ai].push(p.work_area_other);
         });
+        // Lista consolidada global única
+        if (!otherWorkAreasByAi['Todas']) otherWorkAreasByAi['Todas'] = [];
+        otherWorkAreasByAi['Todas'].push(p.work_area_other);
       }
     });
 

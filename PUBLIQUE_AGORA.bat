@@ -1,7 +1,7 @@
 @echo off
-echo 🚀 Sincronizando: Elite 7.3.1 (Restauração do Score Global)...
+echo 🚀 Sincronizando: Elite 7.3.2 (Hotfix de Precisão Analítica)...
 git add .
-git commit -m "💎 Sync: Elite 7.3.1 (Restauração total do Dashboard + Lógica de Score Global)"
+git commit -m "💎 Sync: Elite 7.3.2 (Hotfix: Precisão total na busca de 'Outros' + Normalização)"
 git push origin HEAD --force
-echo 🚀 Sucesso! Elite 7.3.1 (Score Global) implantada. Limpe o cache do navegador (Ctrl+Shift+R).
+echo 🚀 Sucesso! Elite 7.3.2 (Precisão Analítica) implantada. Verifique o Dashboard e Analytics.
 pause

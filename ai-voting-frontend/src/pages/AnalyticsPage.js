@@ -167,7 +167,7 @@ export default function AnalyticsPage() {
           if (isSearchActive) {
             relevantData = {
               answers: workAreaResults,
-              total: workAreaTotalMatched
+              total: workAreaTotalRaw // Mantém base total da IA para cálculo de % real
             };
           }
 
