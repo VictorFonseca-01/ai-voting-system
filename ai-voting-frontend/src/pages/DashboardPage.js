@@ -280,8 +280,6 @@ export default function DashboardPage() {
 
   // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
   
-  // =============== MEMOIZAÇÃO DE DADOS E OPÇÕES (TOP LEVEL) ===============
-  
   // ELITE PROFESSIONAL 6.0: Cálculo de Métricas por Período
   const periodMetrics = useMemo(() => {
     if (!data?.history60d) return { 
@@ -332,6 +330,20 @@ export default function DashboardPage() {
   const useForStudy   = data?.useForStudy    || 0;
   const useForWork    = data?.useForWork     || 0;
   const recentVotes   = data?.recentVotes    || [];
+
+  const groupedRecentVotes = useMemo(() => {
+    const groups = {};
+    recentVotes.forEach(v => {
+      if (!groups[v.userName]) {
+        groups[v.userName] = { ...v, aiNames: [v.aiName] };
+      } else {
+        if (!groups[v.userName].aiNames.includes(v.aiName)) {
+          groups[v.userName].aiNames.push(v.aiName);
+        }
+      }
+    });
+    return Object.values(groups).slice(0, 5);
+  }, [recentVotes]);
 
   // --- LÓGICA DE DADOS REAIS (ELITE 4.4) ---
   const completionRate = useMemo(() => {
