@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { participationAPI } from '../api';
 import { checkLocalVoteStatus, getFingerprint, getPersistentSessionId } from '../utils/security';
+import { extractInstagramUsername, isValidInstagramFormat } from '../utils/socialUtils';
 
 // Opções das perguntas
 const WHERE_OPTIONS = ['No trabalho', 'Em casa', 'Na escola/faculdade', 'No celular', 'Todas as alternativas'];
@@ -350,15 +351,30 @@ export default function QuestionnairePage() {
                     style={{ padding: '16px', borderRadius: '14px', background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
                   />
                 </div>
-                <div>
+                <div style={{ position: 'relative' }}>
                   <label style={{ fontSize: '0.8rem', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.6, marginBottom: '10px', display: 'block' }}>Instagram (Opcional)</label>
                   <input
                     type="text" className="form-control"
                     placeholder="@seu.perfil"
                     value={form.instagram}
                     onChange={(e) => set('instagram', e.target.value)}
-                    style={{ padding: '16px', borderRadius: '14px', background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'none !important' }}
+                    style={{ 
+                        padding: '16px', borderRadius: '14px', background: 'var(--bg-input)', 
+                        border: form.instagram && !isValidInstagramFormat(extractInstagramUsername(form.instagram)) 
+                          ? '1px solid #f43f5e' 
+                          : '1px solid rgba(255,255,255,0.08)', 
+                        boxShadow: 'none !important' 
+                    }}
                   />
+                  {form.instagram && (
+                    <div style={{ marginTop: '8px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {isValidInstagramFormat(extractInstagramUsername(form.instagram)) ? (
+                        <span style={{ color: '#10b981', fontWeight: 600 }}>✓ Formato reconhecido</span>
+                      ) : (
+                        <span style={{ color: '#f43f5e', fontWeight: 600 }}>⚠ Username inválido (será ignorado)</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -98,6 +98,9 @@ export default function Navbar() {
         <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           📊 Dashboard Geral
         </NavLink>
+        <NavLink to="/analytics" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ color: '#fbbf24' }}>
+          📈 Analytics
+        </NavLink>
 
         {isAdmin && (
           <>
@@ -107,9 +110,6 @@ export default function Navbar() {
             </NavLink>
             <NavLink to="/admin/report" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ color: '#0866ff' }}>
               📄 Relatório
-            </NavLink>
-            <NavLink to="/admin/analytics" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ color: '#fbbf24' }}>
-              📈 Analytics
             </NavLink>
           </>
         )}

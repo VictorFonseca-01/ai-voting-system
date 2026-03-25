@@ -17,7 +17,9 @@ const AI_CANONICAL_MAP = {
   'meta': 'Meta AI',
   'copilot': 'Copilot',
   'deepseek': 'DeepSeek',
-  'none': 'Não utilizo IA'
+  'none': 'Não utilizo IA',
+  'não utilizo ia / outra': 'Não utilizo IA',
+  'não utilizo ia': 'Não utilizo IA'
 };
 
 const ALL_AI_OPTIONS = [
@@ -207,7 +209,7 @@ export const dashboardAPI = {
     const [votesRes, responsesRes, usersRes] = await Promise.all([
       supabase.from('votes').select('*').order('voted_at', { ascending: false }),
       supabase.from('question_responses').select('*'),
-      supabase.from('users').select('id, name')
+      supabase.from('users').select('id, name, course, institution, instagram')
     ]);
 
     if (votesRes.error) throw votesRes.error;
@@ -219,14 +221,20 @@ export const dashboardAPI = {
     const users = usersRes.data || [];
     const userMap = users.reduce((acc, u) => ({ 
       ...acc, 
-      [u.id]: { name: u.name, course: u.course } 
+      [u.id]: { 
+        name: u.name, 
+        course: u.course,
+        institution: u.institution,
+        instagram: u.instagram
+      } 
     }), {});
 
     // 1. Participantes únicos que votaram (Excluindo Admin se possível)
     // Para simplificar, contamos todos e filtramos na exibição se necessário
     const uniqueVoters = new Set(votes.map(v => v.user_id));
     
-    // 2. Ranking de IAs (Normalizado e Completo - ELITE 4.6)
+    // 2. Ranking de IAs (Normalizado e Completo - ELITE 5.0)
+    // Inicializa apenas com as 8 opções obrigatórias
     const votesByAi = ALL_AI_OPTIONS.reduce((acc, name) => {
       acc[name] = 0;
       return acc;
@@ -234,11 +242,9 @@ export const dashboardAPI = {
 
     votes.forEach(v => {
       const name = normalizeAiName(v.ai_name);
+      // Somente incrementa se pertencer à lista fixa
       if (votesByAi.hasOwnProperty(name)) {
         votesByAi[name]++;
-      } else {
-        // Fallback para nomes não mapeados mas existentes no banco
-        votesByAi[name] = (votesByAi[name] || 0) + 1;
       }
     });
 
@@ -246,10 +252,16 @@ export const dashboardAPI = {
     const useForStudy = responses.filter(r => r.use_for_study === true).length;
     const useForWork = responses.filter(r => r.use_for_work === true).length;
 
-    // 4. Área de Atuação (Sanitizada)
+    // 4. Área de Atuação (Sanitizada + Coleta de 'Outros' para análise profunda)
+    const otherWorkAreas = [];
     const workAreas = responses.reduce((acc, r) => {
       let area = cleanLabel(r.work_area) || 'Outros';
       if (area === 'undefined' || area === 'null' || !area) area = 'Outros';
+      
+      if (area === 'Outros' && r.work_area_other) {
+        otherWorkAreas.push(r.work_area_other);
+      }
+      
       acc[area] = (acc[area] || 0) + 1;
       return acc;
     }, {});
@@ -287,6 +299,8 @@ export const dashboardAPI = {
         id: v.id, 
         userName: userData.name,
         userCourse: userData.course,
+        institution: userData.institution,
+        instagram: userData.instagram,
         aiName: normalizeAiName(v.ai_name),
         time: v.voted_at
       };
@@ -332,9 +346,111 @@ export const dashboardAPI = {
         votesByAi,
         whereUseAi,
         workAreas,
+        otherWorkAreas,
         recentVotes
       }
     };
+  },
+
+  getPublicQuestionnaireReport: async () => {
+    // 1. Busca dados base
+    const [votesRes, responsesRes] = await Promise.all([
+      supabase.from('votes').select('user_id, ai_name'),
+      supabase.from('question_responses').select('*')
+    ]);
+
+    if (votesRes.error) throw votesRes.error;
+    if (responsesRes.error) throw responsesRes.error;
+
+    const votes = votesRes.data || [];
+    const responses = responsesRes.data || [];
+
+    // Mapeia usuário para suas respostas e IAs votadas
+    const userMap = {};
+    responses.forEach(r => {
+      userMap[r.user_id] = { ...r, ias: [] };
+    });
+    votes.forEach(v => {
+      if (userMap[v.user_id]) {
+        userMap[v.user_id].ias.push(normalizeAiName(v.ai_name));
+      }
+    });
+
+    const activeParticipants = Object.values(userMap);
+
+    const questions = [
+      { id: 'where_use_ai', label: 'Onde você usa?', type: 'multi' },
+      { id: 'why_use_ai', label: 'Por que você usa?', type: 'multi' },
+      { id: 'how_use_ai', label: 'Como você usa?', type: 'multi' },
+      { id: 'use_for_study', label: 'Usa para estudar?', type: 'boolean' },
+      { id: 'use_for_work', label: 'Usa para trabalho?', type: 'boolean' },
+      { id: 'work_area', label: 'Área de atuação', type: 'single' }
+    ];
+
+    const report = questions.map(q => {
+      const aiDistribution = ALL_AI_OPTIONS.map(ai => {
+        const aiParticipants = activeParticipants.filter(p => p.ias.includes(ai));
+        const answers = {};
+
+        aiParticipants.forEach(p => {
+          let val = p[q.id];
+          if (q.id === 'work_area' && val === 'Outros' && p.work_area_other) {
+            val = p.work_area_other;
+          }
+
+          if (q.type === 'multi' && val) {
+            const parts = String(val).split(',').map(s => s.trim()).filter(Boolean);
+            parts.forEach(part => {
+              const cleanPart = part.replace(/[\[\]"]/g, '').trim();
+              if (cleanPart) answers[cleanPart] = (answers[cleanPart] || 0) + 1;
+            });
+          } else if (q.type === 'boolean') {
+            const label = val ? 'Sim' : 'Não';
+            answers[label] = (answers[label] || 0) + 1;
+          } else if (val) {
+            const part = String(val).replace(/[\[\]"]/g, '').trim();
+            if (part && part !== 'undefined' && part !== 'null') {
+              answers[part] = (answers[part] || 0) + 1;
+            }
+          }
+        });
+
+        return {
+          ai,
+          total: aiParticipants.length,
+          answers: Object.entries(answers).map(([label, count]) => ({ label, count }))
+        };
+      });
+
+      // Cálculo de respostas absolutas (sem filtro de IA)
+      const globalAnswers = {};
+      activeParticipants.forEach(p => {
+        let val = p[q.id];
+        if (q.id === 'work_area' && val === 'Outros' && p.work_area_other) val = p.work_area_other;
+        
+        if (q.type === 'multi' && val) {
+          String(val).split(',').map(s => s.trim()).filter(Boolean).forEach(part => {
+             const cleanPart = part.replace(/[\[\]"]/g, '').trim();
+             if (cleanPart) globalAnswers[cleanPart] = (globalAnswers[cleanPart] || 0) + 1;
+          });
+        } else if (q.type === 'boolean') {
+          const label = val ? 'Sim' : 'Não';
+          globalAnswers[label] = (globalAnswers[label] || 0) + 1;
+        } else if (val) {
+          const part = String(val).replace(/[\[\]"]/g, '').trim();
+          if (part && part !== 'undefined' && part !== 'null') globalAnswers[part] = (globalAnswers[part] || 0) + 1;
+        }
+      });
+
+      return {
+        question: q.label,
+        totalResponses: activeParticipants.length,
+        options: aiDistribution,
+        globalAnswers: Object.entries(globalAnswers).map(([label, count]) => ({ label, count }))
+      };
+    });
+
+    return { data: report };
   }
 };
 
@@ -343,9 +459,9 @@ export const adminAPI = {
   getUsers: async ({ page = 1, pageSize = 10, search = '', filters = {}, sort = { column: 'name', ascending: true } } = {}) => {
     let query = supabase.from('users').select('*', { count: 'exact' });
 
-    // 1. Busca (Nome, Curso, Email)
+    // 1. Busca (Nome, Curso, Email, Instituição, Instagram)
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,course.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,course.ilike.%${search}%,institution.ilike.%${search}%,instagram.ilike.%${search}%`);
     }
 
     // 2. Filtros
@@ -598,109 +714,10 @@ export const adminAPI = {
         aiReports: aiReports.sort((a,b) => b.totalVotes - a.totalVotes)
       }
     };
-  },
-
-  getQuestionnaireReport: async () => {
-    // 1. Busca dados base
-    const [votesRes, responsesRes] = await Promise.all([
-      supabase.from('votes').select('user_id, ai_name'),
-      supabase.from('question_responses').select('*')
-    ]);
-
-    if (votesRes.error) throw votesRes.error;
-    if (responsesRes.error) throw responsesRes.error;
-
-    const votes = votesRes.data || [];
-    const responses = responsesRes.data || [];
-
-    // Mapeia usuário para suas respostas e IAs votadas
-    const userMap = {};
-    responses.forEach(r => {
-      userMap[r.user_id] = { ...r, ias: [] };
-    });
-    votes.forEach(v => {
-      if (userMap[v.user_id]) {
-        userMap[v.user_id].ias.push(normalizeAiName(v.ai_name));
-      }
-    });
-
-    const activeParticipants = Object.values(userMap);
-
-    const questions = [
-      { id: 'where_use_ai', label: 'Onde você usa?', type: 'multi' },
-      { id: 'why_use_ai', label: 'Por que você usa?', type: 'multi' },
-      { id: 'how_use_ai', label: 'Como você usa?', type: 'multi' },
-      { id: 'use_for_study', label: 'Usa para estudar?', type: 'boolean' },
-      { id: 'use_for_work', label: 'Usa para trabalho?', type: 'boolean' },
-      { id: 'work_area', label: 'Área de atuação', type: 'single' }
-    ];
-
-    const report = questions.map(q => {
-      const aiDistribution = ALL_AI_OPTIONS.map(ai => {
-        const aiParticipants = activeParticipants.filter(p => p.ias.includes(ai));
-        const answers = {};
-
-        aiParticipants.forEach(p => {
-          let val = p[q.id];
-          if (q.id === 'work_area' && val === 'Outros' && p.work_area_other) {
-            val = p.work_area_other;
-          }
-
-          if (q.type === 'multi' && val) {
-            const parts = String(val).split(',').map(s => s.trim()).filter(Boolean);
-            parts.forEach(part => {
-              const cleanPart = part.replace(/[\[\]"]/g, '').trim();
-              if (cleanPart) answers[cleanPart] = (answers[cleanPart] || 0) + 1;
-            });
-          } else if (q.type === 'boolean') {
-            const label = val ? 'Sim' : 'Não';
-            answers[label] = (answers[label] || 0) + 1;
-          } else if (val) {
-            const part = String(val).replace(/[\[\]"]/g, '').trim();
-            if (part && part !== 'undefined' && part !== 'null') {
-              answers[part] = (answers[part] || 0) + 1;
-            }
-          }
-        });
-
-        return {
-          ai,
-          total: aiParticipants.length,
-          answers: Object.entries(answers).map(([label, count]) => ({ label, count }))
-        };
-      });
-
-      // Cálculo de respostas absolutas (sem filtro de IA)
-      const globalAnswers = {};
-      activeParticipants.forEach(p => {
-        let val = p[q.id];
-        if (q.id === 'work_area' && val === 'Outros' && p.work_area_other) val = p.work_area_other;
-        
-        if (q.type === 'multi' && val) {
-          String(val).split(',').map(s => s.trim()).filter(Boolean).forEach(part => {
-             const cleanPart = part.replace(/[\[\]"]/g, '').trim();
-             if (cleanPart) globalAnswers[cleanPart] = (globalAnswers[cleanPart] || 0) + 1;
-          });
-        } else if (q.type === 'boolean') {
-          const label = val ? 'Sim' : 'Não';
-          globalAnswers[label] = (globalAnswers[label] || 0) + 1;
-        } else if (val) {
-          const part = String(val).replace(/[\[\]"]/g, '').trim();
-          if (part && part !== 'undefined' && part !== 'null') globalAnswers[part] = (globalAnswers[part] || 0) + 1;
-        }
-      });
-
-      return {
-        question: q.label,
-        totalResponses: activeParticipants.length,
-        options: aiDistribution,
-        globalAnswers: Object.entries(globalAnswers).map(([label, count]) => ({ label, count }))
-      };
-    });
-
-    return { data: report };
   }
 };
+
+import { extractInstagramUsername, isValidInstagramFormat } from '../utils/socialUtils';
 
 // ─── PARTICIPATION ───────────────────────────────────────────────────
 export const participationAPI = {
@@ -714,6 +731,11 @@ export const participationAPI = {
       
       const fingerprint = getFingerprint();
       const sessionId = getPersistentSessionId();
+
+      // Normalização e Validação do Instagram (ELITE 5.0)
+      const igUsername = extractInstagramUsername(instagram);
+      const isIgValid = isValidInstagramFormat(igUsername);
+      const validInstagram = isIgValid ? igUsername : null;
 
       // BLOQUEIO ANTIFRAUDE SIMPLIFICADO (ELITE 4.6)
       // Remove bloqueio por dispositivo (IP/Fingerprint/Session)
@@ -756,7 +778,7 @@ export const participationAPI = {
           email: tempEmail,
           password: 'Test_Participation_Password_123!',
           options: {
-            data: { name: fullName, course, institution, instagram, role: 'ROLE_USER' }
+            data: { name: fullName, course, institution, instagram: validInstagram, role: 'ROLE_USER' }
           }
         });
         
@@ -776,13 +798,13 @@ export const participationAPI = {
           const { data: guestData } = await supabase.auth.signUp({
             email: guestEmail,
             password: 'Guest_Participation_123!',
-            options: { data: { name: fullName, course, institution, instagram } }
+            options: { data: { name: fullName, course, institution, instagram: validInstagram } }
           });
           targetUserId = guestData.user?.id;
       }
 
       // Moderação de Conteúdo
-      const allTexts = [...aiNames, fullName, course, institution, instagram, questData.workAreaOther];
+      const allTexts = [...aiNames, fullName, course, institution, validInstagram, questData.workAreaOther];
       for (const t of allTexts) {
         if (t && typeof t === 'string' && hasInappropriateContent(t)) {
           throw new Error("Conteúdo inadequado detectado.");
@@ -797,7 +819,7 @@ export const participationAPI = {
         name: isAdmin ? fullName : (fullName || user?.user_metadata?.name),
         course: course || user?.user_metadata?.course,
         institution: institution || user?.user_metadata?.institution,
-        instagram: instagram || user?.user_metadata?.instagram,
+        instagram: validInstagram,
         email: isAdmin ? `test_vote_${targetUserId}@aivote.com` : (user?.email || `anon_${targetUserId}@aivote.com`),
         role: 'ROLE_USER',
         fingerprint,
