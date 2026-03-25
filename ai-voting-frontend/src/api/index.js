@@ -582,6 +582,34 @@ export const dashboardAPI = {
       data: report,
       otherWorkAreas: otherWorkAreasByAi
     };
+  },
+
+  /**
+   * BUSCA FILTRADA NO BACKEND (ELITE 7.4.0)
+   * Garante: WHERE ia = IA_SELECIONADA AND work_area_other ILIKE %search%
+   */
+  searchOtherWorkAreas: async (aiFilter = 'Todas', searchTerm = '') => {
+    let query = supabase
+      .from('question_responses')
+      .select('work_area_other, user_id, votes!inner(ai_name)')
+      .eq('work_area', 'Outros');
+
+    // 1. Filtro OBRIGATÓRIO por IA (no Backend via Inner Join)
+    if (aiFilter !== 'Todas') {
+      // Supabase filter on joined table
+      query = query.filter('votes.ai_name', 'eq', aiFilter);
+    }
+
+    // 2. Filtro de BUSCA (no Backend via ILIKE)
+    if (searchTerm.trim()) {
+      query = query.ilike('work_area_other', `%${searchTerm.trim()}%`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Retorna lista bruta para normalização final no frontend (agrupamento de aliases)
+    return (data || []).map(r => r.work_area_other);
   }
 };
 

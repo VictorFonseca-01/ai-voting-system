@@ -1,7 +1,7 @@
 @echo off
-echo 🚀 Sincronizando: Elite 7.3.2 (Hotfix de Precisão Analítica)...
+echo 🚀 Sincronizando: Elite 7.4.0 (Backend-First Search)...
 git add .
-git commit -m "💎 Sync: Elite 7.3.2 (Hotfix: Precisão total na busca de 'Outros' + Normalização)"
+git commit -m "🛡️ Sync: Elite 7.4.0 (Busca de 'Outros' estritamente no Backend via Supabase)"
 git push origin HEAD --force
-echo 🚀 Sucesso! Elite 7.3.2 (Precisão Analítica) implantada. Verifique o Dashboard e Analytics.
+echo 🚀 Sucesso! Elite 7.4.0 (Backend Search) implantada. Verifique no Analytics.
 pause

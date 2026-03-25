@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bar } from 'react-chartjs-2';
 import { getFilteredOtherResponses } from '../../utils/workAreaUtils';
+import { dashboardAPI } from '../../api';
 
 const fUp = {
   hidden: { opacity: 0, y: 20 },
@@ -11,15 +12,42 @@ const fUp = {
 export default function BarChartCard({ title, data, options, chartRef, otherData = [], filterAi = 'Todas' }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchedResults, setSearchedResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // BUSCA NO BACKEND (ELITE 7.4.0) - Unificado
+  React.useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!searchTerm.trim()) {
+        setSearchedResults([]);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const results = await dashboardAPI.searchOtherWorkAreas(filterAi, searchTerm);
+        setSearchedResults(results);
+      } catch (err) {
+        console.error('Erro na busca dashboard:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, filterAi]);
 
   // USA A FUNÇÃO CENTRALIZADA (ELITE 6.0) - Unificando lógica de Dashboard e Analytics
-  const { results: filteredResults, totalRaw, totalMatched } = useMemo(() => {
+  const { results: filteredResults } = useMemo(() => {
+    const dataToProcess = searchTerm.trim() ? searchedResults : otherData[filterAi] || [];
     return getFilteredOtherResponses({
-      otherData,
-      activeAiFilter: filterAi,
-      searchTerm
+      otherData: dataToProcess,
+      activeAiFilter: 'Todas', // Já filtrado no dataToProcess
+      searchTerm: '' // Já filtrado no backend
     });
-  }, [otherData, filterAi, searchTerm]);
+  }, [otherData, filterAi, searchTerm, searchedResults]);
+
+  const totalRaw = useMemo(() => {
+    return (otherData[filterAi] || []).length;
+  }, [otherData, filterAi]);
 
   // Filtra as sugestões com base nos resultados já processados pela função única
   const suggestions = useMemo(() => {
@@ -139,7 +167,9 @@ export default function BarChartCard({ title, data, options, chartRef, otherData
 
       {isSearchActive && (
           <p style={{ margin: '15px 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-             Mostrando dados agrupados de <strong>{totalMatched}</strong> de <strong>{totalRaw}</strong> respostas "Outros" em <strong>{filterAi}</strong>.
+             {isSearching ? 'Pesquisando no banco...' : (
+               <>Mostrando dados agrupados de <strong>{filteredResults.length}</strong> de <strong>{totalRaw}</strong> respostas "Outros" em <strong>{filterAi}</strong>.</>
+             )}
           </p>
       )}
     </motion.div>

@@ -27,6 +27,8 @@ export default function AnalyticsPage() {
   const [filterAi, setFilterAi] = useState('Todas');
   const [workAreaSearch, setWorkAreaSearch] = useState('');
   const [showWorkAreaSuggestions, setShowWorkAreaSuggestions] = useState(false);
+  const [searchedOtherWorkAreas, setSearchedOtherWorkAreas] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const aiOptions = useMemo(() => {
     return ['Todas', 'ChatGPT', 'Gemini', 'Claude', 'Grok', 'Copilot', 'Meta AI', 'DeepSeek', 'Não utilizo IA'];
@@ -50,14 +52,39 @@ export default function AnalyticsPage() {
     fetchData();
   }, []);
 
+  // BUSCA NO BACKEND (ELITE 7.4.0) - Não confia no frontend
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!workAreaSearch.trim()) {
+        setSearchedOtherWorkAreas([]);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const results = await dashboardAPI.searchOtherWorkAreas(filterAi, workAreaSearch);
+        setSearchedOtherWorkAreas(results);
+      } catch (err) {
+        console.error('Erro na busca backend:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500); // Debounce de 500ms
+    return () => clearTimeout(timer);
+  }, [workAreaSearch, filterAi]);
+
   // USA A FUNÇÃO CENTRALIZADA (ELITE 6.0)
-  const { results: workAreaResults, totalRaw: workAreaTotalRaw, totalMatched: workAreaTotalMatched } = useMemo(() => {
+  const { results: workAreaResults } = useMemo(() => {
+    const dataToProcess = workAreaSearch.trim() ? searchedOtherWorkAreas : otherWorkAreas[filterAi] || [];
     return getFilteredOtherResponses({
-      otherData: otherWorkAreas,
-      activeAiFilter: filterAi,
-      searchTerm: workAreaSearch
+      otherData: dataToProcess,
+      activeAiFilter: 'Todas', // Já está filtrado por IA no dataToProcess
+      searchTerm: '' // Já filtrado no backend
     });
-  }, [otherWorkAreas, filterAi, workAreaSearch]);
+  }, [otherWorkAreas, filterAi, workAreaSearch, searchedOtherWorkAreas]);
+
+  const workAreaTotalRaw = useMemo(() => {
+    return (otherWorkAreas[filterAi] || []).length;
+  }, [otherWorkAreas, filterAi]);
 
   const workAreaSuggestions = useMemo(() => {
     if (!workAreaSearch.trim()) return [];
