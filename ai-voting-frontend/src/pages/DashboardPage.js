@@ -283,6 +283,9 @@ export default function DashboardPage() {
   const useForWork     = data?.useForWork || 0;
   const recentVotes    = data?.recentVotes || [];
 
+  // SCORE GLOBAL (Σ CONSOLIDADA: VOTOS + QUESTIONÁRIOS + PERFIS DE USO)
+  const scoreGlobal = totalVotes + totalResponses + useForStudy + useForWork;
+
   const groupedRecentVotes = useMemo(() => {
     const groups = {};
     recentVotes.forEach(v => {
@@ -831,6 +834,7 @@ export default function DashboardPage() {
       <MainSynthChart 
         chartRef={mainSynthRef}
         data={totalChartData} opts={totalChartOpts} 
+        scoreGlobal={scoreGlobal}
         totalVotes={totalVotes} totalResponses={totalResponses} 
         useForStudy={useForStudy} useForWork={useForWork}
       />

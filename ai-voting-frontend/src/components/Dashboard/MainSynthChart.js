@@ -7,7 +7,7 @@ const fUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
 };
 
-export default function MainSynthChart({ data, opts, totalVotes, totalResponses, useForStudy, useForWork, chartRef }) {
+export default function MainSynthChart({ data, opts, totalVotes, totalResponses, useForStudy, useForWork, chartRef, scoreGlobal }) {
 
   const drawCustomFeaturesPlugin = useMemo(() => ({
     id: 'drawCustomFeaturesPlugin',
@@ -81,10 +81,10 @@ export default function MainSynthChart({ data, opts, totalVotes, totalResponses,
               letterSpacing: '0',
               lineHeight: 1.3
             }}>
-              {totalVotes} <span style={{ fontSize: '0.8rem', opacity: 0.4, fontWeight: 500, letterSpacing: '1px' }}>TOTAL DE VOTOS</span>
+              {scoreGlobal || totalVotes} <span style={{ fontSize: '0.8rem', opacity: 0.4, fontWeight: 500, letterSpacing: '1px' }}>SCORE GLOBAL</span>
             </h2>
             <p style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Consolidado histórico do ecossistema AI Vote
+              Σ CONSOLIDADA: VOTOS + QUESTIONÁRIOS + PERFIS DE USO
             </p>
           </div>
           <div style={{ textAlign: 'right', minWidth: '100px' }}>
