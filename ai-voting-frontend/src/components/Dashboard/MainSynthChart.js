@@ -99,7 +99,12 @@ export default function MainSynthChart({ data, opts, totalVotes, totalResponses,
           plugins: { ...opts.plugins, legend: { display: false } },
           scales: {
             ...opts.scales,
-            y: { ...opts.scales?.y, suggestedMax: totalVotes > 10 ? totalVotes * 1.2 : 20, padding: 20 }
+            y: { 
+              ...opts.scales?.y, 
+              beginAtZero: true,
+              suggestedMax: Math.max(...data.datasets.map(d => Math.max(...d.data))) * 1.1 || 10,
+              padding: 20 
+            }
           }
         }} plugins={[drawCustomFeaturesPlugin]} />
       </div>

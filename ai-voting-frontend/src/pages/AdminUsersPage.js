@@ -301,17 +301,22 @@ export default function AdminUsersPage() {
                 <tr><td colSpan="7" style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>Nenhum usuário encontrado com estes critérios.</td></tr>
               ) : users.map((u, index) => (
                 <tr key={u.id} className={selectedIds.has(u.id) ? 'row-selected' : ''}>
+                  {/* 1. ID/Index */}
                   <td style={{ color: 'var(--text-dim)', fontSize: '0.8rem', fontWeight: 700 }}>
                     {(page - 1) * pageSize + index + 1}
                   </td>
+
+                  {/* 2. Checkbox */}
                   <td>
                     <input type="checkbox" checked={selectedIds.has(u.id)} onChange={() => toggleSelectUser(u.id)} />
                   </td>
+
+                  {/* 3. Nome */}
                   <td>
                     {editingId === u.id ? (
                       <input 
                         className="form-control" 
-                        value={editData.name} 
+                        value={editData.name || ''} 
                         onChange={e => setEditData({...editData, name: e.target.value})} 
                         style={{ padding: '4px 8px', fontSize: '0.9rem' }}
                         autoFocus
@@ -326,11 +331,28 @@ export default function AdminUsersPage() {
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{u.email}</div>
                     )}
                   </td>
+
+                  {/* 4. Curso */}
                   <td className="hide-mobile">
                     {editingId === u.id ? (
                       <input 
                         className="form-control" 
-                        value={editData.institution} 
+                        value={editData.course || ''} 
+                        onChange={e => setEditData({...editData, course: e.target.value})} 
+                        style={{ padding: '4px 8px', fontSize: '0.9rem' }}
+                        placeholder="Curso"
+                      />
+                    ) : (
+                      u.course || '-'
+                    )}
+                  </td>
+
+                  {/* 5. Instituição */}
+                  <td className="hide-mobile">
+                    {editingId === u.id ? (
+                      <input 
+                        className="form-control" 
+                        value={editData.institution || ''} 
                         onChange={e => setEditData({...editData, institution: e.target.value})} 
                         style={{ padding: '4px 8px', fontSize: '0.9rem' }}
                         placeholder="Instituição"
@@ -339,11 +361,13 @@ export default function AdminUsersPage() {
                       u.institution || '-'
                     )}
                   </td>
+
+                  {/* 6. Insta */}
                   <td style={{ textAlign: 'center' }}>
                     {editingId === u.id ? (
                       <input 
                         className="form-control" 
-                        value={editData.instagram} 
+                        value={editData.instagram || ''} 
                         onChange={e => setEditData({...editData, instagram: e.target.value})} 
                         style={{ padding: '4px 8px', fontSize: '0.9rem' }}
                         placeholder="@username"
@@ -362,12 +386,18 @@ export default function AdminUsersPage() {
                       </a>
                     ) : '-'}
                   </td>
+
+                  {/* 7. Votou? */}
                   <td style={{ textAlign: 'center' }}>
                     <span style={{ color: u.hasVoted ? 'var(--success)' : 'var(--text-muted)' }}>{u.hasVoted ? '● Sim' : '○ Não'}</span>
                   </td>
+
+                  {/* 8. Quest? */}
                   <td style={{ textAlign: 'center' }} className="hide-tablet">
                     <span style={{ color: u.hasAnswered ? 'var(--success)' : 'var(--text-muted)' }}>{u.hasAnswered ? '● Sim' : '○ Não'}</span>
                   </td>
+
+                  {/* 9. Ações */}
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                       {editingId === u.id ? (

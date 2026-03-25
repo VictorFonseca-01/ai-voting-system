@@ -371,7 +371,7 @@ export default function DashboardPage() {
         data: lineB,
         borderColor: 'rgba(255, 0, 204, 0.4)',
         borderWidth: 8,
-        tension: 0.4, 
+        tension: 0.5, 
         fill: true,
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
@@ -391,7 +391,7 @@ export default function DashboardPage() {
         data: lineB,
         borderColor: '#ff00cc',
         borderWidth: 3,
-        tension: 0.4,
+        tension: 0.5,
         fill: false,
         pointRadius: 0,
         pointHoverRadius: 0,
@@ -402,7 +402,7 @@ export default function DashboardPage() {
         data: lineB,
         borderColor: '#ffffff',
         borderWidth: 1.5,
-        tension: 0.4,
+        tension: 0.5,
         fill: false,
         pointRadius: 0,
         pointHoverRadius: 0,

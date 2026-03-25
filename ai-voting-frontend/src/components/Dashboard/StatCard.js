@@ -60,12 +60,12 @@ export default function StatCard({ value, label, delay, trend, chartConfig, icon
                 x: { display: false }, 
                 y: { 
                     display: false, 
-                    suggestedMax: Math.max(...chartConfig.data.datasets[0].data) * 1.5 || 10 
+                    suggestedMax: Math.max(...chartConfig.data.datasets[0].data) * 1.1 || 10 
                 } 
               },
               elements: { 
                 point: { radius: 0 },
-                line: { tension: 0.5, borderWidth: 2.5, capStyle: 'round' }
+                line: { tension: 0.6, borderWidth: 2.5, capStyle: 'round' }
               }
             }} 
           />
