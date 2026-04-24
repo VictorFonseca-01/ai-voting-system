@@ -351,39 +351,40 @@ export default function AdminAnalyticsPage() {
       <AnimatePresence>
         {showRawExplorer && (
           <>
-            {/* Backdrop escurecido */}
+            {/* Backdrop escurecido + Container de Centralização */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowRawExplorer(false)}
               style={{
-                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
-                zIndex: 2000
-              }}
-            />
-
-            {/* Modal Centralizado */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              style={{ 
-                position: 'fixed', top: '50%', left: '50%', 
-                transform: 'translate(-50%, -50%)',
-                width: 'min(95vw, 1100px)', height: 'min(90vh, 850px)',
-                padding: '40px', 
-                background: '#0d0d12',
-                border: '2px solid var(--accent)',
-                borderRadius: '24px',
-                boxShadow: '0 20px 100px rgba(0,0,0,0.8), 0 0 50px rgba(99, 102, 241, 0.2)',
-                zIndex: 2001, 
-                overflow: 'hidden', 
-                display: 'flex', 
-                flexDirection: 'column'
+                position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)',
+                zIndex: 2000,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '20px'
               }}
             >
+              {/* Modal Centralizado */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                onClick={(e) => e.stopPropagation()} // Impede fechar ao clicar dentro
+                style={{ 
+                  width: '100%',
+                  maxWidth: '1100px', 
+                  maxHeight: '90vh',
+                  background: '#0d0d12',
+                  border: '2px solid var(--accent)',
+                  borderRadius: '24px',
+                  boxShadow: '0 30px 120px rgba(0,0,0,1), 0 0 60px rgba(99, 102, 241, 0.2)',
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  padding: '40px',
+                  position: 'relative'
+                }}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                     <div>
                         <h2 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '15px' }}>
