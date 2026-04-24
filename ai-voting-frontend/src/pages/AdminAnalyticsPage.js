@@ -474,6 +474,7 @@ export default function AdminAnalyticsPage() {
                 </div>
               </motion.div>
             </motion.div>
+          </>
         )}
       </AnimatePresence>
 
