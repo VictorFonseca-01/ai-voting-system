@@ -472,8 +472,8 @@ export default function AdminAnalyticsPage() {
                     <button onClick={() => setRawSearch('')} className="btn btn-ghost">Limpar Busca</button>
                     <button onClick={() => setShowRawExplorer(false)} className="btn btn-primary" style={{ padding: '12px 30px' }}>Fechar</button>
                 </div>
+              </motion.div>
             </motion.div>
-          </>
         )}
       </AnimatePresence>
 
