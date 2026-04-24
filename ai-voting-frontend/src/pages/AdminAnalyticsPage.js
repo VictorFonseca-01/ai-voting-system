@@ -347,87 +347,126 @@ export default function AdminAnalyticsPage() {
         })}
       </div>
 
-      {/* ─── EXPLORADOR DE RESPOSTAS BRUTAS (OUTROS) ────────────────── */}
+      {/* ─── MODAL EXPLORADOR DE RESPOSTAS BRUTAS (OUTROS) ────────────────── */}
       <AnimatePresence>
         {showRawExplorer && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 30 }}
-            className="card"
-            style={{ 
-              marginTop: '40px', 
-              padding: '32px', 
-              border: '2px solid var(--accent)',
-              boxShadow: '0 0 40px rgba(99, 102, 241, 0.1)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>🔍 Explorador de Respostas "Outros"</h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Visualização completa de todas as entradas manuais dos participantes.</p>
-                </div>
-                <div style={{ position: 'relative', width: '300px' }}>
-                    <input 
-                        type="text"
-                        placeholder="Pesquisar em toda a lista..."
-                        value={rawSearch}
-                        onChange={(e) => setRawSearch(e.target.value)}
-                        style={{
-                            width: '100%', padding: '12px 15px', borderRadius: '12px',
-                            background: 'rgba(255,255,255,0.05)', border: '1px solid var(--accent)',
-                            color: '#fff', outline: 'none'
-                        }}
-                    />
-                </div>
-            </div>
+          <>
+            {/* Backdrop escurecido */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowRawExplorer(false)}
+              style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
+                zIndex: 2000
+              }}
+            />
 
-            <div style={{ maxHeight: '600px', overflowY: 'auto', paddingRight: '10px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead>
-                        <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                            <th style={{ padding: '12px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem' }}>Resposta Identificada</th>
-                            <th style={{ padding: '12px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem' }}>IA Favorita</th>
-                            <th style={{ padding: '12px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem', textAlign: 'center' }}>Vezes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(workAreaResults || [])
-                          .filter(item => !rawSearch || normalize(item.label).includes(normalize(rawSearch)))
-                          .sort((a, b) => b.count - a.count)
-                          .map((item, i) => (
-                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
-                                <td style={{ padding: '14px 12px', fontWeight: 600 }}>{item.label}</td>
-                                <td style={{ padding: '14px 12px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        {item.ai && item.ai !== 'Todas' ? (
-                                            <>
-                                                <AIIcon name={item.ai} size={16} />
-                                                <span style={{ fontSize: '0.85rem' }}>{item.ai}</span>
-                                            </>
-                                        ) : <span style={{ opacity: 0.5 }}>—</span>}
-                                    </div>
-                                </td>
-                                <td style={{ padding: '14px 12px', textAlign: 'center' }}>
-                                    <span style={{ background: 'var(--accent-glow)', color: 'var(--accent-light)', padding: '2px 10px', borderRadius: '10px', fontWeight: 800 }}>
-                                        {item.count}
-                                    </span>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {(workAreaResults || []).length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                        Nenhuma resposta personalizada encontrada.
+            {/* Modal Centralizado */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="card"
+              style={{ 
+                position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                width: 'min(95vw, 1000px)', maxHeight: '90vh',
+                padding: '40px', border: '2px solid var(--accent)',
+                boxShadow: '0 0 100px rgba(99, 102, 241, 0.3)',
+                zIndex: 2001, overflow: 'hidden', display: 'flex', flexDirection: 'column'
+              }}
+            >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                    <div>
+                        <h2 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <span style={{ fontSize: '2.5rem' }}>🔍</span> Explorador de Respostas "Outros"
+                        </h2>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1rem', margin: '5px 0 0 0' }}>Auditando as entradas manuais dos participantes em tempo real.</p>
                     </div>
-                )}
-            </div>
-            
-            <div style={{ marginTop: '24px', textAlign: 'right' }}>
-                <button onClick={() => setShowRawExplorer(false)} className="btn btn-ghost">Fechar Explorador</button>
-            </div>
-          </motion.div>
+                    <button 
+                        onClick={() => setShowRawExplorer(false)}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '1.5rem', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer' }}
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div style={{ marginBottom: '25px' }}>
+                    <div style={{ position: 'relative' }}>
+                        <input 
+                            type="text"
+                            placeholder="Pesquisar em toda a lista (Ex: cargo, empresa, curso...)"
+                            value={rawSearch}
+                            onChange={(e) => setRawSearch(e.target.value)}
+                            autoFocus
+                            style={{
+                                width: '100%', padding: '20px 25px', borderRadius: '16px',
+                                background: 'rgba(255,255,255,0.03)', border: '2px solid var(--accent)',
+                                color: '#fff', outline: 'none', fontSize: '1.1rem',
+                                boxShadow: '0 0 20px rgba(99, 102, 241, 0.1) inset'
+                            }}
+                        />
+                        <span style={{ position: 'absolute', right: '25px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>
+                            {workAreaResults.filter(item => !rawSearch || normalize(item.label).includes(normalize(rawSearch))).length} resultados
+                        </span>
+                    </div>
+                </div>
+
+                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '15px', borderRadius: '12px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead style={{ position: 'sticky', top: 0, background: '#0d0d12', zIndex: 10 }}>
+                            <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                                <th style={{ padding: '15px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>Resposta Identificada</th>
+                                <th style={{ padding: '15px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem' }}>IA Favorita</th>
+                                <th style={{ padding: '15px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.8rem', textAlign: 'center' }}>Vezes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(workAreaResults || [])
+                              .filter(item => !rawSearch || normalize(item.label).includes(normalize(rawSearch)))
+                              .sort((a, b) => b.count - a.count)
+                              .map((item, i) => (
+                                <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)', transition: 'background 0.2s' }}>
+                                    <td style={{ padding: '18px 15px', fontWeight: 600, fontSize: '1rem' }}>{item.label}</td>
+                                    <td style={{ padding: '18px 15px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            {item.ai && item.ai !== 'Todas' ? (
+                                                <>
+                                                    <AIIcon name={item.ai} size={20} />
+                                                    <span style={{ fontSize: '0.9rem' }}>{item.ai}</span>
+                                                </>
+                                            ) : <span style={{ opacity: 0.4 }}>Não especificado</span>}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '18px 15px', textAlign: 'center' }}>
+                                        <span style={{ 
+                                            background: 'var(--accent)', color: '#fff', 
+                                            padding: '4px 12px', borderRadius: '20px', 
+                                            fontWeight: 900, fontSize: '0.9rem'
+                                        }}>
+                                            {item.count}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    {(workAreaResults || []).length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
+                            <div style={{ fontSize: '4rem', marginBottom: '20px', opacity: 0.2 }}>🔍</div>
+                            Nenhuma resposta personalizada encontrada.
+                        </div>
+                    )}
+                </div>
+                
+                <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>
+                    <button onClick={() => setRawSearch('')} className="btn btn-ghost">Limpar Busca</button>
+                    <button onClick={() => setShowRawExplorer(false)} className="btn btn-primary" style={{ padding: '12px 30px' }}>Fechar</button>
+                </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
