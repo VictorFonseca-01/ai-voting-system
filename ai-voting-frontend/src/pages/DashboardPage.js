@@ -20,7 +20,7 @@ import { generateAIVotePresentation } from '../services/pptxService';
 import { getInstagramUrl } from '../utils/socialUtils';
 import AIIcon from '../components/AIIcon.jsx';
 import { getFilteredOtherResponses } from '../utils/workAreaUtils';
-import { calculateVariation, generateInsight, getProfessionalAnimation } from '../utils/trendUtils';
+
 ChartJS.register(ArcElement, BarElement, PointElement, LineElement, CategoryScale, LinearScale, Tooltip, Legend, Title, Filler);
 
 // Paleta de cores vibrantes centrada no DNA do site (Roxo -> Azul)

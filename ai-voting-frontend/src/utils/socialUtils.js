@@ -72,7 +72,7 @@ export const validateInstagramExistence = async (username) => {
         // Tentativa de HEAD request (muitos navegadores bloqueiam por CORS)
         // Se falhar, dependemos apenas do formato para não quebrar a UX
         const url = getInstagramUrl(username);
-        const res = await fetch(url, { mode: 'no-cors' });
+        await fetch(url, { mode: 'no-cors' });
         
         // no-cors sempre retorna type: "opaque" e status: 0, 
         // então não conseguimos saber se é 404.

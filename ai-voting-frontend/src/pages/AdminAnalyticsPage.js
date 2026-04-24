@@ -49,7 +49,7 @@ export default function AdminAnalyticsPage() {
   }, []);
 
   // USA A FUNÇÃO CENTRALIZADA (ELITE 6.0)
-  const { results: workAreaResults, totalRaw: workAreaTotalRaw, totalMatched: workAreaTotalMatched } = useMemo(() => {
+  const { results: workAreaResults } = useMemo(() => {
     return getFilteredOtherResponses({
       otherData: otherWorkAreas,
       activeAiFilter: filterAi,
@@ -157,7 +157,7 @@ export default function AdminAnalyticsPage() {
           
           if (isSearchActive) {
             const term = normalize(workAreaSearch);
-            const results = workAreaAggregated.filter(item => 
+            const results = workAreaResults.filter(item => 
               normalize(item.label).includes(term)
             );
             relevantData = {

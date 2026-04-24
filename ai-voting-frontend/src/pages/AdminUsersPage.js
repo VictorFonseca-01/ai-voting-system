@@ -42,10 +42,6 @@ export default function AdminUsersPage() {
   const [showModal, setShowModal] = useState(false);
   const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: null, type: 'confirm' });
   
-  // --- STATE: ADD USER ---
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newData, setNewData] = useState({ name: '', course: '', institution: '' });
-  const [addLoading, setAddLoading] = useState(false);
 
   // --- FETCH DATA ---
   const fetchUsers = useCallback(async () => {
@@ -168,21 +164,6 @@ export default function AdminUsersPage() {
     setShowModal(true);
   };
 
-  const handleCreateUser = async (e) => {
-    e.preventDefault();
-    if (!newData.name) return alert('O nome é obrigatório');
-    setAddLoading(true);
-    try {
-      await adminAPI.createUser(newData);
-      setShowAddModal(false);
-      setNewData({ name: '', course: '', institution: '' });
-      fetchUsers();
-    } catch (err) {
-      alert('Erro ao criar usuário.');
-    } finally {
-      setAddLoading(false);
-    }
-  };
 
   // --- RENDER HELPERS ---
   const totalPages = Math.ceil(totalCount / pageSize);

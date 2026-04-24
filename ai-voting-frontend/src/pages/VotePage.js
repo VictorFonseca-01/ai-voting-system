@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { votesAPI } from '../api';
 import AIIcon from '../components/AIIcon.jsx';
-import { checkLocalVoteStatus, getFingerprint, getPersistentSessionId } from '../utils/security';
+import { checkLocalVoteStatus } from '../utils/security';
 
 const AI_OPTIONS = [
   { id: 'chatgpt', name: 'ChatGPT',   color: '#10a37f' },

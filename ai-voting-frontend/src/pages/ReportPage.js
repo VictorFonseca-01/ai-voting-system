@@ -31,26 +31,6 @@ export default function ReportPage() {
     window.print();
   };
 
-  const confirmReset = async () => {
-    setShowModal(false);
-    try {
-      await adminAPI.resetData();
-      setModalConfig({
-        title: 'Sucesso! ✨',
-        message: 'Sistema reiniciado com sucesso. Os votos e os usuários de teste foram zerados!',
-        type: 'alert'
-      });
-      setShowModal(true);
-      fetchReport(); 
-    } catch (err) {
-      setModalConfig({
-        title: 'Erro ❌',
-        message: 'Ocorreu um erro ao tentar zerar os dados.',
-        type: 'alert'
-      });
-      setShowModal(true);
-    }
-  };
 
   const handleResetData = () => {
     setModalConfig({
