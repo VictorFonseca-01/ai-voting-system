@@ -25,6 +25,8 @@ export default function AdminAnalyticsPage() {
   const [workAreaSearch, setWorkAreaSearch] = useState('');
   const [showWorkAreaSuggestions, setShowWorkAreaSuggestions] = useState(false);
   const [otherWorkAreas, setOtherWorkAreas] = useState({});
+  const [showRawExplorer, setShowRawExplorer] = useState(false);
+  const [rawSearch, setRawSearch] = useState('');
 
   const aiOptions = useMemo(() => {
     return ['Todas', 'ChatGPT', 'Gemini', 'Claude', 'Grok', 'Copilot', 'Meta AI', 'DeepSeek', 'Não utilizo IA'];
@@ -126,6 +128,21 @@ export default function AdminAnalyticsPage() {
             <div style={{ alignSelf: 'flex-end' }}>
                 <button onClick={fetchData} className="btn btn-primary" style={{ padding: '10px 20px' }}>
                     🔄 Atualizar
+                </button>
+            </div>
+
+            <div style={{ alignSelf: 'flex-end' }}>
+                <button 
+                  onClick={() => setShowRawExplorer(!showRawExplorer)} 
+                  className="btn btn-ghost" 
+                  style={{ 
+                    padding: '10px 20px', 
+                    border: '1px solid var(--accent)', 
+                    color: 'var(--accent)',
+                    background: showRawExplorer ? 'var(--accent-glow)' : 'transparent'
+                  }}
+                >
+                    🔍 Explorador de Outros
                 </button>
             </div>
         </div>
@@ -329,6 +346,90 @@ export default function AdminAnalyticsPage() {
           );
         })}
       </div>
+
+      {/* ─── EXPLORADOR DE RESPOSTAS BRUTAS (OUTROS) ────────────────── */}
+      <AnimatePresence>
+        {showRawExplorer && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            className="card"
+            style={{ 
+              marginTop: '40px', 
+              padding: '32px', 
+              border: '2px solid var(--accent)',
+              boxShadow: '0 0 40px rgba(99, 102, 241, 0.1)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>🔍 Explorador de Respostas "Outros"</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Visualização completa de todas as entradas manuais dos participantes.</p>
+                </div>
+                <div style={{ position: 'relative', width: '300px' }}>
+                    <input 
+                        type="text"
+                        placeholder="Pesquisar em toda a lista..."
+                        value={rawSearch}
+                        onChange={(e) => setRawSearch(e.target.value)}
+                        style={{
+                            width: '100%', padding: '12px 15px', borderRadius: '12px',
+                            background: 'rgba(255,255,255,0.05)', border: '1px solid var(--accent)',
+                            color: '#fff', outline: 'none'
+                        }}
+                    />
+                </div>
+            </div>
+
+            <div style={{ maxHeight: '600px', overflowY: 'auto', paddingRight: '10px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                            <th style={{ padding: '12px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem' }}>Resposta Identificada</th>
+                            <th style={{ padding: '12px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem' }}>IA Favorita</th>
+                            <th style={{ padding: '12px', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem', textAlign: 'center' }}>Vezes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {(workAreaResults || [])
+                          .filter(item => !rawSearch || normalize(item.label).includes(normalize(rawSearch)))
+                          .sort((a, b) => b.count - a.count)
+                          .map((item, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                                <td style={{ padding: '14px 12px', fontWeight: 600 }}>{item.label}</td>
+                                <td style={{ padding: '14px 12px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {item.ai && item.ai !== 'Todas' ? (
+                                            <>
+                                                <AIIcon name={item.ai} size={16} />
+                                                <span style={{ fontSize: '0.85rem' }}>{item.ai}</span>
+                                            </>
+                                        ) : <span style={{ opacity: 0.5 }}>—</span>}
+                                    </div>
+                                </td>
+                                <td style={{ padding: '14px 12px', textAlign: 'center' }}>
+                                    <span style={{ background: 'var(--accent-glow)', color: 'var(--accent-light)', padding: '2px 10px', borderRadius: '10px', fontWeight: 800 }}>
+                                        {item.count}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {(workAreaResults || []).length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                        Nenhuma resposta personalizada encontrada.
+                    </div>
+                )}
+            </div>
+            
+            <div style={{ marginTop: '24px', textAlign: 'right' }}>
+                <button onClick={() => setShowRawExplorer(false)} className="btn btn-ghost">Fechar Explorador</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
