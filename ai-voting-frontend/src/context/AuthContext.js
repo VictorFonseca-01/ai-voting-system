@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI, supabase, votesAPI } from '../api';
+import { supabase } from '../api';
 
 /** Contexto global de autenticação - Versão Supabase (Safe Mode) */
 const AuthContext = createContext(null);
