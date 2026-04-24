@@ -366,16 +366,22 @@ export default function AdminAnalyticsPage() {
 
             {/* Modal Centralizado */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="card"
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
               style={{ 
-                position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                width: 'min(95vw, 1000px)', maxHeight: '90vh',
-                padding: '40px', border: '2px solid var(--accent)',
-                boxShadow: '0 0 100px rgba(99, 102, 241, 0.3)',
-                zIndex: 2001, overflow: 'hidden', display: 'flex', flexDirection: 'column'
+                position: 'fixed', top: '50%', left: '50%', 
+                transform: 'translate(-50%, -50%)',
+                width: 'min(95vw, 1100px)', height: 'min(90vh, 850px)',
+                padding: '40px', 
+                background: '#0d0d12',
+                border: '2px solid var(--accent)',
+                borderRadius: '24px',
+                boxShadow: '0 20px 100px rgba(0,0,0,0.8), 0 0 50px rgba(99, 102, 241, 0.2)',
+                zIndex: 2001, 
+                overflow: 'hidden', 
+                display: 'flex', 
+                flexDirection: 'column'
               }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
