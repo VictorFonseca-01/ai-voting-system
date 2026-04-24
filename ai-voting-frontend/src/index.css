@@ -63,6 +63,10 @@ html {
   width: 100%;
 }
 
+.gradient-text {
+  text-underline-offset: 8px; /* Fix for utiliza? underline */
+}
+
 /* ─── SCROLLBAR ──────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -126,6 +130,12 @@ h1, h2, h3, h4, h5 {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+@media (max-width: 768px) {
+  .form-group label {
+    font-size: 0.95rem; /* Slightly larger for mobile readability */
+  }
 }
 
 .form-control {
@@ -297,6 +307,18 @@ h1, h2, h3, h4, h5 {
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 10px;
+  z-index: 1001;
 }
 
 .navbar-actions {
@@ -386,64 +408,48 @@ h1, h2, h3, h4, h5 {
   .stat-card { padding: 20px 16px; min-height: 100px; }
   .stat-value { font-size: 2rem; font-weight: 700; letter-spacing: 0; }
 
-  /* ── Navbar Mobile ── */
-  html, body { overflow-x: hidden; }
-
-  .navbar {
-    padding: 0 10px;
-    height: 56px;
-    gap: 6px;
-  }
-
-  .navbar-brand {
-    font-size: 0.95rem;
-    gap: 6px;
-  }
+  /* ── Navbar Mobile (Hamburger implementation) ── */
+  .mobile-toggle { display: block; }
 
   .navbar-nav {
-    flex: 1;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    gap: 4px;
-    padding: 4px 0;
-    margin-left: 6px;
-    flex-wrap: nowrap;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent) transparent;
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    height: 100vh;
+    background: rgba(3, 3, 5, 0.98);
+    backdrop-filter: blur(20px);
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px;
+    z-index: 1000;
   }
 
-  .navbar-nav > * {
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-
-  .navbar-nav::-webkit-scrollbar {
-    height: 3px;
-  }
-  .navbar-nav::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .navbar-nav::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: 3px;
+  .navbar-nav.open {
+    right: 0;
   }
 
   .nav-link {
-    padding: 6px 10px;
-    font-size: 0.78rem;
-    flex-shrink: 0;
-  }
-
-  .btn-ghost, .btn-primary {
-    padding: 6px 12px !important;
-    font-size: 0.8rem !important;
-    flex-shrink: 0;
+    font-size: 1.2rem;
+    width: 100%;
+    text-align: center;
+    padding: 15px;
   }
 
   .desktop-only { display: none !important; }
   .mobile-only { display: block !important; }
+
+  /* HOME PAGE BUTTONS FIX */
+  .hero-cta-group .btn {
+    width: 100% !important;
+    padding: 16px 20px !important;
+    font-size: 1.1rem !important;
+  }
+  
+  .navbar {
+    padding: 0 16px;
+  }
 }
 
 /* ─── ULTRA MOBILE SCALE (< 480px) ─────────────────────────── */

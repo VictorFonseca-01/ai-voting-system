@@ -87,7 +87,7 @@ export default function BarChartCard({ title, data, options, chartRef, otherData
         </div>
 
         {/* Campo de Busca Autocomplete - Unificado */}
-        <div style={{ position: 'relative', width: '220px' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
             <div style={{ position: 'relative' }}>
                 <input 
                     type="text"

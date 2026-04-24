@@ -166,7 +166,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Grid de Perguntas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 600px), 1fr))', gap: '30px' }}>
         {report
           .filter(q => {
             if (filterAi === 'Não utilizo IA') {
@@ -264,7 +264,7 @@ export default function AnalyticsPage() {
 
                 {/* Busca para Área de Atuação */}
                 {isWorkArea && (
-                    <div style={{ position: 'relative', width: '250px' }}>
+                    <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
                         <div style={{ position: 'relative' }}>
                             <input 
                                 type="text"

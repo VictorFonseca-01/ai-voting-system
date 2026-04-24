@@ -132,7 +132,7 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* Grid de Perguntas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 600px), 1fr))', gap: '30px' }}>
         {report
           .filter(q => {
             if (filterAi === 'Não utilizo IA') {

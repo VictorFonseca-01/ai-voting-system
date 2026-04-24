@@ -10,6 +10,7 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [hasNew, setHasNew] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   // Fecha o painel ao clicar fora
@@ -22,6 +23,11 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fecha o menu mobile ao navegar
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [navigate]);
 
   // Polling de notificações (apenas para Admin)
   useEffect(() => {
@@ -87,8 +93,17 @@ export default function Navbar() {
         ⚡ AI<span>Vote</span>
       </Link>
 
-      {/* Nav links (scrollable on mobile) */}
-      <div className="navbar-nav">
+      {/* Hamburger Menu Toggle (Mobile Only) */}
+      <button 
+        className="mobile-toggle"
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        style={{ order: 3 }}
+      >
+        {isMenuOpen ? '✕' : '☰'}
+      </button>
+
+      {/* Nav links */}
+      <div className={`navbar-nav ${isMenuOpen ? 'open' : ''}`}>
         <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           🏠 Início
         </NavLink>
@@ -96,7 +111,7 @@ export default function Navbar() {
           🗳️ Votar
         </NavLink>
         <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          📊 Dashboard Geral
+          📊 Dashboard
         </NavLink>
         <NavLink to="/analytics" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} style={{ color: '#fbbf24' }}>
           📈 Analytics
