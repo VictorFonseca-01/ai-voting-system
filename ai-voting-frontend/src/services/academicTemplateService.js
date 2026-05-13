@@ -20,7 +20,7 @@ const PROJECT_INFO = {
     "Pablo Henrique Rodrigues Gomes - 20242143004"
   ],
   objective: "Mapear a eficiência e a percepção humana sobre as principais IAs do mercado em 2026, utilizando métodos estatísticos para validar a representatividade dos dados.",
-  technologies: ["React 18", "Supabase (PostgreSQL)", "Railway", "Framer Motion", "Chart.js", "PptxGenJS", "jsPDF"],
+  technologies: ["React 18", "Supabase (PostgreSQL)", "Vercel", "Framer Motion", "Chart.js", "PptxGenJS", "jsPDF"],
   architecture: "Arquitetura cliente-servidor (SPA) com persistência em nuvem (BaaS) e políticas de segurança RLS (Row Level Security).",
   methodology: "Pesquisa quantitativa exploratória com amostragem sistemática e análise estatística descritiva em tempo real.",
   problem: "A crescente onipresença da Inteligência Artificial carece de dados estatísticos consolidados sobre a percepção de eficiência e usabilidade por parte dos usuários reais.",
