@@ -220,208 +220,178 @@ export const questionnaireAPI = {
 // ─── DASHBOARD ────────────────────────────────────────────────────────
 export const dashboardAPI = {
   getData: async () => {
-    // 1. Busca usuários que têm respostas no questionário (ELITE 6.0 Safe Mode)
-    const { data: respIds, error: rError } = await supabase
-      .from('question_responses')
-      .select('user_id');
-    
-    if (rError) throw rError;
-    const completeIds = [...new Set((respIds || []).map(r => r.user_id))];
+    try {
+      // 1. Busca todos os dados necessários (Safe Mode para datasets pequenos < 2000 linhas)
+      // Isso evita erros de URL muito longa em cláusulas .in() e é mais performático para volumes baixos
+      const [usersRes, votesRes, responsesRes] = await Promise.all([
+        supabase.from('users').select('id, name, course, institution, instagram'),
+        supabase.from('votes').select('*').order('voted_at', { ascending: false }),
+        supabase.from('question_responses').select('*')
+      ]);
 
-    if (completeIds.length === 0) {
-      return { 
-        data: { totalVotes: 0, totalUniqueVoters: 0, totalResponses: 0, votesByAi: {}, whereUseAi: {}, workAreas: {}, recentVotes: [] } 
-      };
-    }
+      if (usersRes.error) throw usersRes.error;
+      if (votesRes.error) throw votesRes.error;
+      if (responsesRes.error) throw responsesRes.error;
 
-    // Busca metadados dos usuários completos
-    const { data: completeUsers, error: uError } = await supabase
-      .from('users')
-      .select('id, name, course, institution, instagram')
-      .in('id', completeIds);
-    
-    if (uError) throw uError;
+      const allUsers = usersRes.data || [];
+      const allVotes = votesRes.data || [];
+      const allResponses = responsesRes.data || [];
 
-    // 2. Busca votos e respostas apenas dos usuários completos
-    const [votesRes, responsesRes] = await Promise.all([
-      supabase.from('votes').select('*').in('user_id', completeIds).order('voted_at', { ascending: false }),
-      supabase.from('question_responses').select('*').in('user_id', completeIds)
-    ]);
+      // 2. Filtra usuários que completaram o questionário (mesma lógica anterior)
+      const completeIds = new Set(allResponses.map(r => r.user_id));
+      
+      // 3. Mapeamento O(N) de usuários (Performance Elite)
+      const userMap = {};
+      allUsers.forEach(u => {
+        if (completeIds.has(u.id)) {
+          userMap[u.id] = {
+            name: u.name || 'Participante',
+            course: u.course || 'Visitante',
+            institution: u.institution || 'Não informada',
+            instagram: u.instagram || '',
+            ias: []
+          };
+        }
+      });
 
-    if (votesRes.error) throw votesRes.error;
-    if (responsesRes.error) throw responsesRes.error;
-
-    const votes = votesRes.data || [];
-    const responses = responsesRes.data || [];
-    const userMap = completeUsers.reduce((acc, u) => ({ 
-      ...acc, 
-      [u.id]: { 
-        name: u.name, 
-        course: u.course,
-        institution: u.institution,
-        instagram: u.instagram,
-        ias: [] // Inicializa lista de IAs (ELITE 7.3.2 Fix)
-      } 
-    }), {});
-
-    // Mapeia IAs votadas para cada usuário no userMap
-    votes.forEach(v => {
-      if (userMap[v.user_id]) {
+      // 4. Processamento de Votos e IAs por usuário
+      const filteredVotes = allVotes.filter(v => userMap[v.user_id]);
+      filteredVotes.forEach(v => {
         const normalized = normalizeAiName(v.ai_name);
         if (!userMap[v.user_id].ias.includes(normalized)) {
           userMap[v.user_id].ias.push(normalized);
         }
-      }
-    });
-
-    // 1. Participantes únicos que votaram (Excluindo Admin se possível)
-    // Para simplificar, contamos todos e filtramos na exibição se necessário
-    const uniqueVoters = new Set(votes.map(v => v.user_id));
-    
-    // 2. Ranking de IAs (Normalizado e Completo - ELITE 5.0)
-    // Inicializa apenas com as 8 opções obrigatórias
-    const votesByAi = ALL_AI_OPTIONS.reduce((acc, name) => {
-      acc[name] = 0;
-      return acc;
-    }, {});
-
-    votes.forEach(v => {
-      const name = normalizeAiName(v.ai_name);
-      // Somente incrementa se pertencer à lista fixa
-      if (votesByAi.hasOwnProperty(name)) {
-        votesByAi[name]++;
-      }
-    });
-
-    // 3. Estatísticas de Uso
-    const useForStudy = responses.filter(r => r.use_for_study === true).length;
-    const useForWork = responses.filter(r => r.use_for_work === true).length;
-
-    // 4. Área de Atuação (Sanitizada + Coleta de 'Outros' para análise profunda)
-    const otherWorkAreasByAi = {};
-    ALL_AI_OPTIONS.forEach(ai => otherWorkAreasByAi[ai] = []);
-
-    const workAreas = responses.reduce((acc, r) => {
-      let val = r.work_area;
-      const userIas = userMap[r.user_id]?.ias || [];
-
-      if (val === 'Outros' && r.work_area_other) {
-        val = r.work_area_other;
-        // Adiciona aos grupos de cada IA que o usuário votou
-        userIas.forEach(ai => {
-          if (otherWorkAreasByAi[ai]) {
-            otherWorkAreasByAi[ai].push(r.work_area_other);
-          }
-        });
-        // Adiciona à lista global sem duplicatas por IA (Elite 7.3.2 Fix)
-        if (!otherWorkAreasByAi['Todas']) otherWorkAreasByAi['Todas'] = [];
-        otherWorkAreasByAi['Todas'].push(r.work_area_other);
-      }
-      
-      const area = getCanonicalName(val) || 'Outros';
-      acc[area] = (acc[area] || 0) + 1;
-      return acc;
-    }, {});
-
-    // 5. Onde Usam IA (Sanitizada)
-    const whereUseAi = responses.reduce((acc, r) => {
-      const raw = r.where_use_ai || '';
-      const locations = raw.split(',')
-        .map(l => cleanLabel(l))
-        .filter(l => l && l !== 'undefined' && l !== 'null');
-      
-      locations.forEach(l => {
-        acc[l] = (acc[l] || 0) + 1;
       });
-      return acc;
-    }, {});
 
-    // 6. Atividade Recente (Enriquecida para a Navbar e Dashboard)
-      const responseCounts = responses?.reduce((acc, r) => {
+      // 5. Ranking de IAs (Normalizado)
+      const votesByAi = ALL_AI_OPTIONS.reduce((acc, name) => {
+        acc[name] = 0;
+        return acc;
+      }, {});
+
+      filteredVotes.forEach(v => {
+        const name = normalizeAiName(v.ai_name);
+        if (votesByAi.hasOwnProperty(name)) {
+          votesByAi[name]++;
+        }
+      });
+
+      // 6. Estatísticas de Uso e Áreas
+      const responses = allResponses.filter(r => userMap[r.user_id]);
+      const responseCounts = responses.reduce((acc, r) => {
         acc.total++;
         if (r.use_for_study) acc.study++;
         if (r.use_for_work) acc.work++;
         return acc;
-      }, { total: 0, study: 0, work: 0 }) || { total: 0, study: 0, work: 0 };
+      }, { total: 0, study: 0, work: 0 });
 
-      // Volume bruto de votos (cada registro conta)
-      const totalRawVotes = votes?.length || 0;
+      const otherWorkAreasByAi = {};
+      ALL_AI_OPTIONS.forEach(ai => otherWorkAreasByAi[ai] = []);
+      if (!otherWorkAreasByAi['Todas']) otherWorkAreasByAi['Todas'] = [];
 
-      // Participantes únicos
-      const totalUniqueVoters = new Set(votes?.map(v => v.user_id)).size;
+      const workAreas = responses.reduce((acc, r) => {
+        let val = r.work_area;
+        const userIas = userMap[r.user_id]?.ias || [];
 
-    const recentVotes = votes.slice(0, 10).map(v => {
-      const userData = userMap[v.user_id] || { name: 'Participante', course: 'Visitante' };
-      return {
-        id: v.id, 
-        userName: userData.name,
-        userCourse: userData.course,
-        institution: userData.institution,
-        instagram: userData.instagram,
-        aiName: normalizeAiName(v.ai_name),
-        time: v.voted_at
-      };
-    });
+        if (val === 'Outros' && r.work_area_other) {
+          val = r.work_area_other;
+          userIas.forEach(ai => {
+            if (otherWorkAreasByAi[ai]) otherWorkAreasByAi[ai].push(r.work_area_other);
+          });
+          otherWorkAreasByAi['Todas'].push(r.work_area_other);
+        }
+        
+        const area = getCanonicalName(val) || 'Outros';
+        acc[area] = (acc[area] || 0) + 1;
+        return acc;
+      }, {});
 
-    // 7. Métricas Temporais (ELITE PROFESSIONAL 6.0)
-    const now = new Date();
-    const msH = 60 * 60 * 1000;
-    const msD = 24 * msH;
-    
-    // Histórico Estendido (60 dias para comparação Mês vs Mês Anterior)
-    const history60d = Array.from({ length: 60 }).map((_, i) => {
-      const targetDate = new Date(now - (i * msD));
-      const count = votes.filter(v => {
-        const d = new Date(v.voted_at);
-        return d.toDateString() === targetDate.toDateString();
+      // 7. Onde Usam IA
+      const whereUseAi = responses.reduce((acc, r) => {
+        const raw = r.where_use_ai || '';
+        const locations = raw.split(',')
+          .map(l => cleanLabel(l))
+          .filter(l => l && l !== 'undefined' && l !== 'null');
+        
+        locations.forEach(l => {
+          acc[l] = (acc[l] || 0) + 1;
+        });
+        return acc;
+      }, {});
+
+      // 8. Atividade Recente
+      const recentVotes = filteredVotes.slice(0, 10).map(v => {
+        const userData = userMap[v.user_id];
+        return {
+          id: v.id, 
+          userName: userData.name,
+          userCourse: userData.course,
+          institution: userData.institution,
+          instagram: userData.instagram,
+          aiName: normalizeAiName(v.ai_name),
+          time: v.voted_at
+        };
+      });
+
+      // 9. Métricas Temporais
+      const now = new Date();
+      const msD = 24 * 60 * 60 * 1000;
+      const msH = 60 * 60 * 1000;
+      
+      const history60d = Array.from({ length: 60 }).map((_, i) => {
+        const targetDate = new Date(now - (i * msD));
+        const count = filteredVotes.filter(v => {
+          const d = new Date(v.voted_at);
+          return d.toDateString() === targetDate.toDateString();
+        }).length;
+        return { day: targetDate.getDate(), month: targetDate.getMonth() + 1, count };
+      }).reverse();
+
+      const hourlyVotes = Array.from({ length: 24 }).map((_, i) => {
+        const targetTime = new Date(now - (i * msH));
+        const count = filteredVotes.filter(v => {
+          const d = new Date(v.voted_at);
+          return d > new Date(targetTime.getTime() - msH) && d <= targetTime;
+        }).length;
+        return count;
+      }).reverse();
+
+      const votesLast24h = filteredVotes.filter(v => (now - new Date(v.voted_at)) < msD).length;
+      const votesPrev24h = filteredVotes.filter(v => {
+        const diff = now - new Date(v.voted_at);
+        return diff >= msD && diff < (msD * 2);
       }).length;
-      return { day: targetDate.getDate(), month: targetDate.getMonth() + 1, count };
-    }).reverse();
 
-    // Distribuição por Hora (Últimas 24h)
-    const hourlyVotes = Array.from({ length: 24 }).map((_, i) => {
-      const targetTime = new Date(now - (i * msH));
-      const count = votes.filter(v => {
-        const d = new Date(v.voted_at);
-        return d > new Date(targetTime.getTime() - msH) && d <= targetTime;
-      }).length;
-      return count;
-    }).reverse();
-
-    // Votos últimos 24h vs 24h anteriores (Para o Card principal)
-    const votesLast24h = votes.filter(v => (now - new Date(v.voted_at)) < msD).length;
-    const votesPrev24h = votes.filter(v => {
-      const diff = now - new Date(v.voted_at);
-      return diff >= msD && diff < (msD * 2);
-    }).length;
-
-    let vTrend = '+0.0%';
-    if (votesPrev24h > 0) {
-      vTrend = (((votesLast24h - votesPrev24h) / votesPrev24h) * 100).toFixed(1) + "%";
-      if (!vTrend.startsWith('-')) vTrend = '+' + vTrend;
-    } else if (votesLast24h > 0) {
-      vTrend = '+100%';
-    }
-
-    // Normaliza dados para o frontend (camelCase)
-    return {
-      data: {
-        totalVotes: totalRawVotes, 
-        totalUniqueVoters,       
-        totalResponses: responseCounts.total,
-        useForStudy: responseCounts.study,
-        useForWork: responseCounts.work,
-        votesTrend: vTrend,
-        dailyVotes: history60d.slice(-7).map(d => d.count), // Compatibilidade Legada (7 dias)
-        history60d, // Novo padrão Professional
-        hourlyVotes, // Novo padrão Professional
-        votesByAi,
-        whereUseAi,
-        workAreas,
-        otherWorkAreas: otherWorkAreasByAi,
-        recentVotes
+      let vTrend = '+0.0%';
+      if (votesPrev24h > 0) {
+        vTrend = (((votesLast24h - votesPrev24h) / votesPrev24h) * 100).toFixed(1) + "%";
+        if (!vTrend.startsWith('-')) vTrend = '+' + vTrend;
+      } else if (votesLast24h > 0) {
+        vTrend = '+100%';
       }
-    };
+
+      return {
+        data: {
+          totalVotes: filteredVotes.length, 
+          totalUniqueVoters: completeIds.size,       
+          totalResponses: responseCounts.total,
+          useForStudy: responseCounts.study,
+          useForWork: responseCounts.work,
+          votesTrend: vTrend,
+          dailyVotes: history60d.slice(-7).map(d => d.count),
+          history60d,
+          hourlyVotes,
+          votesByAi,
+          whereUseAi,
+          workAreas,
+          otherWorkAreas: otherWorkAreasByAi,
+          recentVotes
+        }
+      };
+    } catch (err) {
+      console.error("Erro Crítico no dashboardAPI.getData:", err);
+      throw err;
+    }
   },
 
   getPublicQuestionnaireReport: async () => {
