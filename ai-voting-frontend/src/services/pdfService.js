@@ -2,18 +2,18 @@ import { jsPDF } from "jspdf";
 
 /**
  * Serviço de Geração de Relatório Acadêmico de ELITE 🎓
- * Versão ULTRA-ESTÁVEL: Resolve definitivamente sobreposição e quebras de página.
+ * Versão ULTRA-ESTÁVEL v2: Corrige corte de texto e alinhamento da Folha de Rosto.
  */
 export const generateAcademicPDF = async (content, data) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 30; // Margem Esquerda/Superior 30mm
+  const margin = 30; // Margem Esquerda 30mm
   const rightMargin = 20; // Margem Direita 20mm
   const bottomMargin = 20; // Margem Inferior 20mm
   const contentWidth = pageWidth - margin - rightMargin;
   const FONT_SIZE_TEXT = 12;
-  const LINE_HEIGHT = 7; // Aprox 1.5 de espaçamento
+  const LINE_HEIGHT = 7; 
 
   let yPos = 30;
 
@@ -69,14 +69,21 @@ export const generateAcademicPDF = async (content, data) => {
 
   // --- 2. FOLHA DE ROSTO ---
   doc.addPage();
+  // Nomes no topo (opcional, mas comum em ABNT)
   authY = 30;
   authors.forEach(a => { centerText(a, authY, 11); authY += 7; });
-  centerText(data.name.toUpperCase(), 120, 16, true);
   
+  // Título no meio
+  centerText(data.name.toUpperCase(), 110, 16, true);
+  
+  // Natureza do trabalho (Bloco à direita, largura 90mm)
   setNormal(10);
   const natureText = "Relatório técnico apresentado ao Centro Universitário Alves Faria (UNIALFA), como requisito parcial para obtenção de nota na disciplina de Probabilidade e Estatística sob orientação do Professor Esp. Eduardo Ungarelli.";
-  const natureLines = doc.splitTextToSize(natureText, 100);
-  doc.text(natureLines, 85, 150, { align: "justify" });
+  // x = 100mm (página tem 210mm, sobra 110mm, margem direita 20mm -> 210-20-90 = 100)
+  doc.text(natureText, 100, 140, { 
+    align: "justify", 
+    maxWidth: 90 
+  });
   
   centerText("GOIÂNIA - GO", 260, 12);
   centerText("2026", 268, 12);
@@ -101,25 +108,21 @@ export const generateAcademicPDF = async (content, data) => {
     const lines = doc.splitTextToSize(cleanText, contentWidth - 15);
 
     lines.forEach(line => {
-      if (checkNewPage(LINE_HEIGHT)) {
-        // Se mudou de página, repete um pequeno recuo ou título se necessário (não aqui para texto corrido)
-      }
+      if (checkNewPage(LINE_HEIGHT)) { }
       doc.text(line, margin + 15, yPos);
       yPos += LINE_HEIGHT;
     });
-    yPos += 8; // Espaço entre seções
+    yPos += 8; 
   };
 
   yPos = 30;
   addBlock("RESUMO", content.resumo, true);
-  
   addBlock("1 INTRODUÇÃO", content.introducao, true);
   addBlock("2 OBJETIVOS", content.objetivos);
   addBlock("3 METODOLOGIA", content.metodologia);
   addBlock("4 DESENVOLVIMENTO", content.desenvolvimento, true);
   addBlock("5 RESULTADOS E DISCUSSÃO", content.resultados);
   addBlock("6 CONCLUSÃO", content.conclusao);
-
   addBlock("REFERÊNCIAS", content.referencias, true);
 
   doc.save(`PROJETO_ESTATISTICO_AIVOTE_2026.pdf`);
