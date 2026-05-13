@@ -35,17 +35,25 @@ export const generateAIVotePresentation = async (data, charts, academicContent) 
   const s1 = pptx.addSlide();
   s1.background = { fill: THEME.bg };
   s1.addText("AI VOTE 2026", {
-    x: 1, y: 2.5, w: 8, h: 1,
+    x: 1, y: 1.5, w: 8, h: 1,
     fontSize: 60, bold: true, color: THEME.grad1, fontFace: "Arial Black",
     align: "center"
   });
   s1.addText("Ecossistema Analítico de Elite", {
-    x: 1, y: 3.5, w: 8, h: 0.5,
+    x: 1, y: 2.5, w: 8, h: 0.5,
     fontSize: 24, italic: true, color: THEME.text, fontFace: "Arial",
     align: "center"
   });
-  s1.addText("Apresentação Acadêmica de Resultados", {
-    x: 1, y: 5, w: 8, h: 0.3,
+  
+  // Autores no Slide de Capa
+  const authors = "Victor Fonseca, Erick Fernando, Gabriel Calixto, João Lucas, Luizinho, Mikael, Pablo";
+  s1.addText(authors, {
+    x: 1, y: 3.5, w: 8, h: 0.3,
+    fontSize: 12, color: THEME.muted, align: "center", bold: true
+  });
+
+  s1.addText("Apresentação Acadêmica de Resultados - UNIALFA", {
+    x: 1, y: 5.5, w: 8, h: 0.3,
     fontSize: 14, color: THEME.muted, align: "center"
   });
 
