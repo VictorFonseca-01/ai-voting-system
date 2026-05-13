@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 
 /**
  * Serviço de Geração de Relatório Acadêmico de ELITE 🎓
- * Versão ULTRA-ESTÁVEL v2: Corrige corte de texto e alinhamento da Folha de Rosto.
+ * Versão ULTRA-ESTÁVEL v3: Remove nomes da Pág 2 e centraliza informações.
  */
 export const generateAcademicPDF = async (content, data) => {
   const doc = new jsPDF();
@@ -59,28 +59,25 @@ export const generateAcademicPDF = async (content, data) => {
     "Pablo Henrique Rodrigues Gomes - 20242143004"
   ];
   
-  let authY = 90;
+  let authY = 100; // Centraliza mais os nomes na capa
   authors.forEach(a => { centerText(a, authY, 11); authY += 7; });
 
-  centerText(data.name.toUpperCase(), 170, 18, true);
-  centerText("RELATÓRIO TÉCNICO DE PESQUISA ESTATÍSTICA APLICADA", 180, 12);
+  centerText(data.name.toUpperCase(), 180, 18, true);
+  centerText("RELATÓRIO TÉCNICO DE PESQUISA ESTATÍSTICA APLICADA", 190, 12);
+  
   centerText("GOIÂNIA - GO", 260, 12);
   centerText("2026", 268, 12);
 
-  // --- 2. FOLHA DE ROSTO ---
+  // --- 2. FOLHA DE ROSTO (SEM NOMES) ---
   doc.addPage();
-  // Nomes no topo (opcional, mas comum em ABNT)
-  authY = 30;
-  authors.forEach(a => { centerText(a, authY, 11); authY += 7; });
   
-  // Título no meio
-  centerText(data.name.toUpperCase(), 110, 16, true);
+  // Título Centralizado no terço superior
+  centerText(data.name.toUpperCase(), 70, 16, true);
   
   // Natureza do trabalho (Bloco à direita, largura 90mm)
   setNormal(10);
   const natureText = "Relatório técnico apresentado ao Centro Universitário Alves Faria (UNIALFA), como requisito parcial para obtenção de nota na disciplina de Probabilidade e Estatística sob orientação do Professor Esp. Eduardo Ungarelli.";
-  // x = 100mm (página tem 210mm, sobra 110mm, margem direita 20mm -> 210-20-90 = 100)
-  doc.text(natureText, 100, 140, { 
+  doc.text(natureText, 100, 110, { 
     align: "justify", 
     maxWidth: 90 
   });
