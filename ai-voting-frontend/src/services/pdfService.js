@@ -25,34 +25,34 @@ export const generateAcademicPDF = async (content, data) => {
   centerText("PROFESSOR: ESP. EDUARDO UNGARELLI", 44, 11);
   
   // Lista de Autores Centralizada
-  let authorY = 80;
+  let authorY = 65;
   centerText("AUTORES:", authorY, 12, true);
   const authors = [
-    "Victor Fonseca",
-    "Erick Fernando",
-    "Gabriel Calixto",
-    "João Lucas",
-    "Luizinho",
-    "Mikael",
-    "Pablo"
+    "Victor Fonseca da Silva - 20242143006",
+    "Erick Fernando de Jesus Silva - 20242143005",
+    "Gabriel Calixto Rosa - 20242143018",
+    "João Lucas Santos Mendonça - 20211193013",
+    "Luiz Henrique Rocha dos Santos - 20241173010",
+    "Mikael Marques de Carvalho Dias - 20242203009",
+    "Pablo Henrique Rodrigues Gomes - 20242143004"
   ];
   authors.forEach((author, i) => {
-    centerText(author, authorY + 10 + (i * 7), 12);
+    centerText(author, authorY + 8 + (i * 6), 10);
   });
   
-  centerText("PROJETO: " + data.name.toUpperCase(), 160, 24, true);
-  centerText("RELATÓRIO TÉCNICO DE PESQUISA ESTATÍSTICA", 172, 14);
+  centerText("PROJETO: " + data.name.toUpperCase(), 160, 20, true);
+  centerText("RELATÓRIO TÉCNICO DE PESQUISA ESTATÍSTICA", 170, 13);
   
-  centerText("GOIÂNIA - GO", 270, 12);
-  centerText("2026", 280, 12);
+  centerText("GOIÂNIA - GO", 275, 12);
+  centerText("2026", 282, 12);
 
   // --- 2. RESUMO ---
   doc.addPage();
   centerText("RESUMO", 30, 14, true);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(12);
-  const resumoLines = doc.splitTextToSize(content.resumo.replace("RESUMO: ", ""), contentWidth);
-  doc.text(resumoLines, margin, 50, { align: "justify" });
+  doc.setFontSize(11);
+  const resumoLines = doc.splitTextToSize(content.resumo.replace("RESUMO: ", ""), contentWidth - 5);
+  doc.text(resumoLines, margin, 50, { align: "justify", maxWidth: contentWidth - 5 });
 
   // --- 3. CONTEÚDO PRINCIPAL ---
   doc.addPage();
@@ -64,16 +64,16 @@ export const generateAcademicPDF = async (content, data) => {
       yPos = 30;
     }
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.text(title, margin, yPos);
-    yPos += 10;
+    yPos += 8;
     
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     const bodyText = text.includes(": ") ? text.split(": ").slice(1).join(": ") : text;
-    const lines = doc.splitTextToSize(bodyText, contentWidth);
-    doc.text(lines, margin, yPos, { align: "justify" });
-    yPos += (lines.length * 7) + 15;
+    const lines = doc.splitTextToSize(bodyText, contentWidth - 5);
+    doc.text(lines, margin, yPos, { align: "justify", maxWidth: contentWidth - 5 });
+    yPos += (lines.length * 6) + 12;
   };
 
   addSection("1 INTRODUÇÃO", content.introducao);

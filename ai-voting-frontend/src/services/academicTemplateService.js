@@ -11,13 +11,13 @@ const PROJECT_INFO = {
   discipline: "PROBABILIDADE E ESTATÍSTICA",
   professor: "ESP. EDUARDO UNGARELLI",
   authors: [
-    "Victor Fonseca",
-    "Erick Fernando",
-    "Gabriel Calixto",
-    "João Lucas",
-    "Luizinho",
-    "Mikael",
-    "Pablo"
+    "Victor Fonseca da Silva - 20242143006",
+    "Erick Fernando de Jesus Silva - 20242143005",
+    "Gabriel Calixto Rosa - 20242143018",
+    "João Lucas Santos Mendonça - 20211193013",
+    "Luiz Henrique Rocha dos Santos - 20241173010",
+    "Mikael Marques de Carvalho Dias - 20242203009",
+    "Pablo Henrique Rodrigues Gomes - 20242143004"
   ],
   objective: "Mapear a eficiência e a percepção humana sobre as principais IAs do mercado em 2026, utilizando métodos estatísticos para validar a representatividade dos dados.",
   technologies: ["React 18", "Supabase (PostgreSQL)", "Railway", "Framer Motion", "Chart.js", "PptxGenJS", "jsPDF"],
