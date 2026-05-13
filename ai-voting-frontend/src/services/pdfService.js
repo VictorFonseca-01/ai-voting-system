@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 
 /**
  * Serviço de Geração de Relatório Acadêmico de ELITE 🎓
- * Versão ULTRA-ESTÁVEL v3: Remove nomes da Pág 2 e centraliza informações.
+ * Versão ULTRA-ESTÁVEL v4: Centralização total da Folha de Rosto.
  */
 export const generateAcademicPDF = async (content, data) => {
   const doc = new jsPDF();
@@ -59,7 +59,7 @@ export const generateAcademicPDF = async (content, data) => {
     "Pablo Henrique Rodrigues Gomes - 20242143004"
   ];
   
-  let authY = 100; // Centraliza mais os nomes na capa
+  let authY = 100;
   authors.forEach(a => { centerText(a, authY, 11); authY += 7; });
 
   centerText(data.name.toUpperCase(), 180, 18, true);
@@ -68,18 +68,19 @@ export const generateAcademicPDF = async (content, data) => {
   centerText("GOIÂNIA - GO", 260, 12);
   centerText("2026", 268, 12);
 
-  // --- 2. FOLHA DE ROSTO (SEM NOMES) ---
+  // --- 2. FOLHA DE ROSTO (CENTRALIZADA) ---
   doc.addPage();
   
-  // Título Centralizado no terço superior
-  centerText(data.name.toUpperCase(), 70, 16, true);
+  // Título Centralizado
+  centerText(data.name.toUpperCase(), 110, 16, true);
   
-  // Natureza do trabalho (Bloco à direita, largura 90mm)
+  // Bloco de Natureza do Trabalho (CENTRALIZADO horizontalmente)
   setNormal(10);
   const natureText = "Relatório técnico apresentado ao Centro Universitário Alves Faria (UNIALFA), como requisito parcial para obtenção de nota na disciplina de Probabilidade e Estatística sob orientação do Professor Esp. Eduardo Ungarelli.";
-  doc.text(natureText, 100, 110, { 
+  // x = (210 - 100) / 2 = 55 para centralizar um bloco de 100mm
+  doc.text(natureText, 55, 130, { 
     align: "justify", 
-    maxWidth: 90 
+    maxWidth: 100 
   });
   
   centerText("GOIÂNIA - GO", 260, 12);
