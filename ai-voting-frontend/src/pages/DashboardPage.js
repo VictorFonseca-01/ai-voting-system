@@ -17,6 +17,9 @@ import { dashboardAPI, adminAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { toPng } from 'html-to-image';
 import { generateAIVotePresentation } from '../services/pptxService';
+import { academicTemplateService } from '../services/academicTemplateService';
+import { generateAcademicPDF } from '../services/pdfService';
+import AIPresentationModal from '../components/Dashboard/AIPresentationModal';
 import { getInstagramUrl } from '../utils/socialUtils';
 import AIIcon from '../components/AIIcon.jsx';
 import { getFilteredOtherResponses } from '../utils/workAreaUtils';
@@ -58,6 +61,11 @@ export default function DashboardPage() {
   const [countdown, setCountdown] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newPass, setNewPass] = useState('');
+
+  // Estados para Geração de Apresentação Acadêmica
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [academicContent, setAcademicContent] = useState(null);
+  const [cachedCharts, setCachedCharts] = useState({});
 
   // Refs para captura de gráficos
   const rankingRef = useRef(null);
@@ -252,23 +260,43 @@ export default function DashboardPage() {
   };
 
   const handleGeneratePresentation = async () => {
-    setIsProcessing(true);
     try {
-      // Capturar gráficos como PNG (Base64)
+      // 1. Gerar Conteúdo Acadêmico via Template
+      const content = academicTemplateService.generateAcademicContent(data);
+      setAcademicContent(content);
+
+      // 2. Capturar gráficos como PNG (Base64)
       const rankingImg = rankingRef.current ? await toPng(rankingRef.current, { backgroundColor: '#030305' }) : null;
       const whereImg = whereRef.current ? await toPng(whereRef.current, { backgroundColor: '#030305' }) : null;
       const workAreaImg = workAreaRef.current ? await toPng(workAreaRef.current, { backgroundColor: '#030305' }) : null;
 
-      const chartImages = {
+      setCachedCharts({
         ranking: rankingImg,
         where: whereImg,
         workArea: workAreaImg
-      };
+      });
 
-      await generateAIVotePresentation(data, chartImages);
+      // 3. Abrir Modal de Progresso/Preview
+      setShowAiModal(true);
     } catch (err) {
-      console.error("Erro ao gerar PPTX:", err);
-      setError("Falha ao gerar apresentação. Verifique a captura de gráficos.");
+      console.error("Erro ao preparar apresentação:", err);
+      setError("Falha ao preparar dados acadêmicos.");
+    }
+  };
+
+  const confirmDownloadPresentation = async (format) => {
+    setIsProcessing(true);
+    try {
+      if (format === 'pptx' || format === 'both') {
+        await generateAIVotePresentation(data, cachedCharts, academicContent);
+      }
+      if (format === 'pdf' || format === 'both') {
+        await generateAcademicPDF(academicContent, { name: "AI Vote 2026" });
+      }
+      setShowAiModal(false);
+    } catch (err) {
+      console.error("Erro no download:", err);
+      alert("Erro ao gerar arquivos para download.");
     } finally {
       setIsProcessing(false);
     }
@@ -700,6 +728,16 @@ export default function DashboardPage() {
               </div>
             </motion.div>
           </motion.div>
+        )}
+        
+        {/* Modal de Geração Acadêmica */}
+        {academicContent && (
+          <AIPresentationModal 
+            isOpen={showAiModal} 
+            onClose={() => setShowAiModal(false)}
+            academicContent={academicContent}
+            onGenerate={confirmDownloadPresentation}
+          />
         )}
       </AnimatePresence>
 
